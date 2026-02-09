@@ -1617,7 +1617,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         addNode(`pg-${cId}`, 'postgres', name, {
           version: cluster.properties?.postgresVersion,
           instances: cluster.properties?.instances,
-          connections: conns, state: cluster.metadata?.state,
+          connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
           dnsName: cluster.properties?.dnsName,
           ram: cluster.properties?.ram, cores: cluster.properties?.cores,
           storageSize: cluster.properties?.storageSize,
@@ -1641,7 +1641,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         addNode(`mongo-${cId}`, 'mongodb', name, {
           version: cluster.properties?.mongoDBVersion,
           instances: cluster.properties?.instances,
-          connections: conns, state: cluster.metadata?.state,
+          connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
           templateId: cluster.properties?.templateId, type: cluster.properties?.type,
         });
         const lanNodeId = lanLookup(lanMap, conn.lanId);
@@ -1663,7 +1663,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         addNode(`mysql-${cId}`, 'mysql', name, {
           version: cluster.properties?.mysqlVersion,
           instances: cluster.properties?.instances,
-          connections: conns, state: cluster.metadata?.state,
+          connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
         });
         const lanNodeId = lanLookup(lanMap, conn.lanId);
         if (lanNodeId) addLink(`mysql-${cId}`, lanNodeId, conn.cidr || '', { linkType: 'managed' });
@@ -1684,7 +1684,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         addNode(`mariadb-${cId}`, 'mariadb', name, {
           version: cluster.properties?.mariadbVersion,
           instances: cluster.properties?.instances,
-          connections: conns, state: cluster.metadata?.state,
+          connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
           dnsName: cluster.properties?.dnsName,
           ram: cluster.properties?.ram, cores: cluster.properties?.cores,
           storageSize: cluster.properties?.storageSize,
@@ -1732,7 +1732,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         addNode(`nfs-${cId}`, 'nfs', name, {
           size: cluster.properties?.size,
           connections: clusterConns,
-          state: cluster.metadata?.state || cluster.state,
+          state: cluster.metadata?.state || cluster.metadata?.status || cluster.properties?.status || cluster.state,
         });
         const nfsLanId = conn.lan || conn.lanId;
         const nfsIp = conn.ipAddress || conn.ip || '';
@@ -1753,7 +1753,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         addNode(`vpn-wg-${gwId}`, 'vpn_wg', name, {
           gatewayIP: gw.properties?.gatewayIP, connections: conns,
           interfaceIPv4: conn.ipv4CIDR, interfaceIPv6: conn.ipv6CIDR,
-          state: gw.metadata?.state,
+          state: gw.metadata?.state || gw.metadata?.status || gw.properties?.status,
         });
         const lanNodeId = lanLookup(lanMap, conn.lanId);
         if (lanNodeId) addLink(`vpn-wg-${gwId}`, lanNodeId, conn.ipv4CIDR || '', { linkType: 'managed' });
@@ -1770,7 +1770,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         const name = gw.properties?.name || `IPSec VPN ${gwId}`;
         addNode(`vpn-ipsec-${gwId}`, 'vpn_ipsec', name, {
           gatewayIP: gw.properties?.gatewayIP, connections: conns,
-          state: gw.metadata?.state,
+          state: gw.metadata?.state || gw.metadata?.status || gw.properties?.status,
         });
         const lanNodeId = lanLookup(lanMap, conn.lanId);
         if (lanNodeId) addLink(`vpn-ipsec-${gwId}`, lanNodeId, conn.ipv4CIDR || '', { linkType: 'managed' });
@@ -1790,7 +1790,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
           version: cluster.properties?.version,
           size: cluster.properties?.size,
           brokerAddresses: cluster.metadata?.brokerAddresses || conn.brokerAddresses,
-          state: cluster.metadata?.state,
+          state: cluster.metadata?.state || cluster.properties?.status,
         });
         const lanNodeId = lanLookup(lanMap, conn.lanId);
         if (lanNodeId) addLink(`kafka-${cId}`, lanNodeId, '', { linkType: 'managed' });
