@@ -20,11 +20,11 @@
 
 ### Global Map & VDC Drill-Down
 
-![Global Map and VDC topology drill-down](docs/visualizer.gif)
+[![Global Map and VDC topology drill-down](docs/visualizer.gif)](docs/visualizer.gif)
 
 ### Cross-Connect Visualization (Regional View)
 
-![Cross-connect visualization in regional mode](docs/cross-connect.gif)
+[![Cross-connect visualization in regional mode](docs/cross-connect.gif)](docs/cross-connect.gif)
 
 ## Key Capabilities
 
@@ -36,7 +36,7 @@
 
 📡 **IP View** — Toggle IP address labels across the entire topology and inspect public IP block allocations (IPv4 and IPv6) in a dedicated sidebar panel.
 
-🛡️ **Security Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, and Cross Connect. Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
+🛡️ **Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, and Cross Connect. Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
 
 📊 **Live Metrics** — Select a server to see 1-hour network throughput and packet count time-series charts directly in the detail panel.
 
