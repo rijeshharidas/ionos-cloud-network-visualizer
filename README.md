@@ -18,8 +18,9 @@ A browser-based interactive network topology visualizer for IONOS Cloud infrastr
 
 **Metrics at a glance** — Select a server to see 1-hour network throughput and packet count time-series charts directly in the detail panel. No need to leave the visualizer to check basic performance data.
 
-<!-- ## Screenshot -->
-<!-- ![IONOS Cloud Network Visualizer Screenshot](docs/screenshot.png) -->
+## Screenshot
+
+![IONOS Cloud Network Visualizer Screenshot](docs/screenshot.png)
 
 ## Quick Start
 
