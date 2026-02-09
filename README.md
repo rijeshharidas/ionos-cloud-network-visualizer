@@ -18,7 +18,13 @@
 
 ---
 
-![IONOS Cloud Network Visualizer Screenshot](docs/screenshot.png)
+### Global Map & VDC Drill-Down
+
+![Global Map and VDC topology drill-down](docs/visualizer.gif)
+
+### Cross-Connect Visualization (Regional View)
+
+![Cross-connect visualization in regional mode](docs/cross-connect.gif)
 
 ## Key Capabilities
 
