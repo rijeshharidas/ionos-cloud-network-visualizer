@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-02-07
 
 ### Added
+
 - Animated traffic flow visualization on links between active/running resources with glowing effect
 - Security highlight rings (SVG circles/polygons) around nodes with active firewall, flow logs, security groups, IPv6, IP failover, or cross connects
 - Connected-component graph clustering to automatically separate unrelated network groups into distinct visual regions
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Infrastructure-aware traffic flow: Internet, LAN, and PCC nodes treated as always-active for animation
 
 ### Changed
+
 - LAN icon redesigned from hub-spoke pattern to network switch icon to avoid confusion with Kubernetes
 - NAT Gateway icon redesigned from box-with-arrows to router/gateway symbol (circle with directional arrows) for clear distinction from servers
 - VDC dropdown now shows location in brackets: "VDC Name (Frankfurt 2)"
@@ -30,9 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NIC labels simplified to show IP address only (removed NIC name prefix)
 
 ### Removed
+
 - Link types legend from canvas/toolbar (removed due to layout conflicts)
 
 ### Fixed
+
 - Sidebar collapse button no longer lost when sidebar is hidden (expand button persists on canvas)
 - Traffic flow animation now works for cross connect and VPN gateway connections
 - Highlight rings render on top of nodes (SVG paint order fixed)
@@ -40,7 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2026-02-06
 
-### Added
+### Added (1.1.0)
+
 - Node search bar with type-ahead filtering for quick resource lookup
 - Welcome onboarding experience with guided setup steps
 - Color-coded link types (NIC, cross connect, managed service, gateway)
@@ -54,7 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CHANGELOG.md` for version tracking
 - GitHub Actions CI workflow for automated validation
 
-### Changed
+### Changed (1.1.0)
+
 - Renamed project from "VDC Visualizer" to "IONOS Cloud Network Visualizer"
 - Renamed `vdc-visualizer.html` to `ionos-cloud-network-visualizer.html`
 - Updated README with badges and improved documentation
@@ -62,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-01-15
 
-### Added
+### Added (1.0.0)
+
 - Interactive force-directed graph visualization of IONOS Cloud VDC resources
 - Support for 16 resource types: servers, LANs, databases, VPN, NFS, K8s, load balancers, cross connects
 - NIC-to-LAN connection mapping with IP address labels
