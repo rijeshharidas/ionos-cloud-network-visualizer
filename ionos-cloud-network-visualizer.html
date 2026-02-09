@@ -1,0 +1,4000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IONOS Cloud Network Visualizer</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23003068'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='22' fill='white'%3EI%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #001B41;
+    --bg-secondary: #00264d;
+    --bg-tertiary: #003366;
+    --bg-hover: #004080;
+    --text-primary: #f1f5f9;
+    --text-secondary: #a0c4e8;
+    --text-muted: #6a9ec8;
+    --border: #1a4a7a;
+    --accent: #11C7E6;
+    --accent-hover: #0ea8c4;
+    --accent-glow: rgba(17, 199, 230, 0.15);
+    --ionos-amber: #FFAA00;
+    --success: #10b981;
+    --warning: #FFAA00;
+    --danger: #ef4444;
+    --sidebar-width: 300px;
+    --detail-width: 380px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+  }
+
+  /* ---- Sidebar ---- */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-tertiary) transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 6px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+  .sidebar::-webkit-scrollbar-thumb:hover { background: var(--border); }
+
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(17, 199, 230, 0.06) 0%, transparent 100%);
+  }
+
+  .sidebar-header .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-header .brand-logo {
+    flex-shrink: 0;
+  }
+
+  .sidebar-header h1 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .sidebar-header h1 span.brand-cloud {
+    color: var(--accent);
+  }
+
+  .sidebar-header .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    padding-left: 42px;
+  }
+
+  .sidebar-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-section label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  input[type="password"], input[type="text"], select {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+  select { cursor: pointer; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { background: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed; }
+  .view-mode-btn { border: 1px solid var(--border); transition: all 0.2s; }
+  .view-mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .view-mode-btn:not(.active) { background: var(--bg-tertiary); color: var(--text-secondary); }
+  .btn-sm { padding: 5px 6px; font-size: 11px; }
+  .view-mode-group { display: flex; gap: 4px; margin-bottom: 8px; }
+  .view-mode-group .view-mode-btn { flex: 1; }
+  .vdc-label-bg { fill: var(--bg-secondary); fill-opacity: 0.7; rx: 6; }
+  .vdc-label-text { fill: var(--text-primary); font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; }
+  .vdc-toggle { cursor: pointer; fill: var(--text-muted); font-size: 14px; font-family: 'Inter', sans-serif; }
+  .vdc-toggle:hover { fill: var(--accent); }
+  .vdc-boundary-collapsed { stroke-opacity: 0.25 !important; }
+  .vdc-collapsed-label { fill: var(--text-muted); font-size: 12px; font-style: italic; font-family: 'Inter', sans-serif; }
+  .btn-secondary { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg-hover); }
+
+  /* ---- Legend (unified resources) ---- */
+  .legend-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 6px;
+  }
+  .legend-item:hover, .legend-item:focus-visible { color: var(--text-primary); background: var(--bg-tertiary); }
+  .legend-item.dimmed { opacity: 0.3; }
+  .legend-icon { width: 22px; height: 22px; flex-shrink: 0; }
+  .legend-count {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+
+  /* ---- Main Canvas ---- */
+  .main-area { flex: 1; position: relative; overflow: hidden; }
+  .main-area svg { width: 100%; height: 100%; display: block; position: relative; z-index: 1; }
+
+  /* ---- Map Background (passive behind topology) ---- */
+  #mapBackground {
+    position: absolute; inset: 0; z-index: 0;
+    opacity: 0; transition: opacity 0.6s ease, z-index 0s;
+    pointer-events: none;
+  }
+  #mapBackground.visible { opacity: 0.72; }
+  #mapBackground .leaflet-control-container { display: none; }
+  #mapBackground .leaflet-tile-pane { filter: grayscale(0.1) brightness(1.1) contrast(1.15); }
+
+  /* ---- Map Overview Mode (interactive, above SVG) ---- */
+  #mapBackground.overview-mode {
+    opacity: 1; z-index: 2; pointer-events: auto;
+  }
+  #mapBackground.overview-mode .leaflet-control-container { display: block; }
+  #mapBackground.overview-mode .leaflet-tile-pane { filter: none; }
+  #graphSvg.hidden-for-map { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+
+  /* Cluster bubble markers */
+  .map-cluster-bubble {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--bg-secondary); border: 2px solid var(--accent);
+    border-radius: 50%; cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    text-align: center;
+  }
+  .map-cluster-bubble:hover {
+    transform: scale(1.12);
+    box-shadow: 0 6px 24px rgba(17,199,230,0.35);
+    border-color: #fff;
+  }
+  .map-cluster-flag { font-size: 20px; line-height: 1; }
+  .map-cluster-name { font-size: 10px; font-weight: 600; color: var(--text-primary); line-height: 1.2; margin-top: 2px; }
+  .map-cluster-count {
+    font-size: 9px; color: var(--text-muted);
+    background: var(--bg-primary); padding: 1px 6px; border-radius: 8px; margin-top: 2px;
+  }
+
+  /* Individual VDC markers (shown after zooming into a region) */
+  .map-vdc-marker {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--bg-secondary); border: 2px solid var(--accent);
+    border-radius: 50%; cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    text-align: center;
+  }
+  .map-vdc-marker:hover {
+    transform: scale(1.12);
+    box-shadow: 0 6px 24px rgba(17,199,230,0.35);
+    border-color: #fff;
+  }
+  .map-vdc-marker .map-cluster-flag { font-size: 18px; }
+  .map-vdc-marker .map-cluster-name { font-size: 9px; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Back to overview button */
+  .map-back-btn {
+    position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 10; background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 16px; color: var(--text-primary);
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    display: none; align-items: center; gap: 6px; transition: all 0.2s;
+  }
+  .map-back-btn:hover { background: var(--bg-tertiary); border-color: var(--accent); }
+  .map-back-btn.visible { display: flex; }
+
+  .empty-state {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: var(--text-muted);
+    pointer-events: auto;
+  }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-state h2 { font-size: 18px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; line-height: 1.5; max-width: 320px; margin: 0 auto; }
+
+  /* ---- Onboarding ---- */
+  .onboarding { max-width: 440px; text-align: center; }
+  .onboarding-header { margin-bottom: 24px; }
+  .onboarding-header svg { margin: 0 auto 16px; display: block; width: 48px; height: 48px; }
+  .onboarding-header h2 { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .onboarding-header p { font-size: 13px; color: var(--text-muted); margin: 0 auto; max-width: none; text-align: center; }
+  .onboarding-steps { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .onboarding-step { display: flex; gap: 12px; align-items: flex-start; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; transition: border-color 0.2s; }
+  .onboarding-step .step-number { margin-top: 2px; }
+  .onboarding-step:hover { border-color: var(--accent); }
+  .step-number { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-content { flex: 1; min-width: 0; }
+  .step-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 1px; }
+  .step-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+  .step-desc a { color: var(--accent); text-decoration: none; }
+  .step-desc a:hover { text-decoration: underline; }
+  .onboarding-footer { margin-top: 16px; font-size: 11px; color: var(--text-muted); }
+  .onboarding-footer kbd { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-family: inherit; font-size: 11px; }
+
+  /* ---- Search (Canvas Overlay) ---- */
+  .canvas-search {
+    position: absolute; top: 16px; left: 16px; z-index: 15;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 12px; min-width: 280px; max-width: 340px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .canvas-search .search-box { position: relative; display: flex; align-items: center; }
+  .canvas-search .search-icon { color: var(--text-muted); flex-shrink: 0; width: 14px; height: 14px; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  .canvas-search .search-box input {
+    flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 28px 7px 30px; color: var(--text-primary);
+    font-size: 13px; font-family: inherit; outline: none; width: 100%;
+  }
+  .canvas-search .search-box input:focus { border-color: var(--accent); }
+  .canvas-search .search-box input::placeholder { color: var(--text-muted); }
+  .search-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; }
+  .search-clear:hover { color: var(--text-primary); }
+  .search-results { max-height: 200px; overflow-y: auto; margin-top: 6px; }
+  .search-result-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; color: var(--text-secondary); transition: background 0.15s; }
+  .search-result-item:hover, .search-result-item:focus-visible { background: var(--bg-tertiary); color: var(--text-primary); }
+  .search-result-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .search-result-count { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+
+  /* ---- Collapsible Sidebar ---- */
+  .sidebar-toggle { position: absolute; top: 16px; right: -14px; width: 28px; height: 28px; border-radius: 50%; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 20; font-size: 12px; transition: all 0.2s; }
+  .sidebar-toggle:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+  .sidebar { position: relative; transition: width 0.3s ease; }
+  .sidebar.collapsed { width: 0; min-width: 0; overflow: hidden; border-right: none; }
+  .sidebar.collapsed .sidebar-toggle { display: none; }
+
+  /* Expand button shown in canvas when sidebar is hidden */
+  .sidebar-expand {
+    position: absolute; top: 16px; left: 16px; z-index: 20;
+    width: 34px; height: 34px; border-radius: 8px;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    color: var(--text-muted); cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+    font-size: 14px; transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .sidebar-expand:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+  .sidebar-expand.visible { display: flex; }
+
+  /* ---- Shortcuts Overlay ---- */
+  .shortcuts-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: flex; align-items: center; justify-content: center; }
+  .shortcuts-dialog { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-width: 300px; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+
+  /* ---- Loading Stages ---- */
+  .loading-stages { display: flex; gap: 8px; margin-bottom: 16px; }
+  .loading-stage { font-size: 11px; color: var(--text-muted); padding: 4px 10px; border-radius: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); transition: all 0.3s; }
+  .loading-stage.active { color: var(--accent); border-color: var(--accent); background: rgba(17,199,230,0.1); }
+  .loading-stage.done { color: var(--success); border-color: var(--success); background: rgba(16,185,129,0.1); }
+  .loading-bar { width: 200px; height: 3px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden; }
+  .loading-bar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+
+  /* ---- Stat Card Enhancements ---- */
+  /* (stat cards merged into legend) */
+
+  /* ---- Loading ---- */
+  .loading-overlay {
+    position: absolute; inset: 0;
+    background: rgba(15, 23, 42, 0.85);
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px; z-index: 100;
+  }
+  .loading-overlay.active { display: flex; }
+  .spinner { width: 40px; height: 40px; border: 3px solid var(--bg-tertiary); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--text-secondary); }
+
+  /* ---- Detail Panel ---- */
+  .detail-panel {
+    width: 0; background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+    overflow-y: auto; transition: width 0.3s ease; flex-shrink: 0;
+  }
+  .detail-panel.open { width: var(--detail-width); }
+  .detail-content { padding: 20px; width: var(--detail-width); }
+  .detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+  .detail-header h2 { font-size: 15px; font-weight: 700; word-break: break-all; }
+  .detail-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; padding: 0 4px; line-height: 1; }
+  .detail-close:hover { color: var(--text-primary); }
+  .detail-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 16px; }
+  .detail-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  .detail-table th, .detail-table td { padding: 8px 0; font-size: 12px; border-bottom: 1px solid var(--bg-tertiary); text-align: left; vertical-align: top; }
+  .detail-table th { color: var(--text-muted); font-weight: 500; width: 110px; }
+  .detail-table td { color: var(--text-primary); word-break: break-all; }
+  .detail-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin: 16px 0 8px; }
+  .connected-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--bg-tertiary); border-radius: 6px; margin-bottom: 4px; font-size: 12px; cursor: pointer; transition: background 0.15s; }
+  .connected-item:hover, .connected-item:focus-visible { background: var(--bg-hover); }
+  .connected-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ---- Metrics Charts ---- */
+  #metricsContainer { margin-top: 4px; }
+  .metrics-loading { font-size: 10px; color: var(--text-muted); }
+  .metrics-chart-label { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
+  .metrics-chart-label + .metrics-chart-label { margin-top: 8px; }
+  .metrics-chart svg { display: block; width: 100%; }
+  .metrics-chart .axis text { fill: #6a9ec8; font-size: 8px; }
+  .metrics-chart .axis .domain { display: none; }
+  .metrics-chart .axis .tick line { stroke: #1a4a7a; }
+  .metrics-chart .grid .grid-line { stroke: #1a4a7a; stroke-opacity: 0.3; }
+  .metrics-legend { display: flex; gap: 12px; margin-top: 2px; }
+  .metrics-legend span { font-size: 10px; }
+  .metrics-no-data { font-size: 10px; color: var(--text-muted); padding: 8px 0; }
+
+  /* ---- Graph Elements ---- */
+  .node { cursor: pointer; }
+  .node:hover .node-bg { filter: brightness(1.3); }
+  .node-icon { pointer-events: none; }
+  .node-label {
+    font-size: 11px; fill: var(--text-primary);
+    text-anchor: middle; pointer-events: none; font-weight: 600;
+  }
+  .node-sublabel {
+    font-size: 9px; fill: var(--text-secondary);
+    text-anchor: middle; pointer-events: none;
+  }
+  .link { stroke-width: 2; stroke-opacity: 0.35; }
+  .link.traffic-flow {
+    stroke-width: 2.5;
+    stroke-opacity: 0.75;
+    stroke-dasharray: 8, 5;
+    animation: trafficFlow 0.8s linear infinite;
+    filter: drop-shadow(0 0 3px currentColor);
+  }
+  @keyframes trafficFlow {
+    to { stroke-dashoffset: -26; }
+  }
+  .link-label {
+    font-size: 10px; fill: var(--text-secondary);
+    text-anchor: middle; pointer-events: none;
+    font-weight: 500;
+  }
+  .link-label-bg {
+    fill: var(--bg-primary); fill-opacity: 0.7;
+  }
+  .node.highlighted .node-bg { filter: brightness(1.4); }
+  .node.dimmed { opacity: 0.12; }
+  .link.dimmed { stroke-opacity: 0.04; }
+  .link.highlighted { stroke-opacity: 0.9; stroke-width: 3; }
+
+  /* ---- Account Info ---- */
+  .sidebar-section.account-section {
+    background: linear-gradient(180deg, rgba(17, 199, 230, 0.06) 0%, transparent 100%);
+    padding: 10px 20px;
+  }
+  .account-info { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .account-info-item { font-size: 11px; }
+  .account-info-label { color: var(--text-muted); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .account-info-value { color: var(--text-secondary); margin-top: 1px; word-break: break-all; }
+
+  /* ---- Highlights ---- */
+  .highlight-checkbox {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 0; font-size: 12px; color: var(--text-secondary); cursor: pointer;
+  }
+  .highlight-checkbox input[type="checkbox"] { cursor: pointer; accent-color: var(--accent); width: 14px; height: 14px; }
+  .highlight-checkbox:hover { color: var(--text-primary); }
+  .highlight-checkbox .hl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .hl-dot-firewall { background: var(--success); }
+  .hl-dot-flowlogs { background: var(--accent); }
+  .hl-dot-secgroups { background: var(--ionos-amber); }
+  .hl-dot-ipv6 { background: #3b82f6; }
+  .hl-dot-failover { background: var(--danger); }
+  .hl-dot-pcc { background: #ec4899; }
+
+  /* Highlight rings around nodes */
+  @keyframes hlRingPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .hl-ring {
+    fill: none; stroke-width: 3; pointer-events: none;
+    animation: hlRingPulse 2s ease-in-out infinite;
+  }
+
+  /* ---- Highlights Overlay ---- */
+  .highlights-overlay {
+    position: absolute; top: 16px; right: 16px; z-index: 15;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; min-width: 180px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    display: none;
+  }
+  .highlights-overlay.open { display: block; }
+  .highlights-overlay .hl-title {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;
+  }
+
+  /* ---- Toolbar ---- */
+  .toolbar {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 4px;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px; z-index: 10;
+  }
+  .toolbar button {
+    position: relative;
+    background: none; border: none; color: var(--text-secondary);
+    padding: 6px 10px; border-radius: 4px; cursor: pointer;
+    font-size: 13px; transition: all 0.15s;
+  }
+  .toolbar button:hover, .toolbar button:focus-visible { background: var(--bg-tertiary); color: var(--text-primary); }
+  .toolbar button.active { background: var(--accent); color: #fff; }
+  .toolbar-divider { width: 1px; background: var(--border); margin: 2px 4px; }
+  .toolbar button::after {
+    content: attr(data-tip);
+    position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    padding: 4px 8px; margin-bottom: 6px;
+    background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border);
+    border-radius: 4px; font-size: 11px; white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+  .toolbar button:hover::after { opacity: 1; }
+
+  /* ---- IP View Mode ---- */
+  /* ---- Author Footer ---- */
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .sidebar-footer .author-text {
+    opacity: 0.7;
+  }
+  .sidebar-footer .author-links {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .sidebar-footer .author-links a {
+    color: var(--text-muted);
+    transition: color 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+  }
+  .sidebar-footer .author-links a:hover {
+    color: var(--accent);
+    transform: scale(1.15);
+  }
+
+  .ip-view-active .node-label { opacity: 0.12 !important; }
+  .ip-view-active .node-sublabel:not(.node-ip-label) { opacity: 0.12 !important; }
+  .ip-view-active .node-ip-label { opacity: 1 !important; font-size: 11px !important; fill: #38bdf8 !important; font-weight: 600 !important; }
+  .ip-view-active .link-label { opacity: 1 !important; fill: #38bdf8 !important; font-weight: 600 !important; }
+  .ip-view-active .link-label-bg { opacity: 0.8 !important; }
+
+  /* ---- IP Block Panel ---- */
+  .ip-block-panel { margin-top: 4px; }
+  .ip-bar-container { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .ip-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--bg-tertiary); overflow: hidden; }
+  .ip-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .ip-bar-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; min-width: 55px; text-align: right; }
+  .ip-block-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid var(--bg-tertiary); }
+  .ip-block-row:last-child { border-bottom: none; }
+  .ip-block-loc { color: var(--text-secondary); font-weight: 500; }
+  .ip-block-stat { color: var(--text-muted); }
+  .ip-block-stat .used { color: var(--accent); font-weight: 600; }
+
+  /* ---- Security Badge ---- */
+  .sg-badge { font-size: 8px; font-weight: 700; pointer-events: none; }
+
+  /* ---- Toast ---- */
+  .toast-container {
+    position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+    z-index: 200; display: flex; flex-direction: column; gap: 8px; align-items: center;
+  }
+  .toast {
+    padding: 10px 20px; border-radius: 8px; font-size: 13px; color: white;
+    animation: toast-in 0.3s ease, toast-out 0.3s ease 2.7s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .toast.error { background: var(--danger); }
+  .toast.success { background: var(--success); }
+  .toast.info { background: var(--accent); }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes toast-out { from { opacity: 1; } to { opacity: 0; } }
+
+  /* ---- Tooltip ---- */
+  .tooltip {
+    position: absolute; background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; font-size: 12px;
+    pointer-events: none; z-index: 150;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3); max-width: 280px; display: none;
+  }
+  .tooltip.visible { display: block; }
+  .tooltip .tt-title { font-weight: 700; margin-bottom: 4px; }
+  .tooltip .tt-type { color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .tooltip .tt-detail { color: var(--text-secondary); margin-top: 4px; }
+  .tooltip .tt-nic { color: var(--text-muted); font-size: 10px; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sidebar">&#x25C0;</button>
+  <div class="sidebar-header">
+    <div class="brand-row">
+      <div class="brand-logo">
+        <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- IONOS official logo mark -->
+          <rect width="64" height="64" rx="12" fill="#003D8F"/>
+          <text x="32" y="39" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="19" fill="white" letter-spacing="0.5">IONOS</text>
+        </svg>
+      </div>
+      <h1><span class="brand-cloud">IONOS Cloud</span><br>Network Visualizer</h1>
+    </div>
+    <div class="subtitle">Cloud Network Topology Visualizer</div>
+  </div>
+
+  <div class="sidebar-section account-section" id="accountSection" style="display:none;">
+    <div class="account-info" id="accountInfo"></div>
+  </div>
+
+  <div class="sidebar-section">
+    <label for="tokenInput">API Token</label>
+    <input type="password" id="tokenInput" placeholder="Paste your IONOS Cloud API token">
+    <button class="btn btn-primary" id="connectBtn" onclick="connect()">Connect</button>
+  </div>
+
+  <div class="sidebar-section">
+    <label>View Mode</label>
+    <div class="view-mode-group">
+      <button class="btn btn-primary btn-sm view-mode-btn active" id="viewModeMap" onclick="setViewMode('map')">Global Map</button>
+      <button class="btn btn-secondary btn-sm view-mode-btn" id="viewModeSingle" onclick="setViewMode('single')">Single VDC</button>
+      <button class="btn btn-secondary btn-sm view-mode-btn" id="viewModeLocation" onclick="setViewMode('location')">By Location</button>
+    </div>
+    <div id="mapView">
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;padding:4px 0;">
+        Click a region bubble on the map to see VDCs at that location, then select a VDC to view its topology.
+      </div>
+    </div>
+    <div id="singleVdcView" style="display:none;">
+      <label style="margin-top:4px;">Virtual Data Center</label>
+      <select id="dcSelect" disabled onchange="loadVDC()">
+        <option value="">-- Connect first --</option>
+      </select>
+      <button class="btn btn-secondary" id="refreshBtn" onclick="loadVDC()" disabled>Refresh</button>
+    </div>
+    <div id="locationView" style="display:none;">
+      <label style="margin-top:4px;">Location</label>
+      <select id="locSelect" disabled onchange="loadLocation()">
+        <option value="">-- Connect first --</option>
+      </select>
+      <button class="btn btn-secondary" id="refreshLocBtn" onclick="loadLocation()" disabled>Refresh</button>
+    </div>
+  </div>
+
+  <div class="sidebar-section" id="legendSection" style="display:none;">
+    <label>Resources <span id="totalCount" style="float:right;font-weight:400;text-transform:none;letter-spacing:0;"></span></label>
+    <ul class="legend-list" id="legendList"></ul>
+  </div>
+
+  <div class="sidebar-section" id="ipBlockSection" style="display:none;">
+    <label>Public IPs</label>
+    <div class="ip-block-panel" id="ipBlockPanel"></div>
+  </div>
+
+  <!-- Author Footer -->
+  <div class="sidebar-footer">
+    <span class="author-text">Built by Rijesh Haridas</span>
+    <div class="author-links">
+      <a href="https://www.linkedin.com/in/rijesh-haridas" target="_blank" rel="noopener noreferrer" title="LinkedIn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+      <a href="https://github.com/rijeshharidas" target="_blank" rel="noopener noreferrer" title="GitHub">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+    </div>
+  </div>
+</aside>
+
+<!-- Main Visualization -->
+<div class="main-area" id="mainArea">
+  <div id="mapBackground"></div>
+  <button class="map-back-btn" id="mapBackBtn" onclick="showMapOverview()">&#x2190; All Regions</button>
+  <button class="sidebar-expand" id="sidebarExpand" onclick="toggleSidebar()" title="Show sidebar">&#x25B6;</button>
+  <div class="canvas-search" id="searchSection" style="display:none;">
+    <div class="search-box">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search resources..." oninput="searchNodes(this.value)">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none;">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <!-- Highlights Overlay -->
+  <div class="highlights-overlay" id="highlightsOverlay">
+    <div class="hl-title">Highlights</div>
+    <div class="highlight-checkbox">
+      <input type="checkbox" id="hlFirewall" onchange="applyHighlights()">
+      <span class="hl-dot hl-dot-firewall"></span>
+      <span>Firewall Active</span>
+    </div>
+    <div class="highlight-checkbox">
+      <input type="checkbox" id="hlFlowLogs" onchange="applyHighlights()">
+      <span class="hl-dot hl-dot-flowlogs"></span>
+      <span>Flow Logs</span>
+    </div>
+    <div class="highlight-checkbox">
+      <input type="checkbox" id="hlSecGroups" onchange="applyHighlights()">
+      <span class="hl-dot hl-dot-secgroups"></span>
+      <span>Security Groups</span>
+    </div>
+    <div class="highlight-checkbox">
+      <input type="checkbox" id="hlIPv6" onchange="applyHighlights()">
+      <span class="hl-dot hl-dot-ipv6"></span>
+      <span>IPv6 Enabled</span>
+    </div>
+    <div class="highlight-checkbox">
+      <input type="checkbox" id="hlFailover" onchange="applyHighlights()">
+      <span class="hl-dot hl-dot-failover"></span>
+      <span>IP Failover</span>
+    </div>
+    <div class="highlight-checkbox">
+      <input type="checkbox" id="hlPCC" onchange="applyHighlights()">
+      <span class="hl-dot hl-dot-pcc"></span>
+      <span>Cross Connect</span>
+    </div>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="onboarding">
+      <div class="onboarding-header">
+        <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="12" fill="#003D8F"/>
+          <text x="32" y="39" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="19" fill="white" letter-spacing="0.5">IONOS</text>
+        </svg>
+        <h2>IONOS Cloud Network Visualizer</h2>
+        <p>Visualize your Virtual Data Center network topology in seconds</p>
+      </div>
+      <div class="onboarding-steps">
+        <div class="onboarding-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Get API Token</div>
+            <div class="step-desc">Generate a token at <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> under Management → Token Management</div>
+          </div>
+        </div>
+        <div class="onboarding-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Connect</div>
+            <div class="step-desc">Paste the token in the sidebar and click Connect</div>
+          </div>
+        </div>
+        <div class="onboarding-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">Explore</div>
+            <div class="step-desc">Select a VDC and explore your network topology interactively</div>
+          </div>
+        </div>
+      </div>
+      <div class="onboarding-footer">
+        Press <kbd>?</kbd> for keyboard shortcuts
+      </div>
+    </div>
+  </div>
+
+  <svg id="graphSvg"></svg>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-stages" id="loadingStages">
+      <div class="loading-stage" data-stage="0">Authenticating</div>
+      <div class="loading-stage" data-stage="1">Servers & LANs</div>
+      <div class="loading-stage" data-stage="2">Managed Services</div>
+      <div class="loading-stage" data-stage="3">Building Graph</div>
+    </div>
+    <div class="loading-bar"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
+    <div class="loading-text" id="loadingText">Loading resources...</div>
+  </div>
+
+  <div class="toolbar" id="toolbar" style="display:none;">
+    <button onclick="zoomIn()" aria-label="Zoom in" data-tip="Zoom in (+)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6M11 8v6"/></svg>
+    </button>
+    <button onclick="zoomOut()" aria-label="Zoom out" data-tip="Zoom out (-)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6"/></svg>
+    </button>
+    <button onclick="zoomFit()" aria-label="Fit to view" data-tip="Fit to view (F)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+    </button>
+    <button onclick="toggleLabels()" aria-label="Toggle labels" data-tip="Toggle labels (L)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+    </button>
+    <button onclick="toggleIPView()" id="ipViewBtn" aria-label="Toggle IP view" data-tip="IP view (I)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 9V4h16v5M4 15v5h16v-5"/><text x="12" y="13.5" text-anchor="middle" font-size="8" font-weight="700" font-family="monospace" fill="currentColor" stroke="none">IP</text></svg>
+    </button>
+    <button onclick="toggleHighlightsOverlay()" id="hlOverlayBtn" aria-label="Toggle highlights" data-tip="Highlights (H)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </button>
+    <button onclick="toggleMapBackground()" id="mapToggleBtn" class="active" aria-label="Toggle map background" data-tip="Map background (M)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    </button>
+    <span class="toolbar-divider"></span>
+    <button onclick="exportPNG()" aria-label="Export as PNG" data-tip="Export as PNG">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    </button>
+    <button onclick="exportSVG()" aria-label="Export as SVG" data-tip="Export as SVG">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2l2-4 2 6 2-2h2"/></svg>
+    </button>
+    <button onclick="exportJSON()" aria-label="Export as JSON" data-tip="Export as JSON">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg>
+    </button>
+    <span class="toolbar-divider"></span>
+    <button onclick="resetView()" aria-label="Reset view" data-tip="Reset view (R)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9"/><path d="M3 3v6h6"/></svg>
+    </button>
+    <span class="toolbar-divider"></span>
+    <button onclick="setViewMode('map')" aria-label="Global map view" data-tip="Global map (G)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-content" id="detailContent"></div>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Shortcuts Overlay -->
+<div class="shortcuts-overlay" id="shortcutsOverlay" style="display:none;" onclick="this.style.display='none'" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+  <div class="shortcuts-dialog" onclick="event.stopPropagation()">
+    <div class="detail-header">
+      <h2>Keyboard Shortcuts</h2>
+      <button class="detail-close" onclick="document.getElementById('shortcutsOverlay').style.display='none'">&times;</button>
+    </div>
+    <table class="detail-table">
+      <tr><th>Esc</th><td>Close panel / overlay</td></tr>
+      <tr><th>Ctrl+F</th><td>Focus search bar</td></tr>
+      <tr><th>+ / -</th><td>Zoom in / out</td></tr>
+      <tr><th>F</th><td>Fit to view</td></tr>
+      <tr><th>L</th><td>Toggle labels</td></tr>
+      <tr><th>I</th><td>Toggle IP view</td></tr>
+      <tr><th>H</th><td>Toggle highlights</td></tr>
+      <tr><th>M</th><td>Toggle map background</td></tr>
+      <tr><th>G</th><td>Global map view</td></tr>
+      <tr><th>R</th><td>Reset view (clear filters)</td></tr>
+      <tr><th>?</th><td>Show this help</td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+/**
+ * IONOS Cloud Network Visualizer
+ *
+ * Interactive force-directed graph visualization of IONOS Cloud
+ * Virtual Data Center resources and their network connections.
+ *
+ * @requires D3.js v7
+ * @see https://api.ionos.com/docs/cloud/v6/
+ * @license Apache-2.0
+ */
+
+// ============================== CONFIG ==============================
+// API endpoints: most services use centralized URLs, while regional services
+// (MariaDB, VPN) use location-based subdomains (e.g., mariadb.de/fra.ionos.com)
+const API_BASES = {
+  cloud: 'https://api.ionos.com/cloudapi/v6',
+  dbaas_pg: 'https://api.ionos.com/databases/postgresql',
+  dbaas_mongo: 'https://api.ionos.com/databases/mongodb',
+  dbaas_mysql: 'https://api.ionos.com/databases/mysql',
+  dbaas_mariadb: (loc) => `https://mariadb.${loc}.ionos.com`,
+  nfs: 'https://api.ionos.com/nfs',
+  vpn: (loc) => `https://vpn.${loc}.ionos.com`,
+  kafka: (loc) => `https://kafka.${loc}.ionos.com`,
+  k8s: 'https://api.ionos.com/cloudapi/v6',
+};
+
+// ============================== LOCATION FLAGS ==============================
+const LOCATION_CITIES = {
+  'de/fra': 'Frankfurt', 'de/txl': 'Berlin', 'de/muc': 'Munich',
+  'us/las': 'Las Vegas', 'us/ewr': 'Newark', 'us/mci': 'Lenexa',
+  'gb/lhr': 'London', 'es/vit': 'Logrono', 'fr/par': 'Paris',
+  'at/vie': 'Vienna', 'nl/ams': 'Amsterdam',
+};
+
+// Coordinates [lat, lon] and zoom level for each IONOS region
+const LOCATION_COORDS = {
+  'de/fra': [50.1109, 8.6821, 10],   // Frankfurt
+  'de/txl': [52.5200, 13.4050, 10],   // Berlin
+  'de/muc': [48.1351, 11.5820, 10],   // Munich
+  'us/las': [36.1699, -115.1398, 10], // Las Vegas
+  'us/ewr': [40.6895, -74.1745, 10],  // Newark
+  'us/mci': [38.9720, -94.7347, 10],  // Lenexa
+  'gb/lhr': [51.5074, -0.1278, 10],   // London
+  'es/vit': [42.4627, -2.4500, 10],   // Logrono
+  'fr/par': [48.8566, 2.3522, 10],    // Paris
+  'at/vie': [48.2082, 16.3738, 10],   // Vienna
+  'nl/ams': [52.3676, 4.9041, 10],    // Amsterdam
+};
+
+// Extract base region from location: "de/fra/1" → "de/fra", "de/fra" → "de/fra"
+function locationRegion(location) {
+  const parts = (location || '').split('/');
+  return parts.length >= 2 ? parts.slice(0, 2).join('/') : location || '';
+}
+
+function countryFlag(location) {
+  if (!location) return '';
+  const cc = location.split('/')[0].toLowerCase();
+  if (cc.length !== 2) return '';
+  return String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + c.charCodeAt(0) - 97));
+}
+
+function locationLabel(location) {
+  const flag = countryFlag(location);
+  // Handle numbered locations: e.g. "de/fra/1" → "Frankfurt 1", "de/fra/2" → "Frankfurt 2"
+  const parts = (location || '').split('/');
+  let city;
+  if (parts.length >= 3) {
+    const base = parts.slice(0, 2).join('/');
+    const num = parts.slice(2).join('/');
+    city = LOCATION_CITIES[base] ? `${LOCATION_CITIES[base]} ${num}` : location;
+  } else {
+    city = LOCATION_CITIES[location] || location;
+  }
+  return `${flag} ${city}`;
+}
+
+// ============================== NODE TYPES ==============================
+const NODE_TYPES = {
+  internet:  { color: '#fbbf24', label: 'Internet',     radius: 26 },
+  lan:       { color: '#3b82f6', label: 'LAN',           radius: 40 },
+  server:    { color: '#10b981', label: 'Server',        radius: 28 },
+  cube:      { color: '#10b981', label: 'Cube Server',   radius: 28 },
+  postgres:  { color: '#336791', label: 'PostgreSQL',    radius: 30 },
+  mongodb:   { color: '#47A248', label: 'MongoDB',       radius: 30 },
+  mysql:     { color: '#00758f', label: 'MySQL',         radius: 30 },
+  mariadb:   { color: '#c0765a', label: 'MariaDB',       radius: 30 },
+  nfs:       { color: '#a855f7', label: 'NFS',           radius: 28 },
+  vpn_wg:    { color: '#f43f5e', label: 'VPN WireGuard', radius: 28 },
+  vpn_ipsec: { color: '#fb7185', label: 'VPN IPSec',     radius: 28 },
+  nat:       { color: '#d97706', label: 'NAT Gateway',   radius: 28 },
+  alb:       { color: '#f97316', label: 'App LB',        radius: 30 },
+  nlb:       { color: '#06b6d4', label: 'Network LB',    radius: 30 },
+  k8s_np:    { color: '#8b5cf6', label: 'K8s NodePool',  radius: 30 },
+  kafka:     { color: '#231f20', label: 'Kafka',         radius: 30 },
+  pcc:       { color: '#ec4899', label: 'Cross Connect', radius: 28 },
+};
+
+// ============================== LINK TYPES ==============================
+const LINK_TYPES = {
+  nic:             { color: '#3b82f6', dash: '0',   label: 'NIC Connection' },
+  'cross-connect': { color: '#ec4899', dash: '6,3', label: 'Cross Connect' },
+  managed:         { color: '#FFAA00', dash: '3,3', label: 'Managed Service' },
+  gateway:         { color: '#d97706', dash: '0',   label: 'Gateway' },
+  'public':        { color: '#fbbf24', dash: '4,2', label: 'Internet' },
+};
+
+// ============================== STATUS COLORS ==============================
+const STATUS_COLORS = {
+  AVAILABLE: '#10b981', RUNNING: '#10b981', ACTIVE: '#10b981',
+  BUSY: '#FFAA00', DEPLOYING: '#FFAA00', PROVISIONING: '#3b82f6',
+  INACTIVE: '#6b7280', SHUTOFF: '#6b7280', SUSPENDED: '#6b7280',
+  ERROR: '#ef4444', FAILED: '#ef4444',
+};
+
+// ============================== SVG ICON DRAWERS ==============================
+// Drawing convention: Each function draws an icon centered at (0,0) with scale parameter `s`
+// and stroke color `c`. Icons are composed of SVG primitives (circles, paths, lines) appended
+// to the provided D3 selection `g`. Use scale `s` for all dimensions to enable responsive sizing.
+const ICON_DRAW = {
+  internet(g, s, c) {
+    // Globe: circle + vertical ellipse + horizontal lines
+    g.append('circle').attr('r', s).attr('fill','none').attr('stroke',c).attr('stroke-width',1.6);
+    g.append('ellipse').attr('rx', s*0.5).attr('ry', s).attr('fill','none').attr('stroke',c).attr('stroke-width',1.2);
+    g.append('line').attr('x1',-s).attr('x2',s).attr('y1',0).attr('y2',0).attr('stroke',c).attr('stroke-width',1.2);
+    g.append('line').attr('x1',-s*0.85).attr('x2',s*0.85).attr('y1',-s*0.55).attr('y2',-s*0.55).attr('stroke',c).attr('stroke-width',0.8);
+    g.append('line').attr('x1',-s*0.85).attr('x2',s*0.85).attr('y1',s*0.55).attr('y2',s*0.55).attr('stroke',c).attr('stroke-width',0.8);
+  },
+
+  lan(g, s, c) {
+    // Network switch: horizontal bar with ports dropping down
+    const w = s * 0.85, bh = s * 0.22;
+    // Switch body (horizontal bar)
+    g.append('rect').attr('x', -w).attr('y', -bh - s*0.1).attr('width', w*2).attr('height', bh)
+      .attr('rx', 2).attr('fill', c).attr('fill-opacity', 0.15).attr('stroke', c).attr('stroke-width', 1.5);
+    // Port LEDs on the switch bar
+    const ports = 4;
+    for (let i = 0; i < ports; i++) {
+      const px = -w + (w * 2) * (i + 0.5) / ports;
+      g.append('circle').attr('cx', px).attr('cy', -s*0.1).attr('r', s*0.06).attr('fill', c);
+    }
+    // Cables dropping down from ports to endpoints
+    const drops = 3;
+    for (let i = 0; i < drops; i++) {
+      const px = -w * 0.7 + (w * 1.4) * i / (drops - 1);
+      const ey = s * 0.55;
+      g.append('line').attr('x1', px).attr('y1', bh - s*0.1).attr('x2', px).attr('y2', ey)
+        .attr('stroke', c).attr('stroke-width', 1.2).attr('stroke-opacity', 0.6);
+      g.append('rect').attr('x', px - s*0.12).attr('y', ey - s*0.06).attr('width', s*0.24).attr('height', s*0.12)
+        .attr('rx', 1).attr('fill', c).attr('fill-opacity', 0.4);
+    }
+  },
+
+  server(g, s, c) {
+    // Server rack: two stacked units with status LEDs and vents
+    const w = s*0.85, gap = s*0.08;
+    const h = s*0.42;
+    [-1, 1].forEach(dir => {
+      const y = dir * (h/2 + gap/2);
+      g.append('rect').attr('x',-w).attr('y',y - h/2).attr('width',w*2).attr('height',h)
+        .attr('rx',3).attr('fill','none').attr('stroke',c).attr('stroke-width',1.6);
+      g.append('circle').attr('cx',-w+s*0.22).attr('cy',y).attr('r',s*0.07).attr('fill',c);
+      g.append('line').attr('x1',-w+s*0.42).attr('x2',w-s*0.15).attr('y1',y).attr('y2',y)
+        .attr('stroke',c).attr('stroke-width',0.8).attr('stroke-opacity',0.5);
+    });
+  },
+
+  cube(g, s, c) {
+    // Cube: isometric cube outline
+    const h = s*0.55, w = s*0.7;
+    g.append('path')
+      .attr('d', `M0,${-h} L${w},${-h*0.35} L${w},${h*0.35} L0,${h} L${-w},${h*0.35} L${-w},${-h*0.35}Z`)
+      .attr('fill','none').attr('stroke',c).attr('stroke-width',1.6);
+    g.append('line').attr('x1',0).attr('y1',-h).attr('x2',0).attr('y2',h*0.05)
+      .attr('stroke',c).attr('stroke-width',1);
+    g.append('line').attr('x1',0).attr('y1',h*0.05).attr('x2',w).attr('y2',-h*0.35+h*0.05)
+      .attr('stroke',c).attr('stroke-width',1);
+    g.append('line').attr('x1',0).attr('y1',h*0.05).attr('x2',-w).attr('y2',-h*0.35+h*0.05)
+      .attr('stroke',c).attr('stroke-width',1);
+  },
+
+  postgres(g, s, c) {
+    // PostgreSQL elephant: simplified side-profile elephant head
+    const p = s * 0.07;
+    // Head & body
+    g.append('path')
+      .attr('d', `M${-2*p},${7*p} Q${-5*p},${4*p} ${-6*p},${0} Q${-6*p},${-5*p} ${-3*p},${-7*p} Q${0},${-9*p} ${4*p},${-7*p} Q${7*p},${-5*p} ${7*p},${-1*p} Q${7*p},${3*p} ${4*p},${5*p} Q${3*p},${6*p} ${2*p},${7*p}`)
+      .attr('fill','none').attr('stroke',c).attr('stroke-width',1.8).attr('stroke-linecap','round');
+    // Trunk
+    g.append('path')
+      .attr('d', `M${-6*p},${0} Q${-8*p},${2*p} ${-7*p},${5*p} Q${-6*p},${7*p} ${-4*p},${7*p}`)
+      .attr('fill','none').attr('stroke',c).attr('stroke-width',1.5).attr('stroke-linecap','round');
+    // Eye
+    g.append('circle').attr('cx', 2*p).attr('cy', -3*p).attr('r', p*1.1).attr('fill',c);
+    // Ear notch
+    g.append('path')
+      .attr('d', `M${-3*p},${-7*p} Q${-4*p},${-8.5*p} ${-1.5*p},${-7.5*p}`)
+      .attr('fill','none').attr('stroke',c).attr('stroke-width',1.2);
+  },
+
+  mongodb(g, s, c) {
+    // MongoDB leaf: symmetric leaf with center vein
+    const h = s*0.9, w = s*0.55;
+    g.append('path')
+      .attr('d', `M0,${h} Q0,${h*0.5} ${-w},${-h*0.1} Q${-w*0.8},${-h*0.7} 0,${-h} Q${w*0.8},${-h*0.7} ${w},${-h*0.1} Q0,${h*0.5} 0,${h}Z`)
+      .attr('fill',c).attr('fill-opacity',0.15).attr('stroke',c).attr('stroke-width',1.8);
+    // Center vein
+    g.append('line').attr('x1',0).attr('y1',-h*0.8).attr('x2',0).attr('y2',h*0.7)
+      .attr('stroke',c).attr('stroke-width',1.2);
+    // Small lines off vein
+    [-0.4, -0.1, 0.2].forEach(f => {
+      const y = h * f;
+      g.append('line').attr('x1',0).attr('y1',y).attr('x2',-w*0.4).attr('y2',y-h*0.12)
+        .attr('stroke',c).attr('stroke-width',0.8);
+      g.append('line').attr('x1',0).attr('y1',y).attr('x2',w*0.4).attr('y2',y-h*0.12)
+        .attr('stroke',c).attr('stroke-width',0.8);
+    });
+  },
+
+  mysql(g, s, c) {
+    // MySQL: database cylinder with dolphin-inspired curve
+    const w = s*0.7, h = s*0.65, ry = s*0.2;
+    // Cylinder body
+    g.append('ellipse').attr('rx',w).attr('ry',ry).attr('cy',-h/2)
+      .attr('fill',c).attr('fill-opacity',0.1).attr('stroke',c).attr('stroke-width',1.6);
+    g.append('rect').attr('x',-w).attr('y',-h/2).attr('width',w*2).attr('height',h)
+      .attr('fill',c).attr('fill-opacity',0.08).attr('stroke','none');
+    g.append('line').attr('x1',-w).attr('y1',-h/2).attr('x2',-w).attr('y2',h/2).attr('stroke',c).attr('stroke-width',1.6);
+    g.append('line').attr('x1',w).attr('y1',-h/2).attr('x2',w).attr('y2',h/2).attr('stroke',c).attr('stroke-width',1.6);
+    g.append('ellipse').attr('rx',w).attr('ry',ry).attr('cy',h/2)
+      .attr('fill',c).attr('fill-opacity',0.1).attr('stroke',c).attr('stroke-width',1.6);
+    // Middle ring
+    g.append('ellipse').attr('rx',w).attr('ry',ry*0.7).attr('cy',0)
+      .attr('fill','none').attr('stroke',c).attr('stroke-width',0.8).attr('stroke-opacity',0.5);
+  },
+
+  mariadb(g, s, c) {
+    // MariaDB: database cylinder with "M" badge
+    const w = s*0.7, h = s*0.65, ry = s*0.2;
+    g.append('ellipse').attr('rx',w).attr('ry',ry).attr('cy',-h/2)
+      .attr('fill',c).attr('fill-opacity',0.1).attr('stroke',c).attr('stroke-width',1.6);
+    g.append('rect').attr('x',-w).attr('y',-h/2).attr('width',w*2).attr('height',h)
+      .attr('fill',c).attr('fill-opacity',0.08).attr('stroke','none');
+    g.append('line').attr('x1',-w).attr('y1',-h/2).attr('x2',-w).attr('y2',h/2).attr('stroke',c).attr('stroke-width',1.6);
+    g.append('line').attr('x1',w).attr('y1',-h/2).attr('x2',w).attr('y2',h/2).attr('stroke',c).attr('stroke-width',1.6);
+    g.append('ellipse').attr('rx',w).attr('ry',ry).attr('cy',h/2)
+      .attr('fill',c).attr('fill-opacity',0.1).attr('stroke',c).attr('stroke-width',1.6);
+    // "M" letter in center
+    const mw = s*0.32, mh = s*0.3;
+    g.append('path')
+      .attr('d', `M${-mw},${mh/2} L${-mw},${-mh/2} L0,${mh*0.15} L${mw},${-mh/2} L${mw},${mh/2}`)
+      .attr('fill','none').attr('stroke',c).attr('stroke-width',2).attr('stroke-linecap','round').attr('stroke-linejoin','round');
+  },
+
+  nfs(g, s, c) {
+    // NFS: folder with network dots
+    const w = s*0.85, h = s*0.6;
+    g.append('path')
+      .attr('d', `M${-w},${-h*0.3} L${-w},${-h} L${-w*0.2},${-h} L${-w*0.05},${-h*0.55} L${w},${-h*0.55} L${w},${h} L${-w},${h}Z`)
+      .attr('fill',c).attr('fill-opacity',0.12).attr('stroke',c).attr('stroke-width',1.6).attr('stroke-linejoin','round');
+    // Network dots inside folder
+    [[-0.3,0.1],[0.1,0.1],[0.5,0.1],[-0.1,0.5],[0.3,0.5]].forEach(([fx,fy]) => {
+      g.append('circle').attr('cx',w*fx).attr('cy',h*fy).attr('r',s*0.07).attr('fill',c).attr('fill-opacity',0.6);
+    });
+    g.append('line').attr('x1',w*-0.3).attr('y1',h*0.1).attr('x2',w*0.1).attr('y2',h*0.1).attr('stroke',c).attr('stroke-width',0.7);
+    g.append('line').attr('x1',w*0.1).attr('y1',h*0.1).attr('x2',w*0.5).attr('y2',h*0.1).attr('stroke',c).attr('stroke-width',0.7);
+    g.append('line').attr('x1',w*0.1).attr('y1',h*0.1).attr('x2',w*-0.1).attr('y2',h*0.5).attr('stroke',c).attr('stroke-width',0.7);
+    g.append('line').attr('x1',w*0.1).attr('y1',h*0.1).attr('x2',w*0.3).attr('y2',h*0.5).attr('stroke',c).attr('stroke-width',0.7);
+  },
+
+  vpn_wg(g, s, c) { ICON_DRAW._shield(g, s, c); ICON_DRAW._lock(g, s*0.3, c); },
+  vpn_ipsec(g, s, c) { ICON_DRAW._shield(g, s, c); ICON_DRAW._key(g, s*0.3, c); },
+
+  _shield(g, s, c) {
+    // Shield shape
+    g.append('path')
+      .attr('d', `M0,${-s*0.9} L${s*0.75},${-s*0.5} L${s*0.75},${s*0.15} Q${s*0.6},${s*0.7} 0,${s*0.9} Q${-s*0.6},${s*0.7} ${-s*0.75},${s*0.15} L${-s*0.75},${-s*0.5}Z`)
+      .attr('fill',c).attr('fill-opacity',0.12).attr('stroke',c).attr('stroke-width',1.8);
+  },
+
+  _lock(g, s, c) {
+    // Small lock inside shield
+    g.append('rect').attr('x',-s).attr('y',-s*0.2).attr('width',s*2).attr('height',s*1.6).attr('rx',2).attr('fill',c).attr('fill-opacity',0.4);
+    g.append('path').attr('d', `M${-s*0.6},${-s*0.2} L${-s*0.6},${-s*0.8} Q${-s*0.6},${-s*1.5} 0,${-s*1.5} Q${s*0.6},${-s*1.5} ${s*0.6},${-s*0.8} L${s*0.6},${-s*0.2}`)
+      .attr('fill','none').attr('stroke',c).attr('stroke-width',1.5);
+  },
+
+  _key(g, s, c) {
+    // Small key inside shield
+    g.append('circle').attr('cx',-s*0.5).attr('cy',0).attr('r',s*0.8).attr('fill','none').attr('stroke',c).attr('stroke-width',1.5);
+    g.append('line').attr('x1',s*0.3).attr('x2',s*2).attr('y1',0).attr('y2',0).attr('stroke',c).attr('stroke-width',1.5);
+    g.append('line').attr('x1',s*1.5).attr('x2',s*1.5).attr('y1',0).attr('y2',s*0.7).attr('stroke',c).attr('stroke-width',1.2);
+  },
+
+  nat(g, s, c) {
+    // NAT Gateway: router/gateway icon — central circle with 4 directional arrows
+    const r = s * 0.28;
+    g.append('circle').attr('r', r).attr('fill', c).attr('fill-opacity', 0.15)
+      .attr('stroke', c).attr('stroke-width', 1.8);
+    // "NAT" label inside circle
+    g.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
+      .attr('font-size', s * 0.2).attr('font-weight', '700').attr('fill', c)
+      .attr('font-family', 'Arial, sans-serif').text('N');
+    // Four directional arrows (up, down, left, right)
+    const arrowLen = s * 0.35, arrowStart = r + s * 0.06, headSize = s * 0.1;
+    [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([dx, dy]) => {
+      const x1 = dx * arrowStart, y1 = dy * arrowStart;
+      const x2 = dx * (arrowStart + arrowLen), y2 = dy * (arrowStart + arrowLen);
+      g.append('line').attr('x1', x1).attr('y1', y1).attr('x2', x2).attr('y2', y2)
+        .attr('stroke', c).attr('stroke-width', 1.5);
+      // Arrowhead
+      if (dx !== 0) {
+        g.append('path').attr('d', `M${x2},${y2} l${-dx*headSize},${-headSize*0.5} l0,${headSize}Z`).attr('fill', c);
+      } else {
+        g.append('path').attr('d', `M${x2},${y2} l${-headSize*0.5},${-dy*headSize} l${headSize},0Z`).attr('fill', c);
+      }
+    });
+  },
+
+  alb(g, s, c) {
+    // Application Load Balancer: layered distribution icon (L7)
+    const lx = -s*0.65, rx = s*0.65;
+    // Incoming
+    g.append('circle').attr('cx',lx).attr('cy',0).attr('r',s*0.2).attr('fill',c).attr('fill-opacity',0.3).attr('stroke',c).attr('stroke-width',1.5);
+    // Split into 3 outgoing
+    [-s*0.55, 0, s*0.55].forEach(ty => {
+      g.append('line').attr('x1',lx+s*0.2).attr('y1',0).attr('x2',rx-s*0.15).attr('y2',ty)
+        .attr('stroke',c).attr('stroke-width',1.3);
+      g.append('circle').attr('cx',rx).attr('cy',ty).attr('r',s*0.13).attr('fill',c).attr('fill-opacity',0.4);
+    });
+    // L7 label
+    g.append('text').attr('x',lx).attr('y',s*0.05).attr('text-anchor','middle')
+      .attr('font-size', s*0.28).attr('font-weight','700').attr('fill',c).text('L7');
+  },
+
+  nlb(g, s, c) {
+    // Network Load Balancer: similar to ALB but with lightning (L4)
+    const lx = -s*0.65, rx = s*0.65;
+    g.append('circle').attr('cx',lx).attr('cy',0).attr('r',s*0.2).attr('fill',c).attr('fill-opacity',0.3).attr('stroke',c).attr('stroke-width',1.5);
+    [-s*0.55, 0, s*0.55].forEach(ty => {
+      g.append('line').attr('x1',lx+s*0.2).attr('y1',0).attr('x2',rx-s*0.15).attr('y2',ty)
+        .attr('stroke',c).attr('stroke-width',1.3);
+      g.append('circle').attr('cx',rx).attr('cy',ty).attr('r',s*0.13).attr('fill',c).attr('fill-opacity',0.4);
+    });
+    // L4 label
+    g.append('text').attr('x',lx).attr('y',s*0.05).attr('text-anchor','middle')
+      .attr('font-size', s*0.28).attr('font-weight','700').attr('fill',c).text('L4');
+  },
+
+  k8s_np(g, s, c) {
+    // Kubernetes: official 7-spoke helm wheel
+    const spokes = 7;
+    const outerR = s * 0.88;
+    const innerR = s * 0.32;
+    const dotR = s * 0.1;
+    // Draw spokes
+    for (let i = 0; i < spokes; i++) {
+      const angle = (Math.PI * 2 / spokes) * i - Math.PI / 2;
+      const ox = outerR * Math.cos(angle);
+      const oy = outerR * Math.sin(angle);
+      const ix = innerR * Math.cos(angle);
+      const iy = innerR * Math.sin(angle);
+      g.append('line').attr('x1',ix).attr('y1',iy).attr('x2',ox).attr('y2',oy)
+        .attr('stroke',c).attr('stroke-width',1.8);
+      g.append('circle').attr('cx',ox).attr('cy',oy).attr('r',dotR).attr('fill',c);
+    }
+    // Outer heptagon connecting the dots
+    const heptPts = [];
+    for (let i = 0; i < spokes; i++) {
+      const angle = (Math.PI * 2 / spokes) * i - Math.PI / 2;
+      heptPts.push([outerR * Math.cos(angle), outerR * Math.sin(angle)]);
+    }
+    g.append('polygon')
+      .attr('points', heptPts.map(p => p.join(',')).join(' '))
+      .attr('fill','none').attr('stroke',c).attr('stroke-width',1.3).attr('stroke-opacity',0.5);
+    // Center circle
+    g.append('circle').attr('r',innerR).attr('fill',c).attr('fill-opacity',0.3).attr('stroke',c).attr('stroke-width',1.5);
+  },
+
+  kafka(g, s, c) {
+    // Kafka: streaming / event bus icon — three horizontal flow lines with arrow heads
+    const lw = s * 0.65, gap = s * 0.28, hw = s * 0.12;
+    [-1, 0, 1].forEach(row => {
+      const y = row * gap;
+      g.append('line').attr('x1', -lw).attr('y1', y).attr('x2', lw - hw).attr('y2', y)
+        .attr('stroke', c).attr('stroke-width', 2).attr('stroke-linecap', 'round');
+      g.append('path')
+        .attr('d', `M${lw - hw * 1.5},${y - hw * 0.7} L${lw},${y} L${lw - hw * 1.5},${y + hw * 0.7}`)
+        .attr('fill', 'none').attr('stroke', c).attr('stroke-width', 1.8).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+    });
+    // Small "K" letter at left side
+    const kx = -lw - s * 0.2, ky = 0, kh = s * 0.3;
+    g.append('text').attr('x', kx).attr('y', ky + kh * 0.35)
+      .attr('text-anchor', 'middle').attr('font-size', s * 0.35).attr('font-weight', '800')
+      .attr('fill', c).attr('font-family', 'Arial, sans-serif').text('K');
+  },
+
+  pcc(g, s, c) {
+    // Private Cross Connect: bridge with bidirectional arrows
+    const w = s * 0.7, gap = s * 0.22;
+    // Two horizontal lines (the "bridge")
+    g.append('line').attr('x1', -w).attr('x2', w).attr('y1', -gap).attr('y2', -gap)
+      .attr('stroke', c).attr('stroke-width', 2);
+    g.append('line').attr('x1', -w).attr('x2', w).attr('y1', gap).attr('y2', gap)
+      .attr('stroke', c).attr('stroke-width', 2);
+    // Vertical connectors at ends
+    g.append('line').attr('x1', -w).attr('x2', -w).attr('y1', -gap).attr('y2', gap)
+      .attr('stroke', c).attr('stroke-width', 1.5);
+    g.append('line').attr('x1', w).attr('x2', w).attr('y1', -gap).attr('y2', gap)
+      .attr('stroke', c).attr('stroke-width', 1.5);
+    // Right arrow in center
+    const ax = s * 0.2;
+    g.append('path').attr('d', `M${-ax},0 L${ax},0 M${ax-s*0.12},${-s*0.1} L${ax},0 L${ax-s*0.12},${s*0.1}`)
+      .attr('fill', 'none').attr('stroke', c).attr('stroke-width', 1.5).attr('stroke-linecap', 'round');
+  },
+};
+
+// ============================== SIMULATION CONFIG ==============================
+const SIM_CONFIG = {
+  linkDistance:      { lan: 170, default: 130 },
+  charge:           { pcc: -900, lan: -800, default: -350 },
+  collisionPadding: { lan: 50, default: 25 },
+  xStrength:        { pcc: 0.02, lan: 0.15, lanChild: 0.12, unattached: 0.04 },
+  yPosition:        { pcc: 0.08, internet: 0.08, nat: 0.24, lan: 0.38, lb: 0.53, default: 0.68 },
+  yStrength:        0.15,
+  labelPosition:    { sourceWeight: 0.7, targetWeight: 0.3, yOffset: -5 },
+};
+
+// ============================== STATE ==============================
+let apiToken = '';
+let datacenters = [];
+let currentDC = null;
+let graphData = { nodes: [], links: [] };
+let simulation = null;
+let svgGroup = null;
+let zoomBehavior = null;
+let showLabels = true;
+let highlightedTypes = new Set(Object.keys(NODE_TYPES));
+let currentUser = null;
+let activeHighlights = new Set();
+let currentAbortController = null;
+
+// ============================== API LAYER ==============================
+function useProxy() {
+  return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+}
+
+async function apiFetch(url, { signal } = {}) {
+  const opts = {
+    headers: {
+      'Authorization': `Bearer ${apiToken}`,
+      'Content-Type': 'application/json',
+    },
+  };
+  if (signal) opts.signal = signal;
+  let fetchUrl = url;
+  if (useProxy()) {
+    fetchUrl = `/proxy?url=${encodeURIComponent(url)}`;
+    opts.headers['X-Token'] = apiToken;
+  }
+  const resp = await fetch(fetchUrl, opts);
+  if (!resp.ok) {
+    if (resp.status === 404) return null;
+    const text = await resp.text();
+    throw new Error(`API ${resp.status}: ${text.substring(0, 200)}`);
+  }
+  return resp.json();
+}
+
+async function safeFetch(url, opts) {
+  try { return await apiFetch(url, opts); }
+  catch (e) {
+    if (e.name === 'AbortError') throw e;  // Propagate abort — don't swallow
+    console.warn(`Fetch failed for ${url}:`, e.message); return null;
+  }
+}
+
+// ============================== DATA FETCHING ==============================
+
+async function fetchDatacenters() {
+  const data = await apiFetch(`${API_BASES.cloud}/datacenters?depth=1`);
+  return (data && data.items) ? data.items : [];
+}
+
+async function fetchDCDetails(dcId) {
+  return await apiFetch(`${API_BASES.cloud}/datacenters/${dcId}?depth=5`);
+}
+
+async function fetchServerNICs(dcId, serverId) {
+  return await safeFetch(`${API_BASES.cloud}/datacenters/${dcId}/servers/${serverId}/nics?depth=2`);
+}
+
+async function fetchNatGateways(dcId) {
+  return await safeFetch(`${API_BASES.cloud}/datacenters/${dcId}/natgateways?depth=2`);
+}
+
+async function fetchALBs(dcId) {
+  return await safeFetch(`${API_BASES.cloud}/datacenters/${dcId}/applicationloadbalancers?depth=2`);
+}
+
+async function fetchNLBs(dcId) {
+  return await safeFetch(`${API_BASES.cloud}/datacenters/${dcId}/networkloadbalancers?depth=2`);
+}
+
+async function fetchPostgresClusters() {
+  return await safeFetch(`${API_BASES.dbaas_pg}/clusters`);
+}
+
+async function fetchMongoClusters() {
+  return await safeFetch(`${API_BASES.dbaas_mongo}/clusters`);
+}
+
+async function fetchMySQLClusters() {
+  return await safeFetch(`${API_BASES.dbaas_mysql}/clusters`);
+}
+
+async function fetchMariaDBClusters(location) {
+  if (!location) { console.warn('[VDC-Viz] No location for MariaDB fetch'); return null; }
+  const loc = location.replace('/', '-');
+  const base = API_BASES.dbaas_mariadb(loc);
+  return await safeFetch(`${base}/clusters`);
+}
+
+async function fetchK8sClusters() {
+  return await safeFetch(`${API_BASES.k8s}/k8s?depth=0`);
+}
+
+async function fetchK8sNodePools(clusterId) {
+  return await safeFetch(`${API_BASES.k8s}/k8s/${clusterId}/nodepools?depth=1`);
+}
+
+async function fetchNFSClusters(location) {
+  const loc = location.replace('/', '-');
+  const urls = [
+    `https://nfs.${loc}.ionos.com/clusters`,
+    `https://api.ionos.com/nfs/v1/clusters`,
+  ];
+  // Try both URLs in parallel — return whichever succeeds first
+  const results = await Promise.allSettled(urls.map(u => safeFetch(u)));
+  for (const r of results) {
+    if (r.status === 'fulfilled' && r.value) return r.value;
+  }
+  return null;
+}
+
+async function fetchVPNGateways(location) {
+  const loc = location.replace('/', '-');
+  const base = `https://vpn.${loc}.ionos.com`;
+  const [wg, ipsec] = await Promise.all([
+    safeFetch(`${base}/wireguardgateways`),
+    safeFetch(`${base}/ipsecgateways`),
+  ]);
+  return { wireguard: wg, ipsec: ipsec };
+}
+
+async function fetchKafkaClusters(location) {
+  const loc = location.replace('/', '-');
+  return safeFetch(`https://kafka.${loc}.ionos.com/clusters`);
+}
+
+async function fetchIPBlocks() {
+  return safeFetch(`${API_BASES.cloud}/ipblocks?depth=2`);
+}
+
+async function fetchSecurityGroups(dcId) {
+  return safeFetch(`${API_BASES.cloud}/datacenters/${dcId}/securitygroups?depth=2`);
+}
+
+// ============================== GRAPH BUILDER ==============================
+// Robust LAN map: stores both string and number keys for type-safe lookup
+function lanLookup(lanMap, lanId) {
+  return lanMap.get(lanId) || lanMap.get(String(lanId)) || lanMap.get(Number(lanId));
+}
+
+function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sNodePools, nfsClusters, vpnGateways, kafkaClusters) {
+  const nodes = [];
+  const links = [];
+  const dcId = dcData.id;
+  const nodeMap = new Map();
+
+  function addNode(id, type, name, data, extra = {}) {
+    if (nodeMap.has(id)) return nodeMap.get(id);
+    const node = { id, type, name, data, ...extra };
+    nodes.push(node);
+    nodeMap.set(id, node);
+    return node;
+  }
+
+  function addLink(source, target, label = '', meta = {}) {
+    links.push({ source, target, label, ...meta });
+  }
+
+  // 1. LANs
+  const lans = dcData.entities?.lans?.items || [];
+  const lanMap = new Map();
+  lans.forEach(lan => {
+    const lanId = lan.id;
+    const name = lan.properties?.name || `LAN ${lanId}`;
+    const isPublic = lan.properties?.public || false;
+    const cidr = lan.properties?.ipv4Cidr || lan.properties?.ipv4CidrBlock || '';
+    const ipv6Cidr = lan.properties?.ipv6Cidr || lan.properties?.ipv6CidrBlock || '';
+    const pcc = lan.properties?.pcc || null;
+    const ipFailover = lan.properties?.ipFailover || [];
+    addNode(`lan-${lanId}`, 'lan', name, {
+      lanId, isPublic, cidr, ipv6Cidr, pcc, ipFailover,
+      state: lan.metadata?.state,
+    });
+    // Store under multiple key types for robust lookup
+    lanMap.set(String(lanId), `lan-${lanId}`);
+    lanMap.set(Number(lanId), `lan-${lanId}`);
+
+    if (isPublic) {
+      // Single shared Internet node per VDC — created on first public LAN
+      if (!nodeMap.has('inet')) addNode('inet', 'internet', 'Internet', {});
+      addLink('inet', `lan-${lanId}`, '', { linkType: 'public' });
+    }
+  });
+
+  // 1b. Private Cross Connects — group LANs sharing the same PCC
+  const pccMap = new Map();
+  lans.forEach(lan => {
+    const pcc = lan.properties?.pcc;
+    if (pcc) {
+      if (!pccMap.has(pcc)) pccMap.set(pcc, []);
+      pccMap.get(pcc).push(lan.id);
+    }
+  });
+  pccMap.forEach((lanIds, pccId) => {
+    const shortId = pccId.substring(0, 8);
+    addNode(`pcc-${pccId}`, 'pcc', `PCC ${shortId}`, { pccId });
+    lanIds.forEach(lanId => {
+      addLink(`lan-${lanId}`, `pcc-${pccId}`, 'cross-connect', { linkType: 'cross-connect' });
+    });
+  });
+
+  // 2. Servers - with full NIC details on links
+  const servers = dcData.entities?.servers?.items || [];
+  servers.forEach(srv => {
+    const srvId = srv.id;
+    const name = srv.properties?.name || srvId;
+    const type = srv.properties?.type === 'CUBE' ? 'cube' : 'server';
+    // Server-level security groups (attached directly to the VM)
+    const srvSecGroups = srv.entities?.securitygroups?.items || [];
+    const srvSecGroupIds = srvSecGroups.map(sg => sg.properties?.name || sg.id);
+    const srvNode = addNode(`srv-${srvId}`, type, name, {
+      cores: srv.properties?.cores,
+      ram: srv.properties?.ram,
+      cpuFamily: srv.properties?.cpuFamily,
+      type: srv.properties?.type,
+      state: srv.metadata?.state,
+      vmState: srv.properties?.vmState,
+      securityGroupCount: srvSecGroups.length,
+      securityGroupIds: srvSecGroupIds,
+    });
+    if (srvSecGroups.length > 0) console.log(`[VDC-Viz] Server "${name}" has ${srvSecGroups.length} server-level SecGroup(s): ${srvSecGroupIds.join(', ')}`);
+
+    // NICs -> LAN connections (explicit NIC data on each link)
+    const nics = srv.entities?.nics?.items || [];
+    console.log(`[VDC-Viz] buildGraph: Server "${name}" has ${nics.length} NIC(s)`);
+    nics.forEach(nic => {
+      const nicLanId = nic.properties?.lan;
+      const ips = nic.properties?.ips || [];
+      const ipv6 = nic.properties?.ipv6Ips || [];
+      const mac = nic.properties?.mac || '';
+      const nicName = nic.properties?.name || '';
+      const flowLogsEnabled = (nic.entities?.flowlogs?.items?.length || 0) > 0;
+      const secGroupItems = nic.entities?.securitygroups?.items || [];
+      const securityGroupCount = secGroupItems.length;
+      const securityGroupIds = secGroupItems.map(sg => sg.properties?.name || sg.id);
+      const multiQueue = nic.properties?.nicMultiQueue === true;
+      console.log(`[VDC-Viz]   NIC "${nicName}" -> LAN ${nicLanId}, IPs: ${ips.join(',')}, flowLogs: ${flowLogsEnabled}, secGroups: ${securityGroupCount}, multiQ: ${multiQueue}`);
+      const lanNodeId = lanLookup(lanMap, nicLanId);
+      if (lanNodeId) {
+        const ipLabel = ips.length > 0 ? ips[0] : '';
+        const nicLabel = ipLabel;
+        addLink(`srv-${srvId}`, lanNodeId, nicLabel, {
+          nicId: nic.id, nicName, ips, ipv6, mac,
+          dhcp: nic.properties?.dhcp,
+          firewall: nic.properties?.firewallActive,
+          flowLogsEnabled, securityGroupCount, securityGroupIds, multiQueue,
+          linkType: 'nic',
+        });
+      } else {
+        console.warn(`[VDC-Viz]   WARNING: No LAN node found for NIC "${nicName}" -> LAN ${nicLanId}. Available LAN keys:`, [...lanMap.keys()]);
+      }
+      // Store NIC info on server node
+      if (!srvNode.data.nics) srvNode.data.nics = [];
+      srvNode.data.nics.push({ nicId: nic.id, name: nicName, lanId: nicLanId, ips, ipv6, mac, dhcp: nic.properties?.dhcp, firewall: nic.properties?.firewallActive, flowLogsEnabled, securityGroupCount, securityGroupIds, multiQueue });
+    });
+  });
+
+  // 3. NAT Gateways
+  const natItems = natGWs?.items || [];
+  natItems.forEach(gw => {
+    const gwId = gw.id;
+    const name = gw.properties?.name || `NAT GW ${gwId}`;
+    addNode(`nat-${gwId}`, 'nat', name, {
+      publicIps: gw.properties?.publicIps,
+      lans: gw.properties?.lans,
+      state: gw.metadata?.state,
+    });
+    const gwLans = gw.properties?.lans || [];
+    gwLans.forEach(l => {
+      const lanNodeId = lanLookup(lanMap, l.id);
+      if (lanNodeId) addLink(`nat-${gwId}`, lanNodeId, l.gatewayIps?.join(', ') || '', { linkType: 'gateway' });
+    });
+    // Reuse single shared Internet node
+    if (!nodeMap.has('inet')) addNode('inet', 'internet', 'Internet', {});
+    addLink(`nat-${gwId}`, 'inet', gw.properties?.publicIps?.join(', ') || '', { linkType: 'gateway' });
+  });
+
+  // 4. ALBs
+  const albItems = albs?.items || [];
+  albItems.forEach(lb => {
+    const lbId = lb.id;
+    const name = lb.properties?.name || `ALB ${lbId}`;
+    const publicIps = lb.properties?.ips || [];
+    const privateIps = lb.properties?.lbPrivateIps || [];
+    console.log(`[VDC-Viz] ALB "${name}": ips=${JSON.stringify(publicIps)}, lbPrivateIps=${JSON.stringify(privateIps)}`);
+    addNode(`alb-${lbId}`, 'alb', name, {
+      listenerLan: lb.properties?.listenerLan,
+      targetLan: lb.properties?.targetLan,
+      ips: publicIps,
+      lbPrivateIps: privateIps,
+      state: lb.metadata?.state,
+    });
+    const listenerLan = lanLookup(lanMap, lb.properties?.listenerLan);
+    if (listenerLan) addLink(`alb-${lbId}`, listenerLan, 'listener', { linkType: 'gateway' });
+    const targetLan = lanLookup(lanMap, lb.properties?.targetLan);
+    if (targetLan) addLink(`alb-${lbId}`, targetLan, 'target', { linkType: 'gateway' });
+  });
+
+  // 5. NLBs
+  const nlbItems = nlbs?.items || [];
+  nlbItems.forEach(lb => {
+    const lbId = lb.id;
+    const name = lb.properties?.name || `NLB ${lbId}`;
+    // Collect listener IPs from forwarding rules as fallback
+    const fwRules = lb.entities?.forwardingrules?.items || [];
+    const fwIps = [...new Set(fwRules.map(r => r.properties?.listenerIp).filter(Boolean))];
+    const publicIps = lb.properties?.ips || fwIps || [];
+    const privateIps = lb.properties?.lbPrivateIps || [];
+    console.log(`[VDC-Viz] NLB "${name}": ips=${JSON.stringify(publicIps)}, lbPrivateIps=${JSON.stringify(privateIps)}, fwRuleIps=${JSON.stringify(fwIps)}`);
+    addNode(`nlb-${lbId}`, 'nlb', name, {
+      listenerLan: lb.properties?.listenerLan,
+      targetLan: lb.properties?.targetLan,
+      ips: publicIps,
+      lbPrivateIps: privateIps,
+      state: lb.metadata?.state,
+    });
+    const listenerLan = lanLookup(lanMap, lb.properties?.listenerLan);
+    if (listenerLan) addLink(`nlb-${lbId}`, listenerLan, 'listener', { linkType: 'gateway' });
+    const targetLan = lanLookup(lanMap, lb.properties?.targetLan);
+    if (targetLan) addLink(`nlb-${lbId}`, targetLan, 'target', { linkType: 'gateway' });
+  });
+
+  // 6. DBaaS PostgreSQL
+  const pgItems = pgClusters?.items || [];
+  console.log(`[VDC-Viz] PostgreSQL clusters fetched: ${pgItems.length}`);
+  pgItems.forEach(cluster => {
+    const conns = cluster.properties?.connections || [];
+    console.log(`[VDC-Viz]   PG "${cluster.properties?.displayName || cluster.id}": ${conns.length} connection(s), DCs: ${conns.map(c=>c.datacenterId).join(',')}, target DC: ${dcId}`);
+    conns.forEach(conn => {
+      if (conn.datacenterId === dcId) {
+        const cId = cluster.id;
+        const name = cluster.properties?.displayName || `PG ${cId}`;
+        addNode(`pg-${cId}`, 'postgres', name, {
+          version: cluster.properties?.postgresVersion,
+          instances: cluster.properties?.instances,
+          connections: conns, state: cluster.metadata?.state,
+          dnsName: cluster.properties?.dnsName,
+          ram: cluster.properties?.ram, cores: cluster.properties?.cores,
+          storageSize: cluster.properties?.storageSize,
+        });
+        const lanNodeId = lanLookup(lanMap, conn.lanId);
+        if (lanNodeId) addLink(`pg-${cId}`, lanNodeId, conn.cidr || '', { linkType: 'managed' });
+      }
+    });
+  });
+
+  // 7. DBaaS MongoDB
+  const mongoItems = mongoClusters?.items || [];
+  console.log(`[VDC-Viz] MongoDB clusters fetched: ${mongoItems.length}`);
+  mongoItems.forEach(cluster => {
+    const conns = cluster.properties?.connections || [];
+    console.log(`[VDC-Viz]   Mongo "${cluster.properties?.displayName || cluster.id}": ${conns.length} connection(s), DCs: ${conns.map(c=>c.datacenterId).join(',')}, target DC: ${dcId}`);
+    conns.forEach(conn => {
+      if (conn.datacenterId === dcId) {
+        const cId = cluster.id;
+        const name = cluster.properties?.displayName || `Mongo ${cId}`;
+        addNode(`mongo-${cId}`, 'mongodb', name, {
+          version: cluster.properties?.mongoDBVersion,
+          instances: cluster.properties?.instances,
+          connections: conns, state: cluster.metadata?.state,
+          templateId: cluster.properties?.templateId, type: cluster.properties?.type,
+        });
+        const lanNodeId = lanLookup(lanMap, conn.lanId);
+        if (lanNodeId) addLink(`mongo-${cId}`, lanNodeId, conn.cidr || '', { linkType: 'managed' });
+      }
+    });
+  });
+
+  // 8. DBaaS MySQL
+  const mysqlItems = mysqlClusters?.items || [];
+  console.log(`[VDC-Viz] MySQL clusters fetched: ${mysqlItems.length}`);
+  mysqlItems.forEach(cluster => {
+    const conns = cluster.properties?.connections || [];
+    console.log(`[VDC-Viz]   MySQL "${cluster.properties?.displayName || cluster.id}": ${conns.length} connection(s), DCs: ${conns.map(c=>c.datacenterId).join(',')}, target DC: ${dcId}`);
+    conns.forEach(conn => {
+      if (conn.datacenterId === dcId) {
+        const cId = cluster.id;
+        const name = cluster.properties?.displayName || `MySQL ${cId}`;
+        addNode(`mysql-${cId}`, 'mysql', name, {
+          version: cluster.properties?.mysqlVersion,
+          instances: cluster.properties?.instances,
+          connections: conns, state: cluster.metadata?.state,
+        });
+        const lanNodeId = lanLookup(lanMap, conn.lanId);
+        if (lanNodeId) addLink(`mysql-${cId}`, lanNodeId, conn.cidr || '', { linkType: 'managed' });
+      }
+    });
+  });
+
+  // 8b. DBaaS MariaDB
+  const mariaItems = mariadbClusters?.items || [];
+  console.log(`[VDC-Viz] MariaDB clusters fetched: ${mariaItems.length}`);
+  mariaItems.forEach(cluster => {
+    const conns = cluster.properties?.connections || [];
+    console.log(`[VDC-Viz]   MariaDB "${cluster.properties?.displayName || cluster.id}": ${conns.length} connection(s), DCs: ${conns.map(c=>c.datacenterId).join(',')}`);
+    conns.forEach(conn => {
+      if (conn.datacenterId === dcId) {
+        const cId = cluster.id;
+        const name = cluster.properties?.displayName || cluster.properties?.name || `MariaDB ${cId}`;
+        addNode(`mariadb-${cId}`, 'mariadb', name, {
+          version: cluster.properties?.mariadbVersion,
+          instances: cluster.properties?.instances,
+          connections: conns, state: cluster.metadata?.state,
+          dnsName: cluster.properties?.dnsName,
+          ram: cluster.properties?.ram, cores: cluster.properties?.cores,
+          storageSize: cluster.properties?.storageSize,
+        });
+        const lanNodeId = lanLookup(lanMap, conn.lanId);
+        if (lanNodeId) addLink(`mariadb-${cId}`, lanNodeId, conn.cidr || '', { linkType: 'managed' });
+        else console.warn(`[VDC-Viz]   MariaDB "${name}": LAN ${conn.lanId} not found in lanMap`);
+      }
+    });
+  });
+
+  // 9. K8s Node Pools
+  k8sNodePools.forEach(({ clusterId, clusterName, pool }) => {
+    const poolLans = pool.properties?.lans || [];
+    const matchingLans = poolLans.filter(l => lanLookup(lanMap, l.id));
+    if (matchingLans.length > 0) {
+      const pId = pool.id;
+      const name = pool.properties?.name || `Pool ${pId}`;
+      addNode(`k8s-${pId}`, 'k8s_np', name, {
+        clusterName, clusterId,
+        nodeCount: pool.properties?.nodeCount,
+        k8sVersion: pool.properties?.k8sVersion,
+        coresCount: pool.properties?.coresCount,
+        ramSize: pool.properties?.ramSize,
+        storageSize: pool.properties?.storageSize,
+        state: pool.metadata?.state, lans: poolLans,
+      });
+      matchingLans.forEach(l => {
+        const lanNodeId = lanLookup(lanMap, l.id);
+        if (lanNodeId) addLink(`k8s-${pId}`, lanNodeId, '', { linkType: 'managed' });
+      });
+    }
+  });
+
+  // 10. NFS Clusters
+  // NFS API uses: conn.lan (not lanId), conn.ipAddress (not ip)
+  const nfsItems = nfsClusters?.items || [];
+  nfsItems.forEach(cluster => {
+    const conns = cluster.properties?.connections || cluster.connections || [];
+    const clusterConns = Array.isArray(conns) ? conns : [];
+    clusterConns.forEach(conn => {
+      if (conn.datacenterId === dcId) {
+        const cId = cluster.id;
+        const name = cluster.properties?.name || cluster.name || `NFS ${cId}`;
+        addNode(`nfs-${cId}`, 'nfs', name, {
+          size: cluster.properties?.size,
+          connections: clusterConns,
+          state: cluster.metadata?.state || cluster.state,
+        });
+        const nfsLanId = conn.lan || conn.lanId;
+        const nfsIp = conn.ipAddress || conn.ip || '';
+        const lanNodeId = lanLookup(lanMap, nfsLanId);
+        if (lanNodeId) addLink(`nfs-${cId}`, lanNodeId, nfsIp, { linkType: 'managed' });
+      }
+    });
+  });
+
+  // 11. VPN Gateways
+  const wgItems = vpnGateways?.wireguard?.items || [];
+  wgItems.forEach(gw => {
+    const conns = gw.properties?.connections || [];
+    conns.forEach(conn => {
+      if (conn.datacenterId === dcId) {
+        const gwId = gw.id;
+        const name = gw.properties?.name || `WG VPN ${gwId}`;
+        addNode(`vpn-wg-${gwId}`, 'vpn_wg', name, {
+          gatewayIP: gw.properties?.gatewayIP, connections: conns,
+          interfaceIPv4: conn.ipv4CIDR, interfaceIPv6: conn.ipv6CIDR,
+          state: gw.metadata?.state,
+        });
+        const lanNodeId = lanLookup(lanMap, conn.lanId);
+        if (lanNodeId) addLink(`vpn-wg-${gwId}`, lanNodeId, conn.ipv4CIDR || '', { linkType: 'managed' });
+      }
+    });
+  });
+
+  const ipsecItems = vpnGateways?.ipsec?.items || [];
+  ipsecItems.forEach(gw => {
+    const conns = gw.properties?.connections || [];
+    conns.forEach(conn => {
+      if (conn.datacenterId === dcId) {
+        const gwId = gw.id;
+        const name = gw.properties?.name || `IPSec VPN ${gwId}`;
+        addNode(`vpn-ipsec-${gwId}`, 'vpn_ipsec', name, {
+          gatewayIP: gw.properties?.gatewayIP, connections: conns,
+          state: gw.metadata?.state,
+        });
+        const lanNodeId = lanLookup(lanMap, conn.lanId);
+        if (lanNodeId) addLink(`vpn-ipsec-${gwId}`, lanNodeId, conn.ipv4CIDR || '', { linkType: 'managed' });
+      }
+    });
+  });
+
+  // 12. Kafka Clusters (Event Streams for Apache Kafka)
+  const kafkaItems = kafkaClusters?.items || [];
+  kafkaItems.forEach(cluster => {
+    const conns = cluster.properties?.connections || [];
+    conns.forEach(conn => {
+      if (conn.datacenterId === dcId) {
+        const cId = cluster.id;
+        const name = cluster.properties?.name || `Kafka ${cId}`;
+        addNode(`kafka-${cId}`, 'kafka', name, {
+          version: cluster.properties?.version,
+          size: cluster.properties?.size,
+          brokerAddresses: cluster.metadata?.brokerAddresses || conn.brokerAddresses,
+          state: cluster.metadata?.state,
+        });
+        const lanNodeId = lanLookup(lanMap, conn.lanId);
+        if (lanNodeId) addLink(`kafka-${cId}`, lanNodeId, '', { linkType: 'managed' });
+      }
+    });
+  });
+
+  return { nodes, links };
+}
+
+// ============================== VISUALIZATION ==============================
+function initSvg() {
+  const svg = d3.select('#graphSvg');
+  svg.selectAll('*').remove();
+  svgGroup = svg.append('g').attr('class', 'graph-container');
+  zoomBehavior = d3.zoom()
+    .scaleExtent([0.1, 4])
+    .on('zoom', (event) => { svgGroup.attr('transform', event.transform); });
+  svg.call(zoomBehavior);
+}
+
+// ---- Map Background (Leaflet) ----
+let bgMap = null;
+let mapVisible = true;
+
+function initMapBackground() {
+  const container = document.getElementById('mapBackground');
+  if (bgMap) { bgMap.remove(); bgMap = null; }
+  bgMap = L.map(container, {
+    zoomControl: false, attributionControl: false,
+    dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
+    boxZoom: false, keyboard: false, touchZoom: false,
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd', maxZoom: 19,
+  }).addTo(bgMap);
+}
+
+function updateMapBackground(location) {
+  const region = locationRegion(location);
+  const coords = LOCATION_COORDS[region];
+  if (!coords || !bgMap) {
+    document.getElementById('mapBackground').classList.remove('visible');
+    return;
+  }
+  bgMap.setView([coords[0], coords[1]], coords[2], { animate: false });
+  setTimeout(() => bgMap.invalidateSize(), 100);
+  if (mapVisible) document.getElementById('mapBackground').classList.add('visible');
+}
+
+function toggleMapBackground() {
+  mapVisible = !mapVisible;
+  const el = document.getElementById('mapBackground');
+  // Don't toggle passive visibility while in overview mode
+  if (el.classList.contains('overview-mode')) return;
+  el.classList.toggle('visible', mapVisible);
+  document.getElementById('mapToggleBtn')?.classList.toggle('active', mapVisible);
+}
+
+// ---- Global Map Overview ----
+let mapMarkers = [];
+let mapDrillRegion = null;  // tracks which region we're zoomed into
+
+function buildRegionClusters() {
+  const byRegion = new Map();
+  datacenters.forEach(dc => {
+    const region = locationRegion(dc.properties?.location || '');
+    if (!byRegion.has(region)) byRegion.set(region, []);
+    byRegion.get(region).push({
+      id: dc.id,
+      name: dc.properties?.name || dc.id,
+      location: dc.properties?.location || '',
+    });
+  });
+  const clusters = [];
+  byRegion.forEach((vdcs, region) => {
+    const coords = LOCATION_COORDS[region];
+    if (!coords) return;
+    clusters.push({
+      region,
+      city: LOCATION_CITIES[region] || region,
+      flag: countryFlag(region),
+      coords: [coords[0], coords[1]],
+      zoom: coords[2],
+      vdcs,
+    });
+  });
+  return clusters;
+}
+
+function clearMapMarkers() {
+  mapMarkers.forEach(m => bgMap.removeLayer(m));
+  mapMarkers = [];
+}
+
+function enableMapInteractions() {
+  bgMap.dragging.enable();
+  bgMap.scrollWheelZoom.enable();
+  bgMap.doubleClickZoom.enable();
+  bgMap.touchZoom.enable();
+  bgMap.boxZoom.enable();
+}
+
+function disableMapInteractions() {
+  bgMap.dragging.disable();
+  bgMap.scrollWheelZoom.disable();
+  bgMap.doubleClickZoom.disable();
+  bgMap.touchZoom.disable();
+  bgMap.boxZoom.disable();
+}
+
+function showMapOverview() {
+  if (!bgMap) return;
+  const el = document.getElementById('mapBackground');
+
+  // Clear previous state
+  clearMapMarkers();
+  mapDrillRegion = null;
+  document.getElementById('mapBackBtn').classList.remove('visible');
+
+  // Switch to overview mode
+  el.classList.remove('visible');
+  el.classList.add('overview-mode');
+  enableMapInteractions();
+
+  // Hide topology SVG and toolbar
+  document.getElementById('graphSvg').classList.add('hidden-for-map');
+  document.getElementById('toolbar').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'none';
+
+  // Build clusters and add markers
+  const clusters = buildRegionClusters();
+  if (clusters.length === 0) { toast('No locations with coordinates found', 'warning'); return; }
+
+  const bounds = [];
+  clusters.forEach(c => {
+    const size = Math.max(64, Math.min(90, 64 + c.vdcs.length * 6));
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="map-cluster-bubble" style="width:${size}px;height:${size}px;">
+        <span class="map-cluster-flag">${c.flag}</span>
+        <span class="map-cluster-name">${c.city}</span>
+        <span class="map-cluster-count">${c.vdcs.length} VDC${c.vdcs.length > 1 ? 's' : ''}</span>
+      </div>`,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+    });
+
+    const marker = L.marker(c.coords, { icon }).addTo(bgMap);
+    // Click cluster → zoom into region and show individual VDC markers
+    marker.on('click', () => drillIntoRegion(c));
+    mapMarkers.push(marker);
+    bounds.push(c.coords);
+  });
+
+  // Fit map to show all clusters with padding
+  if (bounds.length === 1) {
+    bgMap.setView(bounds[0], 8, { animate: false });
+  } else {
+    bgMap.fitBounds(bounds, { padding: [60, 60], maxZoom: 6, animate: false });
+  }
+  // Constrain to Europe + North America
+  bgMap.setMaxBounds([[15, -140], [72, 45]]);
+  bgMap.setMinZoom(2);
+
+  setTimeout(() => bgMap.invalidateSize(), 150);
+}
+
+function drillIntoRegion(cluster) {
+  if (!bgMap) return;
+  mapDrillRegion = cluster.region;
+
+  // Clear cluster markers
+  clearMapMarkers();
+
+  // Zoom into the region
+  bgMap.flyTo(cluster.coords, cluster.zoom + 2, { duration: 0.8 });
+
+  // Show back button
+  document.getElementById('mapBackBtn').classList.add('visible');
+
+  // After zoom animation completes, place individual VDC markers spread around the center
+  bgMap.once('moveend', () => {
+    const vdcs = cluster.vdcs;
+    const [cLat, cLon] = cluster.coords;
+    // Spread VDCs in a circle around the center
+    const spreadRadius = 0.008 * Math.max(1.5, vdcs.length * 0.6);
+
+    vdcs.forEach((v, i) => {
+      let lat, lon;
+      if (vdcs.length === 1) {
+        lat = cLat; lon = cLon;
+      } else {
+        const angle = (2 * Math.PI * i) / vdcs.length - Math.PI / 2;
+        lat = cLat + spreadRadius * Math.sin(angle);
+        lon = cLon + spreadRadius * Math.cos(angle) * 1.5; // wider horizontally
+      }
+
+      const size = 78;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="map-vdc-marker" style="width:${size}px;height:${size}px;" onclick="selectVdcFromMap('${v.id}')">
+          <span class="map-cluster-flag">${cluster.flag}</span>
+          <span class="map-cluster-name">${escapeHtml(v.name)}</span>
+        </div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+      });
+
+      const marker = L.marker([lat, lon], { icon }).addTo(bgMap);
+      mapMarkers.push(marker);
+    });
+  });
+}
+
+function hideMapOverview() {
+  if (!bgMap) return;
+  const el = document.getElementById('mapBackground');
+
+  // Stop any running D3 simulation to free CPU
+  if (simulation) { simulation.stop(); }
+
+  // Clear markers and state
+  clearMapMarkers();
+  mapDrillRegion = null;
+  document.getElementById('mapBackBtn').classList.remove('visible');
+  bgMap.closePopup();
+
+  // Disable interactions
+  disableMapInteractions();
+  bgMap.setMaxBounds(null);
+  bgMap.setMinZoom(0);
+
+  // Switch back to passive background
+  el.classList.remove('overview-mode');
+  if (mapVisible) el.classList.add('visible');
+
+  // Show topology SVG and restore toolbar if a graph exists
+  document.getElementById('graphSvg').classList.remove('hidden-for-map');
+  const hasGraph = document.querySelector('#graphSvg .graph-container');
+  document.getElementById('toolbar').style.display = hasGraph ? '' : 'none';
+  if (!hasGraph) document.getElementById('emptyState').style.display = '';
+}
+
+function selectVdcFromMap(vdcId) {
+  // Set the dropdown and switch to single VDC mode
+  document.getElementById('dcSelect').value = vdcId;
+  setViewMode('single');
+  loadVDC();
+}
+
+function drawNode(g, d) {
+  const cfg = NODE_TYPES[d.type] || NODE_TYPES.server;
+  const r = cfg.radius;
+  const c = cfg.color;
+
+  // Background shape
+  if (d.type === 'lan') {
+    // Hexagon for LANs
+    const pts = [];
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI / 3) * i - Math.PI / 6;
+      pts.push([r * Math.cos(a), r * Math.sin(a)]);
+    }
+    g.append('polygon')
+      .attr('class', 'node-bg')
+      .attr('points', pts.map(p => p.join(',')).join(' '))
+      .attr('fill', c).attr('fill-opacity', 0.15)
+      .attr('stroke', c).attr('stroke-width', 2.5);
+  } else {
+    // Circle for everything else
+    g.append('circle')
+      .attr('class', 'node-bg')
+      .attr('r', r)
+      .attr('fill', c).attr('fill-opacity', 0.12)
+      .attr('stroke', c).attr('stroke-width', 2);
+  }
+
+  // Draw icon inside
+  const iconGroup = g.append('g').attr('class', 'node-icon');
+  const iconScale = d.type === 'lan' ? r * 0.55 : r * 0.48;
+  const drawer = ICON_DRAW[d.type];
+  if (drawer) {
+    drawer(iconGroup, iconScale, c);
+  }
+
+  // Status indicator dot
+  const status = d.data?.vmState || d.data?.state || '';
+  const statusColor = STATUS_COLORS[status.toUpperCase()] || STATUS_COLORS[status];
+  if (statusColor) {
+    g.append('circle')
+      .attr('class', 'status-dot')
+      .attr('cx', r * 0.65).attr('cy', -r * 0.65)
+      .attr('r', 4)
+      .attr('fill', statusColor)
+      .attr('stroke', 'var(--bg-primary)').attr('stroke-width', 1.5);
+  }
+}
+
+function renderGraph(data) {
+  graphData = data;
+  const svg = d3.select('#graphSvg');
+  const width = document.getElementById('mainArea').clientWidth;
+  const height = document.getElementById('mainArea').clientHeight;
+
+  initSvg();
+
+  if (data.nodes.length === 0) {
+    document.getElementById('emptyState').querySelector('h2').textContent = 'No Resources Found';
+    document.getElementById('emptyState').querySelector('p').textContent = 'This Virtual Data Center has no provisioned resources.';
+    document.getElementById('emptyState').style.display = '';
+    document.getElementById('toolbar').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('toolbar').style.display = '';
+
+  // Links (drawn first, behind nodes)
+  const linkGroup = svgGroup.append('g').attr('class', 'links');
+  const link = linkGroup.selectAll('.link')
+    .data(data.links)
+    .join('line')
+    .attr('class', d => `link ${d.linkType === 'nic' ? 'nic-link' : ''}`)
+    .attr('stroke', d => {
+      const lt = LINK_TYPES[d.linkType];
+      if (lt) return lt.color;
+      const srcNode = typeof d.source === 'object' ? d.source : data.nodes.find(n => n.id === d.source);
+      return NODE_TYPES[srcNode?.type]?.color || '#475569';
+    })
+    .attr('stroke-dasharray', d => LINK_TYPES[d.linkType]?.dash || '0');
+
+  // Animate links where both endpoints are in an active/available state
+  const ACTIVE_STATES = new Set(['AVAILABLE', 'RUNNING', 'ACTIVE']);
+  const INFRA_TYPES = new Set(['internet', 'lan', 'pcc', 'nat', 'alb', 'nlb', 'vpn_wg', 'vpn_ipsec', 'nfs', 'postgres', 'mongodb', 'mysql', 'mariadb', 'k8s_np', 'kafka']);
+  const nodeByIdMap = new Map(data.nodes.map(n => [n.id, n]));
+  link.each(function(d) {
+    const sId = typeof d.source === 'object' ? d.source.id : d.source;
+    const tId = typeof d.target === 'object' ? d.target.id : d.target;
+    const sNode = nodeByIdMap.get(sId);
+    const tNode = nodeByIdMap.get(tId);
+    const sState = (sNode?.data?.state || sNode?.data?.vmState || '').toUpperCase();
+    const tState = (tNode?.data?.state || tNode?.data?.vmState || '').toUpperCase();
+    const sActive = INFRA_TYPES.has(sNode?.type) || ACTIVE_STATES.has(sState);
+    const tActive = INFRA_TYPES.has(tNode?.type) || ACTIVE_STATES.has(tState);
+    if (sActive && tActive) {
+      d3.select(this).classed('traffic-flow', true);
+    }
+  });
+
+  // Link label backgrounds (for readability)
+  const linkLabelGroup = svgGroup.append('g').attr('class', 'link-labels');
+  const labelsData = data.links.filter(d => d.label);
+
+  // Label bg rects (added after positioning in tick)
+  const linkLabelBg = linkLabelGroup.selectAll('.link-label-bg')
+    .data(labelsData)
+    .join('rect')
+    .attr('class', 'link-label-bg')
+    .attr('rx', 3).attr('ry', 3);
+
+  const linkLabel = linkLabelGroup.selectAll('.link-label')
+    .data(labelsData)
+    .join('text')
+    .attr('class', 'link-label')
+    .text(d => d.label);
+
+  // Nodes
+  const nodeGroup = svgGroup.append('g').attr('class', 'nodes');
+  const node = nodeGroup.selectAll('.node')
+    .data(data.nodes)
+    .join('g')
+    .attr('class', 'node')
+    .call(d3.drag()
+      .on('start', dragStarted)
+      .on('drag', dragged)
+      .on('end', dragEnded)
+    )
+    .on('click', (event, d) => { event.stopPropagation(); showDetail(d); highlightNode(d); })
+    .on('mouseenter', (event, d) => showTooltip(event, d))
+    .on('mousemove', (event) => moveTooltip(event))
+    .on('mouseleave', () => hideTooltip());
+
+  // Draw each node (shape + icon)
+  node.each(function(d) { drawNode(d3.select(this), d); });
+
+  // Labels below nodes
+  node.append('text')
+    .attr('class', 'node-label')
+    .attr('dy', d => (NODE_TYPES[d.type]?.radius || 28) + 16)
+    .text(d => truncate(d.name, 16));
+
+  // Sublabels (line 1)
+  node.append('text')
+    .attr('class', d => d.type === 'lan' ? 'node-sublabel node-ip-label' : 'node-sublabel')
+    .attr('dy', d => (NODE_TYPES[d.type]?.radius || 28) + 28)
+    .text(d => {
+      if (d.type === 'lan') {
+        const parts = [];
+        if (d.data.isPublic) parts.push('Public');
+        if (d.data.cidr) parts.push(d.data.cidr);
+        return parts.join(' \u2022 ') || 'Private';
+      }
+      if (d.type === 'server' || d.type === 'cube') return `${d.data.cores || '?'}C / ${formatRAM(d.data.ram)}`;
+      if (d.type === 'postgres') return `v${d.data.version || '?'}`;
+      if (d.type === 'mongodb') return `v${d.data.version || '?'}`;
+      if (d.type === 'mysql') return `v${d.data.version || '?'}`;
+      if (d.type === 'mariadb') return `v${d.data.version || '?'}`;
+      if (d.type === 'k8s_np') return `${d.data.nodeCount || '?'} nodes`;
+      if (d.type === 'kafka') return `v${d.data.version || '?'} (${d.data.size || '?'})`;
+      if (d.type === 'pcc') return 'Private Cross Connect';
+      return '';
+    });
+
+  // Sublabels (line 2) — IPs for servers & managed resources, IPv6 for LANs
+  node.append('text')
+    .attr('class', 'node-sublabel node-ip-label')
+    .attr('dy', d => (NODE_TYPES[d.type]?.radius || 28) + 39)
+    .text(d => {
+      if (d.type === 'lan') return d.data.ipv6Cidr || '';
+      // Servers: collect all NIC IPs (first IP per NIC)
+      if (d.type === 'server' || d.type === 'cube') {
+        const nics = d.data.nics || [];
+        const ips = nics.flatMap(n => n.ips || []);
+        return ips.length > 0 ? truncate(ips.join(', '), 28) : '';
+      }
+      // NAT GW: public IPs
+      if (d.type === 'nat') return (d.data.publicIps || []).join(', ') || '';
+      // ALB / NLB: public + private IPs
+      if (d.type === 'alb' || d.type === 'nlb') {
+        const pub = d.data.ips || [];
+        const priv = d.data.lbPrivateIps || [];
+        const all = [...pub, ...priv];
+        return all.length > 0 ? truncate(all.join(', '), 28) : '';
+      }
+      // VPN: gateway IP
+      if (d.type === 'vpn_wg' || d.type === 'vpn_ipsec') return d.data.gatewayIP || '';
+      // Kafka: broker addresses
+      if (d.type === 'kafka') {
+        const addrs = d.data.brokerAddresses || [];
+        return addrs.length > 0 ? truncate(addrs[0], 28) : '';
+      }
+      return '';
+    });
+
+  // ── VDC boundary boxes — created upfront and updated every tick ──
+  let vdcBoundaryEls = [];
+  if (data._vdcBoundaries && data._vdcBoundaries.length >= 1) {
+    // Insert boundary group BEHIND nodes & links (rendered first = behind)
+    const labelGroup = svgGroup.insert('g', ':first-child').attr('class', 'vdc-labels');
+    data._vdcBoundaries.forEach(vdc => {
+      const vdcG = labelGroup.append('g').attr('class', `vdc-boundary-${vdc.index}`);
+
+      const boundaryRect = vdcG.append('rect')
+        .attr('class', 'vdc-boundary-rect')
+        .attr('rx', 12).attr('ry', 12)
+        .attr('fill', 'none')
+        .attr('stroke', 'var(--border)')
+        .attr('stroke-width', 1.5)
+        .attr('stroke-dasharray', '8,4')
+        .attr('stroke-opacity', 0.5);
+
+      const labelW = vdc.name.length * 8 + 40;
+      const labelBg = vdcG.append('rect')
+        .attr('class', 'vdc-label-bg')
+        .attr('width', labelW).attr('height', 24);
+
+      const toggleText = vdcG.append('text')
+        .attr('class', 'vdc-toggle')
+        .text('\u25BC')
+        .on('click', (event) => { event.stopPropagation(); toggleVdc(vdc.index); });
+
+      const nameText = vdcG.append('text')
+        .attr('class', 'vdc-label-text')
+        .text(vdc.name)
+        .style('cursor', 'pointer')
+        .on('click', (event) => { event.stopPropagation(); toggleVdc(vdc.index); });
+
+      const collapsedLabel = vdcG.append('text')
+        .attr('class', 'vdc-collapsed-label')
+        .style('display', 'none');
+
+      vdcBoundaryEls.push({ vdc, boundaryRect, labelBg, toggleText, nameText, collapsedLabel });
+    });
+  }
+
+  // ── Connected-component clustering: give each network group its own region ──
+  // 1. Build adjacency list
+  const adj = new Map();
+  data.nodes.forEach(n => adj.set(n.id, []));
+  data.links.forEach(l => {
+    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+    if (adj.has(sId)) adj.get(sId).push(tId);
+    if (adj.has(tId)) adj.get(tId).push(sId);
+  });
+
+  // 2. Find connected components via BFS
+  const visitedNodes = new Set();
+  const components = [];
+  data.nodes.forEach(n => {
+    if (visitedNodes.has(n.id)) return;
+    const comp = [];
+    const queue = [n.id];
+    visitedNodes.add(n.id);
+    while (queue.length) {
+      const curr = queue.shift();
+      comp.push(curr);
+      for (const nb of (adj.get(curr) || [])) {
+        if (!visitedNodes.has(nb)) { visitedNodes.add(nb); queue.push(nb); }
+      }
+    }
+    components.push(comp);
+  });
+
+  // 3. Sort components: largest first for prominent placement
+  components.sort((a, b) => b.length - a.length);
+
+  // 4. Assign each component a horizontal band with gap between them
+  const outerMargin = width * 0.08;
+  const compGap = Math.min(200, width * 0.10);
+  const availableWidth = width - 2 * outerMargin - Math.max(0, components.length - 1) * compGap;
+  const totalNodeCount = data.nodes.length || 1;
+
+  // Each component gets width proportional to its node count (min 180px per component)
+  const minCompW = 180;
+  let rawWidths = components.map(c => Math.max(minCompW, (c.length / totalNodeCount) * availableWidth));
+  const rawTotal = rawWidths.reduce((a, b) => a + b, 0);
+  if (rawTotal > availableWidth && availableWidth > 0) {
+    const scale = availableWidth / rawTotal;
+    rawWidths = rawWidths.map(w => w * scale);
+  }
+
+  // Calculate component band start/center X
+  const compBands = [];
+  let cx = outerMargin;
+  rawWidths.forEach((w, i) => {
+    compBands.push({ left: cx, center: cx + w / 2, width: w });
+    cx += w + compGap;
+  });
+
+  // 5. Build nodeId → component index lookup
+  const nodeCompIdx = new Map();
+  components.forEach((comp, ci) => comp.forEach(id => nodeCompIdx.set(id, ci)));
+
+  // 6. Within each component, position LANs evenly and assign children
+  const nodeClusterX = new Map();
+  const lanXPositions = new Map();
+
+  components.forEach((comp, ci) => {
+    const band = compBands[ci];
+    if (!band) return;
+    const compLanIds = comp.filter(id => {
+      const nd = data.nodes.find(n => n.id === id);
+      return nd?.type === 'lan';
+    });
+
+    // Position LANs within this component's band
+    if (compLanIds.length === 0) {
+      // No LANs — center everything
+      comp.forEach(id => nodeClusterX.set(id, band.center));
+    } else {
+      const lanMargin = band.width * 0.12;
+      compLanIds.forEach((lanId, idx) => {
+        const x = compLanIds.length > 1
+          ? (band.left + lanMargin) + (idx / (compLanIds.length - 1)) * (band.width - 2 * lanMargin)
+          : band.center;
+        lanXPositions.set(lanId, x);
+        nodeClusterX.set(lanId, x);
+      });
+
+      // Assign non-LAN nodes to their connected LAN(s) — average for multi-homed
+      const nonLanIds = comp.filter(id => !lanXPositions.has(id));
+      // Direct neighbours of LANs
+      const nodeXLists = new Map();
+      data.links.forEach(l => {
+        const sId = typeof l.source === 'object' ? l.source.id : l.source;
+        const tId = typeof l.target === 'object' ? l.target.id : l.target;
+        if (lanXPositions.has(sId) && nodeCompIdx.get(tId) === ci) {
+          if (!nodeXLists.has(tId)) nodeXLists.set(tId, []);
+          nodeXLists.get(tId).push(lanXPositions.get(sId));
+        }
+        if (lanXPositions.has(tId) && nodeCompIdx.get(sId) === ci) {
+          if (!nodeXLists.has(sId)) nodeXLists.set(sId, []);
+          nodeXLists.get(sId).push(lanXPositions.get(tId));
+        }
+      });
+      nodeXLists.forEach((xs, id) => {
+        if (!nodeClusterX.has(id)) {
+          nodeClusterX.set(id, xs.reduce((a, b) => a + b, 0) / xs.length);
+        }
+      });
+
+      // Propagate through indirect chains within this component
+      let changed = true;
+      while (changed) {
+        changed = false;
+        data.links.forEach(l => {
+          const sId = typeof l.source === 'object' ? l.source.id : l.source;
+          const tId = typeof l.target === 'object' ? l.target.id : l.target;
+          if (nodeCompIdx.get(sId) !== ci && nodeCompIdx.get(tId) !== ci) return;
+          if (nodeClusterX.has(sId) && !nodeClusterX.has(tId)) {
+            nodeClusterX.set(tId, nodeClusterX.get(sId)); changed = true;
+          }
+          if (nodeClusterX.has(tId) && !nodeClusterX.has(sId)) {
+            nodeClusterX.set(sId, nodeClusterX.get(tId)); changed = true;
+          }
+        });
+      }
+
+      // Any remaining unassigned nodes in this component → center of band
+      comp.forEach(id => { if (!nodeClusterX.has(id)) nodeClusterX.set(id, band.center); });
+    }
+  });
+
+  // ── Pre-build adjacency map for O(1) access (nodeByIdMap created above) ──
+  // Adjacency map: nodeId → [connected node objects]
+  const adjacencyMap = new Map();
+  data.nodes.forEach(n => adjacencyMap.set(n.id, []));
+  data.links.forEach(l => {
+    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+    const sNode = nodeByIdMap.get(sId), tNode = nodeByIdMap.get(tId);
+    if (sNode && tNode) {
+      adjacencyMap.get(sId).push(tNode);
+      adjacencyMap.get(tId).push(sNode);
+    }
+  });
+  // Store on graphData for use by highlight/detail functions
+  graphData._nodeMap = nodeByIdMap;
+  graphData._adj = adjacencyMap;
+
+  // Pre-initialize positions for key node types so simulation starts from sensible layout
+  data.nodes.forEach(d => {
+    if (d.type === 'internet' || d.type === 'pcc') {
+      d.y = height * SIM_CONFIG.yPosition.pcc;
+      d.x = nodeClusterX.get(d.id) || width / 2;
+    } else if (d.type === 'nat') {
+      d.y = height * SIM_CONFIG.yPosition.nat;
+      d.x = nodeClusterX.get(d.id) || width / 2;
+    } else if (d.type === 'lan') {
+      d.y = height * SIM_CONFIG.yPosition.lan;
+      d.x = nodeClusterX.get(d.id) || width / 2;
+    } else if (d.type === 'alb' || d.type === 'nlb') {
+      d.y = height * SIM_CONFIG.yPosition.lb;
+      d.x = nodeClusterX.get(d.id) || width / 2;
+    }
+  });
+
+  // Force simulation — stop previous to prevent memory leak
+  if (simulation) { simulation.stop(); simulation = null; }
+  simulation = d3.forceSimulation(data.nodes)
+    .force('link', d3.forceLink(data.links).id(d => d.id).distance(d => {
+      const s = typeof d.source === 'object' ? d.source : nodeByIdMap.get(d.source);
+      const t = typeof d.target === 'object' ? d.target : nodeByIdMap.get(d.target);
+      return (s?.type === 'lan' || t?.type === 'lan') ? SIM_CONFIG.linkDistance.lan : SIM_CONFIG.linkDistance.default;
+    }))
+    .force('charge', d3.forceManyBody().strength(d => {
+      if (d.type === 'pcc') return SIM_CONFIG.charge.pcc;
+      if (d.type === 'lan') return SIM_CONFIG.charge.lan;
+      return SIM_CONFIG.charge.default;
+    }))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide().radius(d => {
+      if (d.type === 'lan') return (NODE_TYPES[d.type]?.radius || 40) + SIM_CONFIG.collisionPadding.lan;
+      return (NODE_TYPES[d.type]?.radius || 28) + SIM_CONFIG.collisionPadding.default;
+    }))
+    .force('x', d3.forceX(d => {
+      if (nodeClusterX.has(d.id)) return nodeClusterX.get(d.id);
+      return width / 2;
+    }).strength(d => {
+      if (d.type === 'internet') return 0.08;  // Gently center Internet horizontally
+      if (d.type === 'pcc') return SIM_CONFIG.xStrength.pcc;
+      if (d.type === 'lan') return SIM_CONFIG.xStrength.lan;
+      if (nodeClusterX.has(d.id)) return SIM_CONFIG.xStrength.lanChild;
+      return SIM_CONFIG.xStrength.unattached;
+    }))
+    .force('y', d3.forceY(d => {
+      if (d.type === 'pcc') return height * SIM_CONFIG.yPosition.pcc;
+      if (d.type === 'internet') return height * SIM_CONFIG.yPosition.internet;
+      if (d.type === 'nat') return height * SIM_CONFIG.yPosition.nat;
+      if (d.type === 'lan') return height * SIM_CONFIG.yPosition.lan;
+      if (d.type === 'alb' || d.type === 'nlb') return height * SIM_CONFIG.yPosition.lb;
+      return height * SIM_CONFIG.yPosition.default;
+    }).strength(d => {
+      // Internet, PCC & NAT need stronger pull to stay in their tier
+      if (d.type === 'internet' || d.type === 'pcc') return 0.4;
+      if (d.type === 'nat') return 0.3;
+      if (d.type === 'alb' || d.type === 'nlb') return 0.25;
+      return SIM_CONFIG.yStrength;
+    }))
+    .on('tick', () => {
+      link
+        .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+
+      // Position link labels closer to the source node (server/VM side)
+      linkLabel
+        .attr('x', d => d.source.x * SIM_CONFIG.labelPosition.sourceWeight + d.target.x * SIM_CONFIG.labelPosition.targetWeight)
+        .attr('y', d => d.source.y * SIM_CONFIG.labelPosition.sourceWeight + d.target.y * SIM_CONFIG.labelPosition.targetWeight + SIM_CONFIG.labelPosition.yOffset);
+
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+
+      // Update VDC boundary positions every tick so they're visible immediately
+      vdcBoundaryEls.forEach(({ vdc, boundaryRect, labelBg, toggleText, nameText, collapsedLabel }) => {
+        const vdcNodes = data.nodes.filter(n => vdc.nodeIds.has(n.id));
+        if (vdcNodes.length === 0) return;
+        const pad = 50;
+        const minX = d3.min(vdcNodes, n => n.x) - pad;
+        const minY = d3.min(vdcNodes, n => n.y) - 70;
+        const maxX = d3.max(vdcNodes, n => n.x) + pad;
+        const maxY = d3.max(vdcNodes, n => n.y) + pad;
+
+        boundaryRect
+          .attr('x', minX - 10).attr('y', minY - 10)
+          .attr('width', maxX - minX + 20).attr('height', maxY - minY + 20);
+
+        labelBg.attr('x', minX).attr('y', minY - 30);
+        toggleText.attr('x', minX + 8).attr('y', minY - 13);
+        nameText.attr('x', minX + 22).attr('y', minY - 13);
+        collapsedLabel.attr('x', minX + 10).attr('y', minY + 12);
+      });
+    })
+    .on('end', () => {
+      // Position label backgrounds ONCE after simulation stabilizes (avoids getBBox thrashing per tick)
+      linkLabelBg.each(function(d, i) {
+        const textEl = linkLabel.nodes()[i];
+        if (textEl) {
+          const bbox = textEl.getBBox();
+          d3.select(this)
+            .attr('x', bbox.x - 3).attr('y', bbox.y - 1)
+            .attr('width', bbox.width + 6).attr('height', bbox.height + 2);
+        }
+      });
+
+    });
+
+  // Click background to deselect
+  svg.on('click', () => { clearHighlight(); closeDetail(); });
+
+  updateStats(data);
+  updateLegend(data);
+  document.getElementById('searchSection').style.display = '';
+}
+
+function dragStarted(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x; d.fy = d.y;
+}
+function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+function dragEnded(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+  d.fx = null; d.fy = null;
+}
+
+// ============================== HIGHLIGHT ==============================
+function highlightNode(d) {
+  // Build connected set using O(1) adjacency map
+  const connectedIds = new Set([d.id]);
+  if (graphData._adj) {
+    (graphData._adj.get(d.id) || []).forEach(n => connectedIds.add(n.id));
+  }
+  d3.selectAll('.node')
+    .classed('highlighted', n => n.id === d.id)
+    .classed('dimmed', n => !connectedIds.has(n.id));
+  d3.selectAll('.link')
+    .classed('highlighted', l => {
+      const sid = typeof l.source === 'object' ? l.source.id : l.source;
+      const tid = typeof l.target === 'object' ? l.target.id : l.target;
+      return sid === d.id || tid === d.id;
+    })
+    .classed('dimmed', l => {
+      const sid = typeof l.source === 'object' ? l.source.id : l.source;
+      const tid = typeof l.target === 'object' ? l.target.id : l.target;
+      return sid !== d.id && tid !== d.id;
+    });
+}
+
+function clearHighlight() {
+  d3.selectAll('.node').classed('highlighted', false).classed('dimmed', false);
+  d3.selectAll('.link').classed('highlighted', false).classed('dimmed', false);
+}
+
+// ============================== LEGEND TYPE FILTER ==============================
+function filterByType(type) {
+  if (highlightedTypes.has(type)) { highlightedTypes.delete(type); }
+  else { highlightedTypes.add(type); }
+  d3.selectAll('.node').style('display', d => highlightedTypes.has(d.type) ? '' : 'none');
+  d3.selectAll('.link').style('display', l => {
+    const sType = typeof l.source === 'object' ? l.source.type : '';
+    const tType = typeof l.target === 'object' ? l.target.type : '';
+    return highlightedTypes.has(sType) && highlightedTypes.has(tType) ? '' : 'none';
+  });
+  document.querySelectorAll('.legend-item').forEach(el => {
+    el.classList.toggle('dimmed', !highlightedTypes.has(el.dataset.type));
+  });
+}
+
+// ============================== SEARCH ==============================
+let searchTimeout = null;
+function searchNodes(query) {
+  const clear = document.getElementById('searchClear');
+  const results = document.getElementById('searchResults');
+  clear.style.display = query ? '' : 'none';
+  if (!query || query.length < 2) { results.innerHTML = ''; return; }
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    const q = query.toLowerCase();
+    const matches = graphData.nodes.filter(n => (n.name || '').toLowerCase().includes(q) || (n.id || '').toLowerCase().includes(q));
+    if (matches.length === 0) {
+      results.innerHTML = '<div class="search-result-count">No matches found</div>';
+      return;
+    }
+    let html = `<div class="search-result-count">${matches.length} match${matches.length !== 1 ? 'es' : ''}</div>`;
+    matches.slice(0, 15).forEach(n => {
+      const cfg = NODE_TYPES[n.type] || {};
+      html += `<div class="search-result-item" onclick="focusNode('${escapeHtml(n.id)}')"><span class="search-result-dot" style="background:${cfg.color}"></span><span>${escapeHtml(n.name)}</span></div>`;
+    });
+    if (matches.length > 15) html += `<div class="search-result-count">...and ${matches.length - 15} more</div>`;
+    results.innerHTML = html;
+  }, 250);
+}
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('searchClear').style.display = 'none';
+}
+
+// ============================== SIDEBAR TOGGLE ==============================
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const btn = document.getElementById('sidebarToggle');
+  const expandBtn = document.getElementById('sidebarExpand');
+  const search = document.getElementById('searchSection');
+  sidebar.classList.toggle('collapsed');
+  const isCollapsed = sidebar.classList.contains('collapsed');
+  btn.innerHTML = isCollapsed ? '&#x25B6;' : '&#x25C0;';
+  expandBtn.classList.toggle('visible', isCollapsed);
+  // Shift search bar right when expand button is visible
+  if (search) search.style.left = isCollapsed ? '58px' : '16px';
+}
+
+// ============================== DETAIL PANEL ==============================
+function showDetail(d) {
+  const panel = document.getElementById('detailPanel');
+  const content = document.getElementById('detailContent');
+  const cfg = NODE_TYPES[d.type] || {};
+
+  let html = `
+    <div class="detail-header">
+      <h2>${escapeHtml(d.name)}</h2>
+      <button class="detail-close" onclick="closeDetail()">&times;</button>
+    </div>
+    <span class="detail-badge" style="background:${cfg.color}33;color:${cfg.color}">${cfg.label || d.type}</span>
+  `;
+
+  const props = buildDetailProps(d);
+  if (props.length > 0) {
+    html += '<table class="detail-table">';
+    props.forEach(([k, v]) => {
+      html += `<tr><th>${escapeHtml(k)}</th><td>${escapeHtml(String(v))}</td></tr>`;
+    });
+    html += '</table>';
+  }
+
+  // NIC details for servers
+  if ((d.type === 'server' || d.type === 'cube') && d.data.nics && d.data.nics.length > 0) {
+    html += '<div class="detail-section-title">Network Interfaces (NICs)</div>';
+    d.data.nics.forEach((nic, i) => {
+      const badges = [];
+      if (nic.firewall) badges.push('<span style="color:#10b981;">&#x25cf; Firewall</span>');
+      if (nic.flowLogsEnabled) badges.push('<span style="color:#11C7E6;">&#x25cf; FlowLogs</span>');
+      if (nic.securityGroupCount > 0) badges.push(`<span style="color:#FFAA00;">&#x25cf; ${nic.securityGroupCount} SecGroup(s)</span>`);
+      if (nic.multiQueue) badges.push('<span style="color:#8b5cf6;">&#x25cf; MultiQ</span>');
+      html += `
+        <div style="background:var(--bg-tertiary);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:12px;">
+          <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">${escapeHtml(nic.name || `NIC ${i+1}`)}</div>
+          <div style="color:var(--text-muted);">LAN: ${nic.lanId} &middot; MAC: ${escapeHtml(nic.mac || 'N/A')}</div>
+          <div style="color:var(--text-secondary);">IPv4: ${escapeHtml((nic.ips || []).join(', ') || 'None')}</div>
+          ${nic.ipv6?.length ? `<div style="color:var(--text-muted);font-size:10px;">IPv6: ${escapeHtml(nic.ipv6.join(', '))}</div>` : ''}
+          <div style="color:var(--text-muted);font-size:10px;">DHCP: ${nic.dhcp ? 'Yes' : 'No'} &middot; Firewall: ${nic.firewall ? 'Active' : 'Off'}</div>
+          ${badges.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;font-size:10px;">${badges.join('')}</div>` : ''}
+          ${nic.securityGroupIds?.length ? `<div style="color:var(--text-muted);font-size:10px;margin-top:2px;">SG: ${nic.securityGroupIds.join(', ')}</div>` : ''}
+        </div>`;
+    });
+  }
+
+  // Network Metrics section (async load for servers)
+  if (d.type === 'server' || d.type === 'cube') {
+    html += '<div class="detail-section-title">Network Metrics</div>';
+    html += '<div id="metricsContainer"><div class="metrics-loading">Loading...</div></div>';
+    // Trigger async metrics load after panel renders
+    setTimeout(() => loadAndShowMetrics(d.id.replace(/^srv-/, '')), 50);
+  }
+
+  // Security Group Rules section (if loaded)
+  if (graphData?._securityGroups && graphData._securityGroups.size > 0) {
+    // Collect SG IDs from server-level AND NIC-level security groups
+    const sgIds = new Set();
+    if (d.type === 'server' || d.type === 'cube') {
+      (d.data.securityGroupIds || []).forEach(id => sgIds.add(id));
+      (d.data.nics || []).forEach(nic => {
+        (nic.securityGroupIds || []).forEach(id => sgIds.add(id));
+      });
+    }
+    if (sgIds.size > 0) {
+      html += '<div class="detail-section-title">Security Group Rules</div>';
+      sgIds.forEach(sgId => {
+        const sg = graphData._securityGroups.get(sgId);
+        if (!sg) return;
+        html += `<div style="font-size:11px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">${escapeHtml(sg.name)}</div>`;
+        if (sg.rules.length === 0) {
+          html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">No rules defined</div>';
+        } else {
+          sg.rules.forEach(r => {
+            const dir = r.direction === 'INGRESS' ? '\u2B07\uFE0F' : '\u2B06\uFE0F';
+            const port = r.portStart ? (r.portStart === r.portEnd ? `:${r.portStart}` : `:${r.portStart}-${r.portEnd}`) : '';
+            html += `<div style="font-size:10px;color:var(--text-muted);padding:2px 0;">${dir} ${escapeHtml(r.protocol)}${escapeHtml(port)} ${r.sourceIp ? 'from ' + escapeHtml(r.sourceIp) : ''} ${r.targetIp ? 'to ' + escapeHtml(r.targetIp) : ''}</div>`;
+          });
+        }
+      });
+    }
+  }
+
+  const connected = getConnectedNodes(d);
+  if (connected.length > 0) {
+    html += '<div class="detail-section-title">Connected Resources</div>';
+    connected.forEach(cn => {
+      const ccfg = NODE_TYPES[cn.type] || {};
+      html += `
+        <div class="connected-item" onclick="focusNode('${escapeHtml(cn.id)}')">
+          <span class="connected-dot" style="background:${ccfg.color}"></span>
+          <span>${escapeHtml(cn.name)}</span>
+        </div>`;
+    });
+  }
+
+  content.innerHTML = html;
+  panel.classList.add('open');
+}
+
+function closeDetail() { document.getElementById('detailPanel').classList.remove('open'); }
+
+function setLoadingStage(stage) {
+  const stages = document.querySelectorAll('.loading-stage');
+  const fill = document.getElementById('loadingBarFill');
+  stages.forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i < stage) el.classList.add('done');
+    else if (i === stage) el.classList.add('active');
+  });
+  if (fill) fill.style.width = `${((stage + 1) / stages.length) * 100}%`;
+}
+
+
+function resetView() {
+  highlightedTypes = new Set(Object.keys(NODE_TYPES));
+  d3.selectAll('.node').style('display', '');
+  d3.selectAll('.link').style('display', '');
+  document.querySelectorAll('.legend-item').forEach(el => el.classList.remove('dimmed'));
+  clearHighlight();
+  closeDetail();
+  clearSearch();
+  zoomFit();
+}
+
+function buildDetailProps(d) {
+  const p = [];
+  const data = d.data || {};
+
+  if (d.type === 'lan') {
+    p.push(['LAN ID', data.lanId]);
+    p.push(['Public', data.isPublic ? 'Yes' : 'No']);
+    if (data.cidr) p.push(['IPv4 CIDR', data.cidr]);
+    if (data.ipv6Cidr) p.push(['IPv6 CIDR', data.ipv6Cidr]);
+    if (data.pcc) p.push(['Cross Connect', data.pcc]);
+    if (data.ipFailover?.length) p.push(['IP Failover', data.ipFailover.map(f => `${f.ip} (NIC: ${f.nicUuid?.substring(0,8)}...)`).join(', ')]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'server' || d.type === 'cube') {
+    p.push(['Type', data.type || 'ENTERPRISE']);
+    p.push(['Cores', data.cores]);
+    p.push(['RAM', formatRAM(data.ram)]);
+    if (data.cpuFamily) p.push(['CPU', data.cpuFamily]);
+    if (data.state) p.push(['State', data.state]);
+    if (data.vmState) p.push(['VM State', data.vmState]);
+  } else if (d.type === 'postgres') {
+    if (data.version) p.push(['Version', data.version]);
+    if (data.instances) p.push(['Instances', data.instances]);
+    if (data.cores) p.push(['Cores', data.cores]);
+    if (data.ram) p.push(['RAM', formatRAM(data.ram)]);
+    if (data.storageSize) p.push(['Storage', `${data.storageSize} MB`]);
+    if (data.dnsName) p.push(['DNS', data.dnsName]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'mongodb') {
+    if (data.version) p.push(['Version', data.version]);
+    if (data.instances) p.push(['Instances', data.instances]);
+    if (data.type) p.push(['Type', data.type]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'mysql') {
+    if (data.version) p.push(['Version', data.version]);
+    if (data.instances) p.push(['Instances', data.instances]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'nat') {
+    if (data.publicIps) p.push(['Public IPs', data.publicIps.join(', ')]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'mariadb') {
+    if (data.version) p.push(['Version', data.version]);
+    if (data.instances) p.push(['Instances', data.instances]);
+    if (data.cores) p.push(['Cores', data.cores]);
+    if (data.ram) p.push(['RAM', formatRAM(data.ram)]);
+    if (data.storageSize) p.push(['Storage', `${data.storageSize} MB`]);
+    if (data.dnsName) p.push(['DNS', data.dnsName]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'alb' || d.type === 'nlb') {
+    if (data.listenerLan) p.push(['Listener LAN', data.listenerLan]);
+    if (data.targetLan) p.push(['Target LAN', data.targetLan]);
+    if (data.ips) p.push(['Public IPs', data.ips.join(', ')]);
+    if (data.lbPrivateIps) p.push(['Private IPs', data.lbPrivateIps.join(', ')]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'pcc') {
+    if (data.pccId) p.push(['PCC ID', data.pccId]);
+  } else if (d.type === 'k8s_np') {
+    if (data.clusterName) p.push(['Cluster', data.clusterName]);
+    if (data.k8sVersion) p.push(['K8s Version', data.k8sVersion]);
+    if (data.nodeCount) p.push(['Nodes', data.nodeCount]);
+    if (data.coresCount) p.push(['Cores/Node', data.coresCount]);
+    if (data.ramSize) p.push(['RAM/Node', formatRAM(data.ramSize)]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'nfs') {
+    if (data.size) p.push(['Size', data.size]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'vpn_wg' || d.type === 'vpn_ipsec') {
+    if (data.gatewayIP) p.push(['Gateway IP', data.gatewayIP]);
+    if (data.interfaceIPv4) p.push(['Interface IPv4', data.interfaceIPv4]);
+    if (data.interfaceIPv6) p.push(['Interface IPv6', data.interfaceIPv6]);
+    if (data.state) p.push(['State', data.state]);
+  } else if (d.type === 'kafka') {
+    if (data.version) p.push(['Version', data.version]);
+    if (data.size) p.push(['Size', data.size]);
+    if (data.brokerAddresses) p.push(['Private IPs', Array.isArray(data.brokerAddresses) ? data.brokerAddresses.join(', ') : data.brokerAddresses]);
+    if (data.state) p.push(['State', data.state]);
+  }
+
+  return p.filter(([k, v]) => v !== undefined && v !== null && v !== '');
+}
+
+function getConnectedNodes(d) {
+  // O(1) adjacency lookup instead of scanning all links
+  if (graphData._adj) return graphData._adj.get(d.id) || [];
+  return [];
+}
+
+function focusNode(nodeId) {
+  const node = graphData._nodeMap ? graphData._nodeMap.get(nodeId) : graphData.nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  showDetail(node);
+  highlightNode(node);
+  const svg = d3.select('#graphSvg');
+  const width = document.getElementById('mainArea').clientWidth;
+  const height = document.getElementById('mainArea').clientHeight;
+  const transform = d3.zoomIdentity.translate(width/2 - node.x, height/2 - node.y);
+  svg.transition().duration(500).call(zoomBehavior.transform, transform);
+}
+
+// ============================== TOOLTIP ==============================
+function showTooltip(event, d) {
+  const tt = document.getElementById('tooltip');
+  const cfg = NODE_TYPES[d.type] || {};
+  let detail = '';
+  let nicInfo = '';
+  if (d.type === 'lan') detail = d.data.isPublic ? 'Public LAN' : (d.data.cidr || 'Private LAN');
+  else if (d.type === 'server' || d.type === 'cube') {
+    detail = `${d.data.cores || '?'} cores, ${formatRAM(d.data.ram)}`;
+    if (d.data.nics && d.data.nics.length > 0) {
+      nicInfo = d.data.nics.map((n, i) =>
+        `NIC${i+1}: ${escapeHtml(n.ips?.join(', ') || 'no IP')} (LAN ${escapeHtml(String(n.lanId))})`
+      ).join('<br>');
+    }
+  }
+  else if (d.data?.state) detail = d.data.state;
+
+  tt.innerHTML = `
+    <div class="tt-title">${escapeHtml(d.name)}</div>
+    <div class="tt-type">${cfg.label || d.type}</div>
+    ${detail ? `<div class="tt-detail">${escapeHtml(detail)}</div>` : ''}
+    ${nicInfo ? `<div class="tt-nic">${nicInfo}</div>` : ''}
+  `;
+  tt.classList.add('visible');
+  moveTooltip(event);
+}
+
+function moveTooltip(event) {
+  const tt = document.getElementById('tooltip');
+  tt.style.left = (event.clientX + 14) + 'px';
+  tt.style.top = (event.clientY + 14) + 'px';
+}
+
+function hideTooltip() { document.getElementById('tooltip').classList.remove('visible'); }
+
+// ============================== STATS & LEGEND ==============================
+function updateStats(data) {
+  // Stats are now merged into the legend — this function just updates the total count badge
+  const total = data.nodes.length;
+  const el = document.getElementById('totalCount');
+  if (el) el.textContent = `${total} total`;
+}
+
+function updateLegend(data) {
+  const typeCounts = {};
+  data.nodes.forEach(n => { typeCounts[n.type] = (typeCounts[n.type] || 0) + 1; });
+
+  const list = document.getElementById('legendList');
+  list.innerHTML = '';
+
+  Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).forEach(([type, count]) => {
+    const cfg = NODE_TYPES[type] || {};
+    const li = document.createElement('li');
+    li.className = 'legend-item';
+    li.dataset.type = type;
+    li.onclick = () => filterByType(type);
+
+    // Mini SVG icon for legend
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('class', 'legend-icon');
+    svg.setAttribute('viewBox', '-14 -14 28 28');
+    const gEl = document.createElementNS(svgNS, 'g');
+    svg.appendChild(gEl);
+
+    // Render mini icon using D3
+    const d3g = d3.select(gEl);
+    const drawer = ICON_DRAW[type];
+    if (drawer) {
+      if (type === 'lan') {
+        // Small hexagon bg
+        const pts = [];
+        for (let i = 0; i < 6; i++) {
+          const a = (Math.PI / 3) * i - Math.PI / 6;
+          pts.push([11 * Math.cos(a), 11 * Math.sin(a)]);
+        }
+        d3g.append('polygon').attr('points', pts.map(p => p.join(',')).join(' '))
+          .attr('fill', cfg.color).attr('fill-opacity', 0.15).attr('stroke', cfg.color).attr('stroke-width', 1.5);
+      } else {
+        d3g.append('circle').attr('r', 11).attr('fill', cfg.color).attr('fill-opacity', 0.12).attr('stroke', cfg.color).attr('stroke-width', 1.5);
+      }
+      drawer(d3g.append('g'), 7, cfg.color);
+    } else {
+      d3g.append('circle').attr('r', 8).attr('fill', cfg.color).attr('fill-opacity', 0.3);
+    }
+
+    li.appendChild(svg);
+    li.insertAdjacentHTML('beforeend', `<span>${cfg.label || type}</span><span class="legend-count">${count}</span>`);
+    list.appendChild(li);
+  });
+
+  document.getElementById('legendSection').style.display = '';
+  highlightedTypes = new Set(Object.keys(typeCounts));
+}
+
+// ============================== TOOLBAR ACTIONS ==============================
+function zoomIn() { d3.select('#graphSvg').transition().duration(300).call(zoomBehavior.scaleBy, 1.4); }
+function zoomOut() { d3.select('#graphSvg').transition().duration(300).call(zoomBehavior.scaleBy, 0.7); }
+
+function zoomFit() {
+  if (graphData.nodes.length === 0) return;
+  const svg = d3.select('#graphSvg');
+  const width = document.getElementById('mainArea').clientWidth;
+  const height = document.getElementById('mainArea').clientHeight;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  graphData.nodes.forEach(n => {
+    minX = Math.min(minX, n.x - 60); maxX = Math.max(maxX, n.x + 60);
+    minY = Math.min(minY, n.y - 60); maxY = Math.max(maxY, n.y + 60);
+  });
+  const dx = maxX - minX, dy = maxY - minY;
+  const scale = Math.min(0.9 * width / dx, 0.9 * height / dy, 2);
+  const tx = width / 2 - scale * (minX + dx / 2);
+  const ty = height / 2 - scale * (minY + dy / 2);
+  svg.transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+}
+
+// ============================== HIGHLIGHTS ==============================
+/**
+ * Applies visual highlights (glow effects) to nodes based on active filter checkboxes.
+ * Highlights include firewall rules, flow logs, security groups, IPv6, failover, and PCC.
+ * Updates CSS glow classes on .node elements to indicate feature presence.
+ */
+function applyHighlights() {
+  const checks = {
+    firewall:  document.getElementById('hlFirewall')?.checked,
+    flowlogs:  document.getElementById('hlFlowLogs')?.checked,
+    secgroups: document.getElementById('hlSecGroups')?.checked,
+    ipv6:      document.getElementById('hlIPv6')?.checked,
+    failover:  document.getElementById('hlFailover')?.checked,
+    pcc:       document.getElementById('hlPCC')?.checked,
+  };
+  const anyActive = Object.values(checks).some(Boolean);
+
+  // Highlight color map
+  const HL_COLORS = {
+    firewall: '#10b981', flowlogs: '#11C7E6', secgroups: '#FFAA00',
+    ipv6: '#3b82f6', failover: '#ef4444', pcc: '#ec4899',
+  };
+
+  // Only check node types that can actually match any active highlight
+  const serverChecks = checks.firewall || checks.flowlogs || checks.secgroups;
+  const lanChecks = checks.ipv6 || checks.failover || checks.pcc;
+
+  d3.selectAll('.node').each(function(d) {
+    const el = d3.select(this);
+    // Remove old rings
+    el.selectAll('.hl-ring').remove();
+
+    if (!anyActive) return;
+
+    // Skip nodes that can't match any active check (perf: avoid processing irrelevant nodes)
+    const isServerType = d.type === 'server' || d.type === 'cube';
+    const isLanType = d.type === 'lan';
+    if (!isServerType && !isLanType) return;
+    if (isServerType && !serverChecks) return;
+    if (isLanType && !lanChecks) return;
+
+    const r = (NODE_TYPES[d.type]?.radius || 28);
+    const matched = [];
+
+    if (isServerType) {
+      const nics = d.data?.nics || [];
+      if (checks.firewall && nics.some(n => n.firewall)) matched.push('firewall');
+      if (checks.flowlogs && nics.some(n => n.flowLogsEnabled)) matched.push('flowlogs');
+      // Check both server-level and NIC-level security groups
+      const hasSrvSG = (d.data?.securityGroupCount || 0) > 0;
+      const hasNicSG = nics.some(n => n.securityGroupCount > 0);
+      if (checks.secgroups && (hasSrvSG || hasNicSG)) matched.push('secgroups');
+    } else {
+      if (checks.ipv6 && d.data?.ipv6Cidr) matched.push('ipv6');
+      if (checks.failover && d.data?.ipFailover?.length > 0) matched.push('failover');
+      if (checks.pcc && d.data?.pcc) matched.push('pcc');
+    }
+
+    if (matched.length === 0) return;
+
+    // Draw concentric rings for each matched highlight (appended ON TOP so they're visible)
+    matched.forEach((key, i) => {
+      const ringR = r + 8 + i * 6;
+      if (isLanType) {
+        const pts = [];
+        for (let j = 0; j < 6; j++) {
+          const a = (Math.PI / 3) * j - Math.PI / 6;
+          pts.push([ringR * Math.cos(a), ringR * Math.sin(a)]);
+        }
+        el.append('polygon')
+          .attr('class', 'hl-ring')
+          .attr('points', pts.map(p => p.join(',')).join(' '))
+          .attr('stroke', HL_COLORS[key])
+          .attr('stroke-dasharray', '6,3');
+      } else {
+        el.append('circle')
+          .attr('class', 'hl-ring')
+          .attr('r', ringR)
+          .attr('stroke', HL_COLORS[key])
+          .attr('stroke-dasharray', '6,3');
+      }
+    });
+  });
+}
+
+// ============================== USER INFO ==============================
+// Safely decodes JWT payload from authorization token. Handles base64url padding.
+// Returns parsed payload object on success, null on invalid token or parse error.
+function decodeJwtPayload(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.log('[VDC-Viz] Token is not JWT format (no 3 dot-separated parts)');
+      return null;
+    }
+    // Handle base64url → base64 conversion and add padding
+    let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4 !== 0) b64 += '=';
+    const payload = JSON.parse(atob(b64));
+    console.log('[VDC-Viz] JWT decoded fields:', Object.keys(payload));
+    return payload;
+  } catch (e) {
+    console.warn('[VDC-Viz] JWT decode error:', e.message);
+    return null;
+  }
+}
+
+function showUserInfo(user) {
+  if (!user) return;
+  const items = [];
+  if (user.email) items.push(`<div class="account-info-item"><div class="account-info-label">Email</div><div class="account-info-value">${escapeHtml(user.email)}</div></div>`);
+  if (user.contractNumber) items.push(`<div class="account-info-item"><div class="account-info-label">Contract</div><div class="account-info-value">${escapeHtml(String(user.contractNumber))}</div></div>`);
+  if (items.length === 0) return;
+  document.getElementById('accountInfo').innerHTML = items.join('');
+  document.getElementById('accountSection').style.display = '';
+}
+
+function toggleLabels() {
+  showLabels = !showLabels;
+  d3.selectAll('.node-label, .node-sublabel, .link-label, .link-label-bg').style('display', showLabels ? '' : 'none');
+}
+
+let ipViewActive = false;
+function toggleIPView() {
+  ipViewActive = !ipViewActive;
+  const svg = document.getElementById('graphSvg');
+  const btn = document.getElementById('ipViewBtn');
+  svg.classList.toggle('ip-view-active', ipViewActive);
+  btn.classList.toggle('active', ipViewActive);
+
+  if (ipViewActive) {
+    // Ensure IP labels and link labels are visible
+    d3.selectAll('.node-ip-label, .link-label, .link-label-bg').style('display', '');
+    // All links stay visible — only text labels are dimmed via CSS
+  }
+}
+
+function toggleHighlightsOverlay() {
+  const overlay = document.getElementById('highlightsOverlay');
+  const btn = document.getElementById('hlOverlayBtn');
+  const isOpen = overlay.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+}
+
+// Helper: returns IP text for a given node (used by IP View mode)
+function getNodeIPText(d) {
+  if (d.type === 'server' || d.type === 'cube') {
+    return (d.data.nics || []).flatMap(n => n.ips || []).length > 0;
+  }
+  if (d.type === 'nat') return (d.data.publicIps || []).length > 0;
+  if (d.type === 'alb' || d.type === 'nlb') return (d.data.ips || []).length > 0 || (d.data.lbPrivateIps || []).length > 0;
+  if (d.type === 'vpn_wg' || d.type === 'vpn_ipsec') return !!d.data.gatewayIP;
+  if (d.type === 'lan') return !!(d.data.cidr || d.data.ipv6Cidr);
+  if (d.type === 'kafka') return (d.data.brokerAddresses || []).length > 0;
+  if (d.type === 'internet') return true; // always relevant in IP view
+  return false;
+}
+
+function exportPNG() {
+  const svgEl = document.getElementById('graphSvg');
+  const bbox = svgEl.getBoundingClientRect();
+
+  // Clone SVG so we can inject inline styles without affecting the live DOM
+  const clone = svgEl.cloneNode(true);
+
+  // Set explicit width/height on the clone for proper rendering
+  clone.setAttribute('width', bbox.width);
+  clone.setAttribute('height', bbox.height);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+  // Resolve CSS variable values from computed styles
+  const cs = getComputedStyle(document.documentElement);
+  const textPrimary = cs.getPropertyValue('--text-primary').trim() || '#f1f5f9';
+  const textSecondary = cs.getPropertyValue('--text-secondary').trim() || '#a0c4e8';
+  const bgPrimary = cs.getPropertyValue('--bg-primary').trim() || '#001B41';
+
+  // Inject a <style> block with resolved (non-variable) CSS into the SVG clone
+  const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  styleEl.textContent = `
+    .node-label { font-family: Inter, sans-serif; font-size: 11px; fill: ${textPrimary}; text-anchor: middle; font-weight: 600; }
+    .node-sublabel { font-family: Inter, sans-serif; font-size: 9px; fill: ${textSecondary}; text-anchor: middle; }
+    .link { stroke-width: 2; stroke-opacity: 0.35; }
+    .link-label { font-family: Inter, sans-serif; font-size: 10px; fill: ${textSecondary}; text-anchor: middle; font-weight: 500; }
+    .link-label-bg { fill: ${bgPrimary}; fill-opacity: 0.7; }
+    .node.dimmed { opacity: 0.12; }
+    .link.dimmed { stroke-opacity: 0.04; }
+    .link.highlighted { stroke-opacity: 0.9; stroke-width: 3; }
+    .hl-ring { fill: none; stroke-width: 3; stroke-dasharray: 6,3; }
+  `;
+  clone.insertBefore(styleEl, clone.firstChild);
+
+  const serializer = new XMLSerializer();
+  const svgStr = serializer.serializeToString(clone);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = bbox.width * 2; canvas.height = bbox.height * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+  ctx.fillStyle = bgPrimary;
+  ctx.fillRect(0, 0, bbox.width, bbox.height);
+
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, bbox.width, bbox.height);
+    const a = document.createElement('a');
+    a.download = `vdc-${currentDC?.properties?.name || 'export'}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    toast('PNG exported', 'success');
+  };
+  img.onerror = () => toast('PNG export failed — try a smaller zoom level', 'error');
+  // Unicode-safe Base64 encode (replaces deprecated unescape)
+  const utf8Bytes = new TextEncoder().encode(svgStr);
+  const binStr = Array.from(utf8Bytes, b => String.fromCharCode(b)).join('');
+  img.src = 'data:image/svg+xml;base64,' + btoa(binStr);
+}
+
+function exportSVG() {
+  const svgEl = document.getElementById('graphSvg');
+  const bbox = svgEl.getBoundingClientRect();
+  const clone = svgEl.cloneNode(true);
+  clone.setAttribute('width', bbox.width);
+  clone.setAttribute('height', bbox.height);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  const cs = getComputedStyle(document.documentElement);
+  const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  styleEl.textContent = `
+    .node-label { font-family: Inter, sans-serif; font-size: 11px; fill: ${cs.getPropertyValue('--text-primary').trim()}; text-anchor: middle; font-weight: 600; }
+    .node-sublabel { font-family: Inter, sans-serif; font-size: 9px; fill: ${cs.getPropertyValue('--text-secondary').trim()}; text-anchor: middle; }
+    .link { stroke-width: 2; stroke-opacity: 0.35; }
+    .link-label { font-family: Inter, sans-serif; font-size: 10px; fill: ${cs.getPropertyValue('--text-secondary').trim()}; text-anchor: middle; font-weight: 500; }
+    .link-label-bg { fill: ${cs.getPropertyValue('--bg-primary').trim()}; fill-opacity: 0.7; }
+    svg { background: ${cs.getPropertyValue('--bg-primary').trim()}; }
+  `;
+  clone.insertBefore(styleEl, clone.firstChild);
+  const svgStr = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.download = `vdc-${currentDC?.properties?.name || 'export'}.svg`;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('SVG exported', 'success');
+}
+
+function exportJSON() {
+  if (!graphData || !graphData.nodes) { toast('No data to export', 'warning'); return; }
+  const exportData = {
+    meta: {
+      exported: new Date().toISOString(),
+      tool: 'IONOS Cloud Network Visualizer',
+      vdc: currentDC?.properties?.name || '',
+      location: currentDC?.properties?.location || '',
+    },
+    nodes: graphData.nodes.map(n => ({
+      id: n.id, type: n.type, name: n.name,
+      data: n.data || {},
+    })),
+    links: graphData.links.map(l => ({
+      source: typeof l.source === 'object' ? l.source.id : l.source,
+      target: typeof l.target === 'object' ? l.target.id : l.target,
+      label: l.label || '', linkType: l.linkType || '',
+    })),
+    stats: {
+      totalNodes: graphData.nodes.length,
+      totalLinks: graphData.links.length,
+      byType: {},
+    },
+  };
+  graphData.nodes.forEach(n => { exportData.stats.byType[n.type] = (exportData.stats.byType[n.type] || 0) + 1; });
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.download = `vdc-topology-${currentDC?.properties?.name || 'export'}.json`;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('JSON topology exported', 'success');
+}
+
+// ── IP Block Panel ──
+let ipBlockData = null;
+async function loadIPBlocks() {
+  try {
+    const data = await fetchIPBlocks();
+    console.log('[VDC-Viz] IP blocks response:', data);
+    if (!data?.items) {
+      console.warn('[VDC-Viz] No IP blocks found or fetch failed');
+      return;
+    }
+    ipBlockData = data.items;
+    console.log(`[VDC-Viz] Loaded ${ipBlockData.length} IP block(s)`);
+    renderIPBlockPanel();
+  } catch (e) { console.warn('[VDC-Viz] IP blocks fetch failed', e); }
+}
+
+function renderIPBlockPanel(filterLocation) {
+  const panel = document.getElementById('ipBlockPanel');
+  const section = document.getElementById('ipBlockSection');
+  if (!ipBlockData || ipBlockData.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+
+  // Aggregate by location
+  const byLoc = new Map();
+  ipBlockData.forEach(block => {
+    const loc = block.properties?.location || 'unknown';
+    if (!byLoc.has(loc)) byLoc.set(loc, { total: 0, used: 0, blocks: [] });
+    const entry = byLoc.get(loc);
+    const ips = block.properties?.ips || [];
+    const size = block.properties?.size || ips.length;
+    // IONOS API may use ipConsumers (camelCase) or ip_consumers (snake_case)
+    const consumers = block.properties?.ipConsumers || block.properties?.ip_consumers || [];
+    entry.total += size;
+    entry.used += consumers.length;
+    entry.blocks.push(block);
+  });
+
+  // Determine which locations to display
+  // When filtering, also match sub-locations (e.g. 'de/fra' matches 'de/fra/1')
+  let locations;
+  if (filterLocation) {
+    const baseLoc = filterLocation.split('/').slice(0, 2).join('/');
+    locations = [...byLoc.keys()].filter(k => k === filterLocation || k === baseLoc || k.startsWith(baseLoc + '/'));
+    // If no blocks match the filter, show all locations with a note
+    if (locations.length === 0) locations = [...byLoc.keys()].sort();
+  } else {
+    locations = [...byLoc.keys()].sort();
+  }
+
+  // Compute totals only for visible locations (not all locations)
+  let totalVis = 0, usedVis = 0;
+  locations.forEach(loc => {
+    const entry = byLoc.get(loc);
+    if (entry) { totalVis += entry.total; usedVis += entry.used; }
+  });
+
+  // Also compute grand totals for context
+  let totalAll = 0, usedAll = 0;
+  byLoc.forEach(v => { totalAll += v.total; usedAll += v.used; });
+
+  const pct = totalVis > 0 ? Math.round((usedVis / totalVis) * 100) : 0;
+  const barColor = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#10b981';
+
+  // Show filtered totals; if filtering, also show grand total in parentheses
+  const barLabel = filterLocation && totalVis !== totalAll
+    ? `<span class="used" style="color:${barColor}">${usedVis}</span> / ${totalVis} <span style="opacity:0.5">(${usedAll}/${totalAll} total)</span>`
+    : `<span class="used" style="color:${barColor}">${usedVis}</span> / ${totalVis}`;
+
+  let html = `<div class="ip-bar-container">
+    <div class="ip-bar"><div class="ip-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+    <div class="ip-bar-label">${barLabel}</div>
+  </div>`;
+
+  locations.forEach(loc => {
+    const entry = byLoc.get(loc);
+    if (!entry) return;
+    const flag = countryFlag(loc);
+    const city = LOCATION_CITIES[loc.split('/').slice(0, 2).join('/')] || loc;
+    html += `<div class="ip-block-row">
+      <span class="ip-block-loc">${flag} ${city}</span>
+      <span class="ip-block-stat"><span class="used">${entry.used}</span> / ${entry.total} used</span>
+    </div>`;
+  });
+
+  panel.innerHTML = html;
+}
+
+// ── Security Groups Overlay ──
+async function loadSecurityOverlay(dcId) {
+  try {
+    const data = await fetchSecurityGroups(dcId);
+    if (!data?.items || data.items.length === 0) return;
+
+    // Build map: securityGroupId → { name, rules[] }
+    const sgMap = new Map();
+    data.items.forEach(sg => {
+      const rules = sg.entities?.rules?.items || [];
+      sgMap.set(sg.id, {
+        name: sg.properties?.name || sg.id,
+        description: sg.properties?.description || '',
+        rules: rules.map(r => ({
+          name: r.properties?.name || '',
+          protocol: r.properties?.protocol || 'ANY',
+          direction: r.properties?.type || 'INGRESS',
+          sourceIp: r.properties?.sourceIp || '',
+          targetIp: r.properties?.targetIp || '',
+          portStart: r.properties?.portRangeStart,
+          portEnd: r.properties?.portRangeEnd,
+        })),
+      });
+    });
+
+    // Store on graphData for use in detail panel
+    if (graphData) graphData._securityGroups = sgMap;
+  } catch (e) { console.warn('Security groups fetch failed', e); }
+}
+
+// ── Network Metrics (IONOS Monitoring/Telemetry) ──
+// Telemetry API is Prometheus-compatible; uses same auth as Cloud API.
+// Metric names: instance_network_in_bytes, instance_network_out_bytes,
+//               instance_network_in_packets, instance_network_out_packets
+const TELEMETRY_BASE = 'https://api.ionos.com/telemetry/api/v1';
+
+async function fetchNetworkMetrics(serverId) {
+  const metricNames = ['instance_network_in_bytes', 'instance_network_out_bytes',
+                       'instance_network_in_packets', 'instance_network_out_packets'];
+  const keys = ['bytesIn', 'bytesOut', 'packetsIn', 'packetsOut'];
+
+  // Time range: last 1 hour, 60s steps (matches IONOS telemetry pattern)
+  const end = new Date();
+  const start = new Date(end.getTime() - 60 * 60 * 1000);
+  const timeParams = `&start=${start.toISOString()}&end=${end.toISOString()}&step=60`;
+
+  try {
+    const results = {};
+    const fetches = metricNames.map(async (metric, i) => {
+      try {
+        const query = `irate(${metric}{uuid="${serverId}"}[4m])`;
+        const url = `${TELEMETRY_BASE}/query_range?query=${encodeURIComponent(query)}${timeParams}`;
+        console.log(`[Metrics] Querying ${keys[i]}: ${url}`);
+        const json = await apiFetch(url);
+        console.log(`[Metrics] ${keys[i]} response:`, json);
+        // query_range returns matrix: result[].values = [[timestamp, "value"], ...]
+        const values = json?.data?.result?.[0]?.values;
+        if (values && values.length > 0) {
+          results[keys[i]] = values.map(([ts, val]) => ({ t: ts * 1000, v: parseFloat(val) || 0 }));
+        }
+      } catch (e) {
+        console.warn(`[Metrics] ${keys[i]} query failed:`, e.message);
+      }
+    });
+    await Promise.allSettled(fetches);
+    console.log('[Metrics] Final results:', Object.keys(results).map(k => `${k}: ${results[k]?.length || 0} pts`));
+    return Object.keys(results).length > 0 ? results : null;
+  } catch (e) {
+    console.warn('[VDC-Viz] Network metrics fetch failed', e);
+    return null;
+  }
+}
+
+function formatBytes(bytesPerSec) {
+  if (bytesPerSec == null || isNaN(bytesPerSec)) return 'N/A';
+  if (bytesPerSec < 1024) return `${bytesPerSec.toFixed(1)} B/s`;
+  if (bytesPerSec < 1024 * 1024) return `${(bytesPerSec / 1024).toFixed(1)} KB/s`;
+  return `${(bytesPerSec / (1024 * 1024)).toFixed(1)} MB/s`;
+}
+
+function formatPackets(pps) {
+  if (pps == null || isNaN(pps)) return 'N/A';
+  if (pps < 1000) return `${pps.toFixed(0)} pps`;
+  return `${(pps / 1000).toFixed(1)}K pps`;
+}
+
+// Render a small time-series chart into a container using D3
+function renderMetricsChart(container, seriesA, seriesB, labelA, labelB, colorA, colorB, formatter) {
+  const W = container.clientWidth || 320, H = 80;
+  const margin = { top: 4, right: 6, bottom: 18, left: 40 };
+  const w = W - margin.left - margin.right, h = H - margin.top - margin.bottom;
+
+  container.classList.add('metrics-chart');
+  const allPts = [...(seriesA || []), ...(seriesB || [])];
+  if (allPts.length === 0) {
+    container.innerHTML = '<div class="metrics-no-data">No data</div>';
+    return;
+  }
+
+  const xExtent = d3.extent(allPts, d => d.t);
+  const yMax = d3.max(allPts, d => d.v) || 1;
+  const x = d3.scaleTime().domain(xExtent).range([0, w]);
+  const y = d3.scaleLinear().domain([0, yMax * 1.1]).range([h, 0]);
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', W).attr('height', H)
+    .append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  // Axes
+  svg.append('g').attr('class', 'axis x-axis').attr('transform', `translate(0,${h})`)
+    .call(d3.axisBottom(x).ticks(4).tickFormat(d3.timeFormat('%H:%M')));
+
+  svg.append('g').attr('class', 'axis y-axis grid')
+    .call(d3.axisLeft(y).ticks(3).tickFormat(d => formatter(d)))
+    .call(g => g.selectAll('.tick line').clone().attr('x2', w).attr('class', 'grid-line'));
+
+  const line = d3.line().x(d => x(d.t)).y(d => y(d.v)).curve(d3.curveMonotoneX);
+  const area = d3.area().x(d => x(d.t)).y0(h).y1(d => y(d.v)).curve(d3.curveMonotoneX);
+
+  // Draw each series: area fill + line
+  function drawSeries(data, color) {
+    if (!data || data.length === 0) return;
+    svg.append('path').datum(data).attr('d', area)
+      .attr('fill', color).attr('fill-opacity', 0.1);
+    svg.append('path').datum(data).attr('d', line)
+      .attr('fill', 'none').attr('stroke', color).attr('stroke-width', 1.5).attr('stroke-opacity', 0.8);
+  }
+  drawSeries(seriesA, colorA);
+  drawSeries(seriesB, colorB);
+
+  // Legend with latest values
+  const lastA = seriesA?.[seriesA.length - 1]?.v;
+  const lastB = seriesB?.[seriesB.length - 1]?.v;
+  const legend = d3.select(container).append('div').attr('class', 'metrics-legend');
+  if (lastA !== undefined) legend.append('span')
+    .style('color', colorA).html(`\u25CF ${labelA}: ${formatter(lastA)}`);
+  if (lastB !== undefined) legend.append('span')
+    .style('color', colorB).html(`\u25CF ${labelB}: ${formatter(lastB)}`);
+}
+
+async function loadAndShowMetrics(serverId) {
+  const container = document.getElementById('metricsContainer');
+  if (!container) return;
+  container.innerHTML = '<div class="metrics-loading">Loading metrics...</div>';
+  const metrics = await fetchNetworkMetrics(serverId);
+  if (!metrics) {
+    container.innerHTML = '<div class="metrics-no-data">No metrics data — check browser console for details</div>';
+    return;
+  }
+  container.innerHTML = '';
+
+  // Throughput chart (bytes/s)
+  if (metrics.bytesIn || metrics.bytesOut) {
+    const chartLabel = document.createElement('div');
+    chartLabel.className = 'metrics-chart-label';
+    chartLabel.textContent = 'Throughput (last 1h)';
+    container.appendChild(chartLabel);
+    const bytesDiv = document.createElement('div');
+    container.appendChild(bytesDiv);
+    renderMetricsChart(bytesDiv, metrics.bytesIn, metrics.bytesOut, '\u2193 In', '\u2191 Out', '#10b981', '#f59e0b', formatBytes);
+  }
+
+  // Packets chart
+  if (metrics.packetsIn || metrics.packetsOut) {
+    const chartLabel = document.createElement('div');
+    chartLabel.className = 'metrics-chart-label';
+    chartLabel.textContent = 'Packets (last 1h)';
+    container.appendChild(chartLabel);
+    const pktDiv = document.createElement('div');
+    container.appendChild(pktDiv);
+    renderMetricsChart(pktDiv, metrics.packetsIn, metrics.packetsOut, '\u2193 In', '\u2191 Out', '#10b981', '#f59e0b', formatPackets);
+  }
+}
+
+// ============================== MAIN FLOWS ==============================
+async function connect() {
+  apiToken = document.getElementById('tokenInput').value.trim();
+  if (!apiToken) { toast('Please enter an API token', 'error'); return; }
+
+  const btn = document.getElementById('connectBtn');
+  btn.disabled = true;
+  btn.textContent = 'Connecting...';
+
+  try {
+    datacenters = await fetchDatacenters();
+    if (datacenters.length === 0) {
+      toast('No data centers found', 'warning');
+      return;
+    }
+
+    // Sort by name for easier selection
+    datacenters.sort((a, b) => (a.properties?.name || '').localeCompare(b.properties?.name || ''));
+
+    const sel = document.getElementById('dcSelect');
+    sel.innerHTML = '<option value="">-- Select a VDC --</option>';
+    datacenters.forEach(dc => {
+      const opt = document.createElement('option');
+      opt.value = dc.id;
+      const name = dc.properties?.name || dc.id;
+      const loc = dc.properties?.location || '';
+      const cityLabel = locationLabel(loc);
+      opt.textContent = `${name} (${cityLabel.trim()})`;
+      sel.appendChild(opt);
+    });
+    sel.disabled = false;
+    document.getElementById('refreshBtn').disabled = false;
+
+    // Populate location dropdown (grouped by region — e.g. de/fra covers de/fra/1 + de/fra/2)
+    const locMap = new Map();
+    datacenters.forEach(dc => {
+      const region = locationRegion(dc.properties?.location || '');
+      if (!locMap.has(region)) locMap.set(region, []);
+      locMap.get(region).push(dc);
+    });
+    const locSel = document.getElementById('locSelect');
+    locSel.innerHTML = '<option value="">-- Select a location --</option>';
+    [...locMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).forEach(([region, dcs]) => {
+      const opt = document.createElement('option');
+      opt.value = region;
+      opt.textContent = `${locationLabel(region).trim()} (${dcs.length} VDC${dcs.length > 1 ? 's' : ''})`;
+      locSel.appendChild(opt);
+    });
+    locSel.disabled = false;
+    document.getElementById('refreshLocBtn').disabled = false;
+
+    toast(`Found ${datacenters.length} data center(s)`, 'success');
+
+    // Initialize map and show global overview
+    initMapBackground();
+    setViewMode('map');
+
+    // Extract user info: decode JWT for uuid + contract, then fetch user by ID for email
+    const jwt = decodeJwtPayload(apiToken);
+    console.log('[VDC-Viz] JWT payload:', jwt);
+    const userInfo = { email: '', firstName: '', lastName: '', contractNumber: '' };
+
+    if (jwt) {
+      // IONOS JWT structure: fields are nested under jwt.identity {}
+      const identity = jwt.identity || {};
+      const jwtUuid = identity.uuid || '';
+      userInfo.contractNumber = String(identity.contractNumber || '') || '';
+      console.log('[VDC-Viz] JWT identity.uuid:', jwtUuid, '| contractNumber:', userInfo.contractNumber);
+
+      // Fetch user email by direct /um/users/{uuid} call
+      if (jwtUuid) {
+        try {
+          const user = await safeFetch(`${API_BASES.cloud}/um/users/${jwtUuid}`);
+          if (user?.properties) {
+            userInfo.email = user.properties.email || '';
+            userInfo.firstName = user.properties.firstname || '';
+            userInfo.lastName = user.properties.lastname || '';
+            console.log('[VDC-Viz] User found by id:', userInfo.email);
+          }
+        } catch (e) { console.warn('[VDC-Viz] User-by-id fetch failed:', e.message); }
+      }
+    }
+
+    if (userInfo.email || userInfo.contractNumber) {
+      currentUser = userInfo;
+      showUserInfo(currentUser);
+    } else {
+      console.log('[VDC-Viz] No user info available');
+    }
+
+    // Fetch IP blocks in background (non-blocking)
+    loadIPBlocks();
+  } catch (e) {
+    toast(`Connection failed: ${e.message}`, 'error');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Connect';
+  }
+}
+
+async function loadVDC() {
+  const dcId = document.getElementById('dcSelect').value;
+  if (!dcId) return;
+
+  // Cancel any in-flight requests from previous VDC load
+  if (currentAbortController) currentAbortController.abort();
+  currentAbortController = new AbortController();
+
+  showLoading('Fetching data center details...');
+  currentDC = datacenters.find(dc => dc.id === dcId);
+  const dcLocation = currentDC?.properties?.location || '';
+
+  try {
+    setLoadingText('Fetching servers, LANs, and managed services...');
+    const [dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sData, nfsClusters, vpnGateways, kafkaClusters] = await Promise.all([
+      fetchDCDetails(dcId),
+      fetchNatGateways(dcId),
+      fetchALBs(dcId),
+      fetchNLBs(dcId),
+      fetchPostgresClusters(),
+      fetchMongoClusters(),
+      fetchMySQLClusters(),
+      fetchMariaDBClusters(dcLocation),
+      fetchK8sClusters(),
+      fetchNFSClusters(dcLocation),
+      fetchVPNGateways(dcLocation),
+      fetchKafkaClusters(dcLocation),
+    ]);
+
+    // Ensure all servers have NIC data - fallback to per-server fetch if depth didn't include them
+    setLoadingText('Resolving server NICs...');
+    const servers = dcData?.entities?.servers?.items || [];
+    console.log(`[VDC-Viz] Found ${servers.length} server(s) in DC response`);
+    let nicFallbackCount = 0;
+    await Promise.all(servers.map(async (srv) => {
+      const nics = srv.entities?.nics?.items || [];
+      const hasNicProps = nics.length > 0 && nics[0].properties;
+      console.log(`[VDC-Viz] Server "${srv.properties?.name || srv.id}": ${nics.length} NIC(s), properties present: ${!!hasNicProps}`);
+      if (nics.length === 0 || !hasNicProps) {
+        // NICs missing or lacking properties - fetch them directly
+        const nicData = await fetchServerNICs(dcId, srv.id);
+        if (nicData && nicData.items && nicData.items.length > 0) {
+          if (!srv.entities) srv.entities = {};
+          srv.entities.nics = nicData;
+          nicFallbackCount++;
+          console.log(`[VDC-Viz]   -> Fetched ${nicData.items.length} NIC(s) for server "${srv.properties?.name || srv.id}"`);
+        }
+      }
+    }));
+    if (nicFallbackCount > 0) console.log(`[VDC-Viz] Used NIC fallback fetch for ${nicFallbackCount} server(s)`);
+
+    setLoadingText('Fetching Kubernetes node pools...');
+    const k8sNodePools = [];
+    const k8sClusters = k8sData?.items || [];
+    await Promise.all(k8sClusters.map(async (cluster) => {
+      const pools = await fetchK8sNodePools(cluster.id);
+      (pools?.items || []).forEach(pool => {
+        k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
+      });
+    }));
+
+    setLoadingText('Building visualization...');
+    const data = buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sNodePools, nfsClusters || {}, vpnGateways, kafkaClusters);
+
+    // Tag all nodes/links with _vdcIdx = 0 so collapse toggle works in single-VDC mode
+    data.nodes.forEach(n => n._vdcIdx = 0);
+    data.links.forEach(l => l._vdcIdx = 0);
+
+    // Attach VDC boundary info so the name label renders on the canvas
+    const vdcName = currentDC?.properties?.name || dcId;
+    data._vdcBoundaries = [{ name: vdcName, nodeIds: new Set(data.nodes.map(n => n.id)), index: 0 }];
+
+    renderGraph(data);
+    setTimeout(() => zoomFit(), 1500);
+    toast(`Loaded ${data.nodes.length} resources`, 'success');
+
+    // Update map background to show VDC region
+    updateMapBackground(dcLocation);
+
+    // Load security groups and refresh IP block panel in background (non-blocking)
+    loadSecurityOverlay(dcId);
+    if (ipBlockData) renderIPBlockPanel(dcLocation);
+  } catch (e) {
+    toast(`Failed to load VDC: ${e.message}`, 'error');
+    console.error(e);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ============================== VIEW MODE ==============================
+function setViewMode(mode) {
+  document.getElementById('mapView').style.display = mode === 'map' ? '' : 'none';
+  document.getElementById('singleVdcView').style.display = mode === 'single' ? '' : 'none';
+  document.getElementById('locationView').style.display = mode === 'location' ? '' : 'none';
+  document.getElementById('viewModeMap').classList.toggle('active', mode === 'map');
+  document.getElementById('viewModeSingle').classList.toggle('active', mode === 'single');
+  document.getElementById('viewModeLocation').classList.toggle('active', mode === 'location');
+
+  // Toggle map overview vs topology
+  if (mode === 'map') {
+    showMapOverview();
+  } else {
+    hideMapOverview();
+  }
+}
+
+const collapsedVdcs = new Set();
+
+function toggleVdc(vdcIdx) {
+  if (collapsedVdcs.has(vdcIdx)) {
+    collapsedVdcs.delete(vdcIdx);
+  } else {
+    collapsedVdcs.add(vdcIdx);
+  }
+  const isCollapsed = collapsedVdcs.has(vdcIdx);
+
+  // Toggle node visibility
+  d3.selectAll('.node').each(function(d) {
+    if (d._vdcIdx === vdcIdx) {
+      d3.select(this).style('display', isCollapsed ? 'none' : '');
+    }
+  });
+  // Toggle link visibility
+  d3.selectAll('.link').each(function(d) {
+    if (d._vdcIdx === vdcIdx) {
+      d3.select(this).style('display', isCollapsed ? 'none' : '');
+    }
+  });
+  // Toggle link labels
+  d3.selectAll('.link-labels text, .link-labels rect').each(function(d) {
+    if (d && d._vdcIdx === vdcIdx) {
+      d3.select(this).style('display', isCollapsed ? 'none' : '');
+    }
+  });
+
+  // Update VDC boundary appearance
+  const boundaryGroup = d3.select(`.vdc-boundary-${vdcIdx}`);
+  if (!boundaryGroup.empty()) {
+    boundaryGroup.select('.vdc-boundary-rect').classed('vdc-boundary-collapsed', isCollapsed);
+    boundaryGroup.select('.vdc-toggle').text(isCollapsed ? '▶' : '▼');
+    boundaryGroup.selectAll('.vdc-inner-content').style('display', isCollapsed ? 'none' : '');
+    const collapsedLabel = boundaryGroup.select('.vdc-collapsed-label');
+    if (isCollapsed) {
+      const nodeCount = graphData.nodes.filter(n => n._vdcIdx === vdcIdx).length;
+      collapsedLabel.text(`${nodeCount} resources (collapsed)`).style('display', '');
+    } else {
+      collapsedLabel.style('display', 'none');
+    }
+  }
+}
+
+async function loadLocation() {
+  const loc = document.getElementById('locSelect').value;
+  if (!loc) return;
+
+  // Match all VDCs in this region (e.g. "de/fra" matches "de/fra", "de/fra/1", "de/fra/2")
+  const dcsInLoc = datacenters.filter(dc => {
+    const dcRegion = locationRegion(dc.properties?.location || '');
+    return dcRegion === loc || dc.properties?.location === loc;
+  });
+  if (dcsInLoc.length === 0) { toast('No VDCs at this location', 'warning'); return; }
+
+  showLoading(`Loading ${dcsInLoc.length} VDC(s) at ${locationLabel(loc).trim()}...`);
+
+  try {
+    // Fetch global/shared services ONCE (these are the same regardless of VDC)
+    setLoadingText('Fetching shared managed services...');
+    const dcLocation = dcsInLoc[0]?.properties?.location || '';
+    const [pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sData, nfsClusters, vpnGateways, kafkaClusters] = await Promise.all([
+      fetchPostgresClusters(),
+      fetchMongoClusters(),
+      fetchMySQLClusters(),
+      fetchMariaDBClusters(dcLocation),
+      fetchK8sClusters(),
+      fetchNFSClusters(dcLocation),
+      fetchVPNGateways(dcLocation),
+      fetchKafkaClusters(dcLocation),
+    ]);
+
+    // Fetch per-VDC data in parallel (only DC-specific APIs)
+    const allVdcData = await Promise.all(dcsInLoc.map(async (dc, idx) => {
+      setLoadingText(`Fetching VDC ${idx + 1}/${dcsInLoc.length}: ${dc.properties?.name || dc.id}...`);
+      const dcId = dc.id;
+
+      const [dcData, natGWs, albs, nlbs] = await Promise.all([
+        fetchDCDetails(dcId),
+        fetchNatGateways(dcId),
+        fetchALBs(dcId),
+        fetchNLBs(dcId),
+      ]);
+
+      // Resolve NICs
+      const servers = dcData?.entities?.servers?.items || [];
+      await Promise.all(servers.map(async (srv) => {
+        const nics = srv.entities?.nics?.items || [];
+        if (nics.length === 0 || !(nics[0]?.properties)) {
+          const nicData = await fetchServerNICs(dcId, srv.id);
+          if (nicData?.items?.length > 0) {
+            if (!srv.entities) srv.entities = {};
+            srv.entities.nics = nicData;
+          }
+        }
+      }));
+
+      // K8s node pools
+      const k8sNodePools = [];
+      const k8sClusters = k8sData?.items || [];
+      await Promise.all(k8sClusters.map(async (cluster) => {
+        const pools = await fetchK8sNodePools(cluster.id);
+        (pools?.items || []).forEach(pool => {
+          k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
+        });
+      }));
+
+      return {
+        dc,
+        graph: buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sNodePools, nfsClusters || {}, vpnGateways, kafkaClusters),
+      };
+    }));
+
+    // Merge all VDC graphs into one, prefixing node/link IDs to avoid collisions
+    setLoadingText('Merging VDC graphs...');
+    const mergedNodes = [];
+    const mergedLinks = [];
+    const vdcBoundaries = []; // track which nodes belong to which VDC
+
+    allVdcData.forEach(({ dc, graph }, vi) => {
+      const prefix = `vdc${vi}-`;
+      const vdcName = dc.properties?.name || dc.id;
+      const nodeIds = new Set();
+
+      graph.nodes.forEach(n => {
+        const newId = prefix + n.id;
+        nodeIds.add(newId);
+        mergedNodes.push({ ...n, id: newId, _origId: n.id, _vdcIdx: vi, _vdcName: vdcName });
+      });
+
+      graph.links.forEach(l => {
+        const sId = typeof l.source === 'object' ? l.source.id : l.source;
+        const tId = typeof l.target === 'object' ? l.target.id : l.target;
+        mergedLinks.push({ ...l, source: prefix + sId, target: prefix + tId, _vdcIdx: vi });
+      });
+
+      vdcBoundaries.push({ name: vdcName, nodeIds, index: vi });
+    });
+
+    // ── Cross-VDC PCC bridging: merge PCC nodes sharing the same pccId ──
+    // Find PCC nodes grouped by their underlying pccId
+    const pccGroups = new Map(); // pccId → [node objects]
+    mergedNodes.forEach(n => {
+      if (n.type === 'pcc' && n.data?.pccId) {
+        const pid = n.data.pccId;
+        if (!pccGroups.has(pid)) pccGroups.set(pid, []);
+        pccGroups.get(pid).push(n);
+      }
+    });
+
+    // For each shared PCC (appearing in >1 VDC), keep one canonical node and repoint links
+    const allRemoveIds = new Set();
+    pccGroups.forEach((pccNodes, pccId) => {
+      if (pccNodes.length <= 1) return; // only in one VDC, nothing to bridge
+
+      const canonical = pccNodes[0]; // keep first as the shared node
+      canonical._vdcName = 'Shared';  // mark as cross-VDC
+      // Collect all VDC names this PCC spans
+      const vdcNames = [...new Set(pccNodes.map(n => n._vdcName))];
+      canonical.name = `PCC: ${vdcNames.join(' ↔ ')}`;
+
+      // Add canonical to ALL VDC boundaries it spans
+      pccNodes.forEach(n => {
+        const boundary = vdcBoundaries.find(b => b.index === n._vdcIdx);
+        if (boundary) boundary.nodeIds.add(canonical.id);
+      });
+
+      // Remove duplicate PCC nodes (all except canonical) and repoint their links
+      for (let i = 1; i < pccNodes.length; i++) {
+        const dup = pccNodes[i];
+        allRemoveIds.add(dup.id);
+        // Repoint links from duplicate to canonical
+        mergedLinks.forEach(l => {
+          if (l.source === dup.id) l.source = canonical.id;
+          if (l.target === dup.id) l.target = canonical.id;
+        });
+      }
+    });
+
+    // Batch-remove duplicate PCC nodes in a single pass
+    const cleanedNodes = allRemoveIds.size > 0
+      ? mergedNodes.filter(n => !allRemoveIds.has(n.id))
+      : mergedNodes;
+
+    const mergedData = { nodes: cleanedNodes, links: mergedLinks, _vdcBoundaries: vdcBoundaries };
+    renderGraph(mergedData);
+    setTimeout(() => zoomFit(), 1500);
+    toast(`Loaded ${dcsInLoc.length} VDC(s) with ${cleanedNodes.length} total resources`, 'success');
+
+    // Update map background to show location region
+    updateMapBackground(loc);
+
+    // Refresh IP block panel filtered to this location
+    if (ipBlockData) renderIPBlockPanel(loc);
+
+  } catch (e) {
+    toast(`Failed to load location: ${e.message}`, 'error');
+    console.error(e);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ============================== UTILITIES ==============================
+function showLoading(text) {
+  document.getElementById('loadingOverlay').classList.add('active');
+  document.getElementById('loadingText').textContent = text || 'Loading...';
+}
+function setLoadingText(text) { document.getElementById('loadingText').textContent = text; }
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
+
+function toast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function truncate(str, len) {
+  if (!str) return '';
+  return str.length > len ? str.substring(0, len - 1) + '\u2026' : str;
+}
+
+function formatRAM(mb) {
+  if (!mb) return '?';
+  if (mb >= 1024) return `${(mb / 1024).toFixed(mb % 1024 === 0 ? 0 : 1)} GB`;
+  return `${mb} MB`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.getElementById('tokenInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') connect();
+});
+
+// ============================== GLOBAL KEYBOARD SHORTCUTS ==============================
+document.addEventListener('keydown', (e) => {
+  const tag = document.activeElement?.tagName?.toLowerCase();
+  const isInput = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+  if (e.key === 'Escape') {
+    document.getElementById('shortcutsOverlay').style.display = 'none';
+    closeDetail();
+    clearSearch();
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    e.preventDefault();
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput && document.getElementById('searchSection').style.display !== 'none') {
+      searchInput.focus();
+    }
+    return;
+  }
+  if (isInput) return;
+  if (e.key === '?' || e.key === '/') { document.getElementById('shortcutsOverlay').style.display = ''; }
+  else if (e.key === '+' || e.key === '=') zoomIn();
+  else if (e.key === '-') zoomOut();
+  else if (e.key === 'f' || e.key === 'F') zoomFit();
+  else if (e.key === 'l' || e.key === 'L') toggleLabels();
+  else if (e.key === 'i' || e.key === 'I') toggleIPView();
+  else if (e.key === 'h' || e.key === 'H') toggleHighlightsOverlay();
+  else if (e.key === 'm' || e.key === 'M') toggleMapBackground();
+  else if (e.key === 'g' || e.key === 'G') setViewMode('map');
+  else if (e.key === 'r' || e.key === 'R') resetView();
+});
+</script>
+</body>
+</html>

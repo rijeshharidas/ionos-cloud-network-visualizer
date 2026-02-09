@@ -1,0 +1,79 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.0] - 2026-02-07
+
+### Added
+- Animated traffic flow visualization on links between active/running resources with glowing effect
+- Security highlight rings (SVG circles/polygons) around nodes with active firewall, flow logs, security groups, IPv6, IP failover, or cross connects
+- Connected-component graph clustering to automatically separate unrelated network groups into distinct visual regions
+- Hierarchical force layout: Cross Connect → Internet → LANs → VMs and managed services
+- Per-LAN Internet nodes to reduce visual clutter (each public LAN gets its own Internet icon)
+- Sidebar re-expand button on canvas when sidebar is collapsed
+- Canvas-based floating search bar (moved from sidebar to graph overlay)
+- IONOS branded logo in sidebar header
+- Infrastructure-aware traffic flow: Internet, LAN, and PCC nodes treated as always-active for animation
+
+### Changed
+- LAN icon redesigned from hub-spoke pattern to network switch icon to avoid confusion with Kubernetes
+- NAT Gateway icon redesigned from box-with-arrows to router/gateway symbol (circle with directional arrows) for clear distinction from servers
+- VDC dropdown now shows location in brackets: "VDC Name (Frankfurt 2)"
+- Location labels properly handle 3-part location strings (e.g., `de/fra/2` → Frankfurt 2)
+- Security highlights upgraded from CSS glow filters to SVG ring elements for better visibility
+- Force simulation uses cluster-aware X positioning: child nodes pulled toward their parent LAN column
+- Increased LAN charge and collision radius for better spacing
+- Search icon properly sized inside input field (was rendering oversized)
+- NIC labels simplified to show IP address only (removed NIC name prefix)
+
+### Removed
+- Link types legend from canvas/toolbar (removed due to layout conflicts)
+
+### Fixed
+- Sidebar collapse button no longer lost when sidebar is hidden (expand button persists on canvas)
+- Traffic flow animation now works for cross connect and VPN gateway connections
+- Highlight rings render on top of nodes (SVG paint order fixed)
+- Location label rendering for multi-segment locations in VDC dropdown
+
+## [1.1.0] - 2026-02-06
+
+### Added
+- Node search bar with type-ahead filtering for quick resource lookup
+- Welcome onboarding experience with guided setup steps
+- Color-coded link types (NIC, cross connect, managed service, gateway)
+- Node status indicators showing resource state (AVAILABLE, BUSY, INACTIVE)
+- Collapsible sidebar for expanded graph workspace
+- Keyboard shortcuts (Escape, Ctrl+F, +/-, F, L, ?)
+- Staged loading progress bar with resource-level status
+- Interactive stat cards with click-to-filter behavior
+- Quick action toolbar buttons (Reset, Select All, Deselect All)
+- `.gitignore` for clean repository management
+- `CHANGELOG.md` for version tracking
+- GitHub Actions CI workflow for automated validation
+
+### Changed
+- Renamed project from "VDC Visualizer" to "IONOS Cloud Network Visualizer"
+- Renamed `vdc-visualizer.html` to `ionos-cloud-network-visualizer.html`
+- Updated README with badges and improved documentation
+- Enhanced toolbar with additional quick action buttons
+
+## [1.0.0] - 2026-01-15
+
+### Added
+- Interactive force-directed graph visualization of IONOS Cloud VDC resources
+- Support for 16 resource types: servers, LANs, databases, VPN, NFS, K8s, load balancers, cross connects
+- NIC-to-LAN connection mapping with IP address labels
+- Security highlights for firewall, flow logs, security groups, IPv6, IP failover, cross connects
+- Detailed inspection panel with resource properties
+- User account information display (email, contract number)
+- PNG export with high-resolution rendering
+- Country flags and datacenter location labels
+- JWT token decode fallback for user information
+- Lightweight Python proxy server with CORS support
+- Port auto-fallback when default port is busy
+- IONOS Cloud brand colors and Inter typography
+- Apache 2.0 open source license
+- README, CONTRIBUTING, and LICENSE documentation

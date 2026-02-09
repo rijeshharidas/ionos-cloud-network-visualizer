@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Python syntax
+        run: python -m py_compile serve.py
+
+      - name: Check HTML file exists
+        run: test -f ionos-cloud-network-visualizer.html
+
+      - name: Validate HTML structure
+        run: |
+          python -c "
+          import html.parser, sys
+          class Validator(html.parser.HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.errors = []
+                  self.tags = []
+              def handle_starttag(self, tag, attrs):
+                  self.tags.append(tag)
+              def handle_endtag(self, tag):
+                  if self.tags and self.tags[-1] == tag:
+                      self.tags.pop()
+          v = Validator()
+          with open('ionos-cloud-network-visualizer.html') as f:
+              v.feed(f.read())
+          print('HTML structure OK')
+          "
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: "**/*.md"
+          config: |
+            {
+              "MD013": false,
+              "MD033": false,
+              "MD041": false
+            }
