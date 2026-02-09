@@ -13,7 +13,7 @@
 
 <p align="center">
   A browser-based interactive network topology visualizer for IONOS Cloud infrastructure.<br>
-  See your entire cloud at a glance — from a global map of regions down to individual NICs and firewall rules.
+  See your entire cloud at a glance — from a global map of regions down to individual servers, LANs, and managed services.
 </p>
 
 ---
