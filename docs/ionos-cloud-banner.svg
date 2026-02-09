@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#001B41"/>
+      <stop offset="100%" style="stop-color:#003068"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="200" rx="12" fill="url(#bg)"/>
+  <!-- IONOS Logo Box -->
+  <rect x="40" y="55" width="90" height="90" rx="16" fill="#003D8F"/>
+  <text x="85" y="110" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="24" fill="white" letter-spacing="0.5">IONOS</text>
+  <!-- Title Text -->
+  <text x="160" y="95" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="32" fill="white">
+    <tspan fill="#11C7E6">IONOS Cloud</tspan>
+    <tspan dx="8" fill="white">Network Visualizer</tspan>
+  </text>
+  <text x="160" y="125" font-family="Arial, Helvetica, sans-serif" font-weight="400" font-size="16" fill="#a0c4e8">Interactive network topology visualization for your cloud infrastructure</text>
+</svg>

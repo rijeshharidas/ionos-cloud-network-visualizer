@@ -1,10 +1,22 @@
-# IONOS Cloud Network Visualizer
+<p align="center">
+  <img src="docs/ionos-cloud-banner.svg" alt="IONOS Cloud Network Visualizer" width="800">
+</p>
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Python-3.6%2B-3776AB?logo=python&logoColor=white" alt="Python 3.6+">
+  <img src="https://img.shields.io/badge/D3.js-v7-F9A03C?logo=d3dotjs&logoColor=white" alt="D3.js v7">
+  <img src="https://img.shields.io/badge/Leaflet-1.9.4-199900?logo=leaflet&logoColor=white" alt="Leaflet 1.9.4">
+  <img src="https://img.shields.io/badge/Dependencies-None-brightgreen" alt="No Dependencies">
+  <img src="https://img.shields.io/badge/IONOS%20Cloud-Visualizer-003D8F" alt="IONOS Cloud">
+</p>
 
-A browser-based interactive network topology visualizer for IONOS Cloud infrastructure. See your entire cloud at a glance — from a global map of regions down to individual NICs and firewall rules.
+<p align="center">
+  A browser-based interactive network topology visualizer for IONOS Cloud infrastructure.<br>
+  See your entire cloud at a glance — from a global map of regions down to individual NICs and firewall rules.
+</p>
 
-## Why This Tool
+## Key Capabilities
 
 **See every managed service connected to your LANs** — Databases (PostgreSQL, MongoDB, MySQL, MariaDB), VPN Gateways, NFS shares, Load Balancers, Kubernetes clusters, and Kafka clusters are all rendered on the topology graph, connected to the LANs they belong to. No more jumping between DCD panels to understand which services share a network.
 
@@ -38,9 +50,8 @@ The server automatically opens your browser at `http://localhost:8080` (with aut
 2. The Global Map loads automatically — explore your regions
 3. Click into any VDC to visualize its full network topology
 
-## Installing Python
-
-The visualizer requires **Python 3.6 or later**. If you don't have it, follow the steps below for your operating system.
+<details>
+<summary><strong>Installing Python</strong> (click to expand — skip if you already have Python 3.6+)</summary>
 
 ### macOS
 
@@ -108,6 +119,8 @@ python --version    # Windows
 ```
 
 You should see `Python 3.x.x`. Any version from 3.6 onward works.
+
+</details>
 
 ## Prerequisites
 
