@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-02-10
+
+### Added (1.3.0)
+
+- Global map shows all IONOS data center locations as faded markers (pre-login and post-login)
+- Dynamic location discovery via `/cloudapi/v6/locations` API after authentication
+- Cloud DNS integration: sidebar panel with zone list, record counts, and forward DNS lookup
+- Reverse DNS enrichment on IP View labels (IP addresses show hostnames in parentheses)
+- CDN badge on DNS zones that have CDN distributions configured
+- DNS Names and Reverse DNS rows in node detail panel for resources with public IPs
+- Public IP block sidebar panel showing IPv4 and IPv6 allocations
+- GitHub Sponsors heart icon in sidebar footer
+- SVG and JSON export options alongside existing PNG export
+
+### Changed (1.3.0)
+
+- Global Map now fits all DC locations (active + available) in view bounds
+- IP View icon changed from globe to bordered "IP" text for clarity
+- Improved zoom behavior for small VDCs (adaptive padding, minimum bounding box)
+- Map background opacity increased to 0.85 for better visibility
+- Highlights overlay auto-closes on navigation to Global Map or different VDC
+
+### Fixed (1.3.0)
+
+- Node dimming persisting after closing detail panel (clearHighlight on close)
+- NFS and VPN status indicator dots not showing (metadata.status fallback)
+- CDN badge matching for subdomains (e.g., www.example.com matching example.com zone)
+- IP labels not resetting when toggling IP View off
+- README tagline incorrectly mentioning firewall rules
+
 ## [1.2.0] - 2026-02-07
 
 ### Added

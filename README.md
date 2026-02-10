@@ -41,7 +41,7 @@
 
 ## Key Capabilities
 
-🗺️ **Global Map View** — An interactive geographic map loads automatically after connecting, showing all your IONOS regions as cluster bubbles with country flags and VDC counts. Click a region to drill down, then click a VDC to visualize its topology.
+🗺️ **Global Map View** — An interactive geographic map displays all IONOS data center locations worldwide on first load. After connecting, your active regions appear as cluster bubbles with country flags and VDC counts while available locations remain visible as faded markers. Click a region to drill down, then click a VDC to visualize its topology.
 
 🔗 **Managed Service Visibility** — Databases (PostgreSQL, MongoDB, MySQL, MariaDB), VPN Gateways, NFS shares, Load Balancers, Kubernetes clusters, and Kafka clusters are all rendered on the topology graph, connected to the LANs they belong to. No more jumping between DCD panels.
 
@@ -157,7 +157,7 @@ You should see `Python 3.x.x`. Any version from 3.6 onward works.
 
 | Mode | Description | Use Case |
 |------|-------------|----------|
-| 🗺️ **Global Map** | Interactive Leaflet.js map with region clusters, country flags, and VDC counts. Press `G` to return. | Navigate multi-region infrastructure |
+| 🗺️ **Global Map** | Interactive Leaflet.js map showing all IONOS DC locations. Active regions display as cluster bubbles with VDC counts; available locations appear as faded markers. Press `G` to return. | Navigate multi-region infrastructure |
 | 🖥️ **Single VDC** | Full force-directed topology graph for one data center: servers, LANs, NICs, managed services, gateways, and load balancers. | Inspect a specific data center |
 | 📍 **By Location** | All VDCs in a metro region on one canvas with Private Cross Connect links visible. | See cross-VDC connections |
 
@@ -212,6 +212,7 @@ Your API token never leaves your machine.
 | Kafka | `kafka.{location}.ionos.com` | Regional |
 | Cloud DNS | `dns.de-fra.ionos.com` | Centralized |
 | CDN | `cdn.de-fra.ionos.com` | Centralized |
+| Locations | `/cloudapi/v6/locations` | Centralized |
 | User Management | `/cloudapi/v6/um` | Centralized |
 
 ## Configuration

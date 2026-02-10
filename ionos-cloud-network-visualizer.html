@@ -205,6 +205,9 @@
   }
   #mapBackground.overview-mode .leaflet-control-container { display: block; }
   #mapBackground.overview-mode .leaflet-tile-pane { filter: none; }
+  /* Pre-login: dim map so onboarding card stands out */
+  #mapBackground.overview-mode.pre-login { opacity: 0.45; }
+  #mapBackground.overview-mode.pre-login .leaflet-tile-pane { filter: brightness(0.7); }
   #graphSvg.hidden-for-map { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 
   /* Cluster bubble markers */
@@ -245,6 +248,53 @@
   .map-vdc-marker .map-cluster-flag { font-size: 18px; }
   .map-vdc-marker .map-cluster-name { font-size: 9px; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+  /* Available DC location markers — compact flag + city name, color-coded border */
+  .map-available-loc {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(17,199,230,0.8);
+    background: rgba(25,28,38,0.8);
+    opacity: 0.9;
+    text-align: center;
+    box-shadow: 0 0 8px rgba(17,199,230,0.15), 0 2px 8px rgba(0,0,0,0.4);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .map-available-loc:hover { opacity: 1; transform: scale(1.08); }
+  .map-available-loc.cloud-private { border-color: rgba(187,134,252,0.8); box-shadow: 0 0 8px rgba(187,134,252,0.15), 0 2px 8px rgba(0,0,0,0.4); }
+  .map-available-loc.cloud-both { border-color: rgba(160,180,255,0.8); box-shadow: 0 0 8px rgba(160,180,255,0.15), 0 2px 8px rgba(0,0,0,0.4); }
+  .map-available-flag { font-size: 16px; line-height: 1; }
+  .map-available-name { font-size: 7.5px; font-weight: 600; color: rgba(255,255,255,0.8); line-height: 1.1; margin-top: 1px; white-space: nowrap; }
+
+  /* Dimmed variant — when shown alongside active cluster bubbles */
+  .map-available-loc.dimmed {
+    width: 36px; height: 36px;
+    opacity: 0.45;
+    border-style: dashed;
+    border-width: 1px;
+    box-shadow: none;
+    background: rgba(25,28,38,0.6);
+  }
+  .map-available-loc.dimmed .map-available-flag { font-size: 13px; }
+  .map-available-loc.dimmed .map-available-name { font-size: 6.5px; color: rgba(255,255,255,0.5); }
+  .map-available-loc.dimmed:hover { opacity: 0.8; transform: scale(1.1); }
+
+  /* Tooltip for DC location markers */
+  .map-loc-tooltip {
+    background: var(--bg-secondary) !important; border: 1px solid var(--border) !important;
+    border-radius: 8px !important; padding: 8px 12px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    color: var(--text-primary) !important; font-family: inherit !important;
+    font-size: 11px !important; line-height: 1.4 !important;
+    max-width: 220px !important;
+  }
+  .map-loc-tooltip .leaflet-tooltip-arrow { display: none; }
+  .map-loc-tooltip .tt-city { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .map-loc-tooltip .tt-cloud { font-size: 10px; font-weight: 600; margin-bottom: 3px; }
+  .map-loc-tooltip .tt-cloud.tt-public { color: #11C7E6; }
+  .map-loc-tooltip .tt-cloud.tt-private { color: #BB86FC; }
+  .map-loc-tooltip .tt-cloud.tt-both { color: #A0B4FF; }
   /* Back to overview button */
   .map-back-btn {
     position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
@@ -264,6 +314,7 @@
     text-align: center;
     color: var(--text-muted);
     pointer-events: auto;
+    z-index: 3;
   }
   .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
   .empty-state h2 { font-size: 18px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
@@ -892,26 +943,46 @@ const API_BASES = {
 
 // ============================== LOCATION FLAGS ==============================
 const LOCATION_CITIES = {
-  'de/fra': 'Frankfurt', 'de/txl': 'Berlin', 'de/muc': 'Munich',
+  'de/fra': 'Frankfurt', 'de/txl': 'Berlin',
   'us/las': 'Las Vegas', 'us/ewr': 'Newark', 'us/mci': 'Lenexa',
-  'gb/lhr': 'London', 'es/vit': 'Logrono', 'fr/par': 'Paris',
-  'at/vie': 'Vienna', 'nl/ams': 'Amsterdam',
+  'gb/lhr': 'London', 'gb/bhx': 'Worcester',
+  'es/vit': 'Logrono', 'fr/par': 'Paris',
+  'fr/nlb': 'Niederlauterbach',
 };
 
 // Coordinates [lat, lon] and zoom level for each IONOS region
 const LOCATION_COORDS = {
-  'de/fra': [50.1109, 8.6821, 10],   // Frankfurt
+  'de/fra': [50.1109, 8.6821, 10],   // Frankfurt (+ Frankfurt East de/fra/2)
   'de/txl': [52.5200, 13.4050, 10],   // Berlin
-  'de/muc': [48.1351, 11.5820, 10],   // Munich
   'us/las': [36.1699, -115.1398, 10], // Las Vegas
   'us/ewr': [40.6895, -74.1745, 10],  // Newark
   'us/mci': [38.9720, -94.7347, 10],  // Lenexa
   'gb/lhr': [51.5074, -0.1278, 10],   // London
+  'gb/bhx': [52.1920, -2.2214, 10],   // Worcester
   'es/vit': [42.4627, -2.4500, 10],   // Logrono
   'fr/par': [48.8566, 2.3522, 10],    // Paris
-  'at/vie': [48.2082, 16.3738, 10],   // Vienna
-  'nl/ams': [52.3676, 4.9041, 10],    // Amsterdam
+  'fr/nlb': [48.9706, 8.0825, 10],    // Niederlauterbach (Private Cloud only)
 };
+
+// Cloud type classification per DC location
+const DC_CLOUD_TYPE = {
+  'de/fra': 'public',
+  'de/txl': 'both',
+  'us/las': 'public',
+  'us/ewr': 'public',
+  'us/mci': 'public',
+  'gb/lhr': 'public',
+  'gb/bhx': 'both',
+  'es/vit': 'both',
+  'fr/par': 'public',
+  'fr/nlb': 'private',
+};
+
+// Cloud type label for tooltips
+function cloudLabel(region) {
+  const t = DC_CLOUD_TYPE[region] || 'public';
+  return t === 'both' ? 'Public & Private Cloud' : t === 'private' ? 'Private Cloud' : 'Public Cloud';
+}
 
 // Extract base region from location: "de/fra/1" → "de/fra", "de/fra" → "de/fra"
 function locationRegion(location) {
@@ -1346,6 +1417,58 @@ async function safeFetch(url, opts) {
 async function fetchDatacenters() {
   const data = await apiFetch(`${API_BASES.cloud}/datacenters?depth=1`);
   return (data && data.items) ? data.items : [];
+}
+
+async function fetchLocations() {
+  return await safeFetch(`${API_BASES.cloud}/locations?depth=1`);
+}
+
+// Format API location name: "lasvegas" → "Las Vegas", "frankfurt-east" → "Frankfurt East"
+function formatLocationName(apiName) {
+  if (!apiName) return '';
+  // Known compound names the API returns without separators
+  const KNOWN_NAMES = {
+    'lasvegas': 'Las Vegas',
+    'newyork': 'New York',
+    'losangeles': 'Los Angeles',
+    'sanfrancisco': 'San Francisco',
+  };
+  const lower = apiName.toLowerCase();
+  if (KNOWN_NAMES[lower]) return KNOWN_NAMES[lower];
+  // Handle hyphenated names: "frankfurt-east" → "Frankfurt East"
+  return apiName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
+// Dynamically update LOCATION_CITIES from the /locations API
+async function loadDynamicLocations() {
+  try {
+    const data = await fetchLocations();
+    if (!data || !data.items) return;
+
+    let newRegions = [];
+    data.items.forEach(loc => {
+      const id = loc.id; // e.g. "de/fra", "de/txl", "de/fra/2"
+      if (!id) return;
+      const region = locationRegion(id);
+      const rawName = loc.properties?.name || '';
+      const name = formatLocationName(rawName);
+      // Add city name if we don't already have one for this region
+      if (!LOCATION_CITIES[region] && name) {
+        LOCATION_CITIES[region] = name;
+      }
+      // Track regions that have no map coordinates (future-proofing)
+      if (!LOCATION_COORDS[region] && !newRegions.includes(region)) {
+        newRegions.push(region);
+      }
+    });
+
+    if (newRegions.length > 0) {
+      console.warn(`[VDC-Viz] New region(s) without map coordinates: ${newRegions.join(', ')}. Add coords to LOCATION_COORDS to show on map.`);
+    }
+    console.log(`[VDC-Viz] Loaded ${data.items.length} location(s) from API`);
+  } catch (e) {
+    console.warn('[VDC-Viz] Could not load dynamic locations:', e.message);
+  }
 }
 
 async function fetchDCDetails(dcId) {
@@ -1913,9 +2036,53 @@ function buildRegionClusters() {
   return clusters;
 }
 
+let availableLocationMarkers = [];
+
 function clearMapMarkers() {
   mapMarkers.forEach(m => bgMap.removeLayer(m));
   mapMarkers = [];
+}
+
+function clearAvailableLocationMarkers() {
+  availableLocationMarkers.forEach(m => bgMap.removeLayer(m));
+  availableLocationMarkers = [];
+}
+
+// Show markers for all IONOS DC locations. When hasActiveClusters is true,
+// available markers appear smaller/dimmed so active cluster bubbles stand out.
+function showAvailableLocations(activeRegions) {
+  clearAvailableLocationMarkers();
+  if (!bgMap) return;
+
+  const activeSet = new Set(activeRegions || []);
+  const hasActive = activeSet.size > 0;
+  Object.entries(LOCATION_COORDS).forEach(([region, coords]) => {
+    if (activeSet.has(region)) return; // Active regions already have cluster bubbles
+    const city = LOCATION_CITIES[region] || region;
+    const flag = countryFlag(region);
+    const cloudType = DC_CLOUD_TYPE[region] || 'public';
+    const typeClass = cloudType === 'private' ? 'cloud-private' : cloudType === 'both' ? 'cloud-both' : '';
+    const dimClass = hasActive ? ' dimmed' : '';
+    const sz = hasActive ? 36 : 48;
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="map-available-loc ${typeClass}${dimClass}">
+        <span class="map-available-flag">${flag}</span>
+        <span class="map-available-name">${city}</span>
+      </div>`,
+      iconSize: [sz, sz],
+      iconAnchor: [sz / 2, sz / 2],
+    });
+    const marker = L.marker([coords[0], coords[1]], { icon }).addTo(bgMap);
+
+    // Bind tooltip with cloud type
+    const cloudClass = cloudType === 'private' ? 'tt-private' : cloudType === 'both' ? 'tt-both' : 'tt-public';
+    const tooltipHtml = `<div class="tt-city">${flag} ${city}</div>
+      <div class="tt-cloud ${cloudClass}">${cloudLabel(region)}</div>`;
+    marker.bindTooltip(tooltipHtml, { className: 'map-loc-tooltip', direction: 'top', offset: [0, -28] });
+
+    availableLocationMarkers.push(marker);
+  });
 }
 
 function enableMapInteractions() {
@@ -1950,16 +2117,34 @@ function showMapOverview() {
   el.classList.add('overview-mode');
   enableMapInteractions();
 
-  // Hide topology SVG and toolbar
+  // Hide topology SVG, toolbar, and VDC-specific sidebar sections
   document.getElementById('graphSvg').classList.add('hidden-for-map');
   document.getElementById('toolbar').style.display = 'none';
   document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('legendSection').style.display = 'none';
+  document.getElementById('searchSection').style.display = 'none';
 
   // Build clusters and add markers
   const clusters = buildRegionClusters();
-  if (clusters.length === 0) { toast('No locations with coordinates found', 'warning'); return; }
 
+  // Show faded markers for all available IONOS locations
+  const activeRegions = clusters.map(c => c.region);
+  showAvailableLocations(activeRegions);
+
+  // If no user VDCs, still show available locations on the map
+  if (clusters.length === 0 && Object.keys(LOCATION_COORDS).length > 0) {
+    const allCoords = Object.values(LOCATION_COORDS).map(c => [c[0], c[1]]);
+    bgMap.fitBounds(allCoords, { padding: [60, 60], maxZoom: 5, animate: false });
+    bgMap.setMaxBounds([[15, -140], [72, 45]]);
+    bgMap.setMinZoom(2);
+    setTimeout(() => bgMap.invalidateSize(), 150);
+    return;
+  }
+
+  // Collect bounds from all locations (active + available) for fitBounds
   const bounds = [];
+  Object.values(LOCATION_COORDS).forEach(c => bounds.push([c[0], c[1]]));
+
   clusters.forEach(c => {
     const size = Math.max(64, Math.min(90, 64 + c.vdcs.length * 6));
     const icon = L.divIcon({
@@ -1976,15 +2161,22 @@ function showMapOverview() {
     const marker = L.marker(c.coords, { icon }).addTo(bgMap);
     // Click cluster → zoom into region and show individual VDC markers
     marker.on('click', () => drillIntoRegion(c));
+
+    // Bind same-style tooltip as available markers for consistency
+    const cloudType = DC_CLOUD_TYPE[c.region] || 'public';
+    const cloudClass = cloudType === 'private' ? 'tt-private' : cloudType === 'both' ? 'tt-both' : 'tt-public';
+    const tooltipHtml = `<div class="tt-city">${c.flag} ${c.city}</div>
+      <div class="tt-cloud ${cloudClass}">${cloudLabel(c.region)} · ${c.vdcs.length} VDC${c.vdcs.length > 1 ? 's' : ''}</div>`;
+    marker.bindTooltip(tooltipHtml, { className: 'map-loc-tooltip', direction: 'top', offset: [0, -size / 2 - 4] });
+
     mapMarkers.push(marker);
-    bounds.push(c.coords);
   });
 
-  // Fit map to show all clusters with padding
+  // Fit map to show all locations (active clusters + available DCs)
   if (bounds.length === 1) {
     bgMap.setView(bounds[0], 8, { animate: false });
-  } else {
-    bgMap.fitBounds(bounds, { padding: [60, 60], maxZoom: 6, animate: false });
+  } else if (bounds.length > 1) {
+    bgMap.fitBounds(bounds, { padding: [60, 60], maxZoom: 5, animate: false });
   }
   // Constrain to Europe + North America
   bgMap.setMaxBounds([[15, -140], [72, 45]]);
@@ -1997,8 +2189,9 @@ function drillIntoRegion(cluster) {
   if (!bgMap) return;
   mapDrillRegion = cluster.region;
 
-  // Clear cluster markers
+  // Clear cluster markers and available location markers
   clearMapMarkers();
+  clearAvailableLocationMarkers();
 
   // Zoom into the region
   bgMap.flyTo(cluster.coords, cluster.zoom + 2, { duration: 0.8 });
@@ -2049,6 +2242,7 @@ function hideMapOverview() {
 
   // Clear markers and state
   clearMapMarkers();
+  clearAvailableLocationMarkers();
   mapDrillRegion = null;
   document.getElementById('mapBackBtn').classList.remove('visible');
   bgMap.closePopup();
@@ -3844,9 +4038,13 @@ async function connect() {
 
     toast(`Found ${datacenters.length} data center(s)`, 'success');
 
-    // Initialize map and show global overview
+    // Initialize map and show global overview (remove pre-login dimming)
+    document.getElementById('mapBackground').classList.remove('pre-login');
     initMapBackground();
     setViewMode('map');
+
+    // Background: fetch dynamic locations from API to enrich city labels
+    loadDynamicLocations();
 
     // Extract user info: decode JWT for uuid + contract, then fetch user by ID for email
     const jwt = decodeJwtPayload(apiToken);
@@ -4251,6 +4449,32 @@ function escapeHtml(str) {
 document.getElementById('tokenInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') connect();
 });
+
+// Show global map with all available IONOS DC locations on page load (before login)
+// Show global map with all available IONOS DC locations on page load (before login)
+(function initPreLoginMap() {
+  initMapBackground();
+  const el = document.getElementById('mapBackground');
+
+  // Use overview-mode so the map is interactive (pointer-events, tooltips work)
+  // pre-login class dims the map so the onboarding card stands out
+  el.classList.add('overview-mode', 'pre-login');
+  enableMapInteractions();
+
+  // Hide topology SVG and toolbar (same as showMapOverview)
+  document.getElementById('graphSvg').classList.add('hidden-for-map');
+  document.getElementById('toolbar').style.display = 'none';
+
+  // Show all DC locations as markers
+  showAvailableLocations([]);
+  const allCoords = Object.values(LOCATION_COORDS).map(c => [c[0], c[1]]);
+  if (allCoords.length > 0) {
+    bgMap.fitBounds(allCoords, { padding: [60, 60], maxZoom: 5, animate: false });
+  }
+  bgMap.setMaxBounds([[15, -140], [72, 45]]);
+  bgMap.setMinZoom(2);
+  setTimeout(() => bgMap.invalidateSize(), 150);
+})();
 
 // ============================== GLOBAL KEYBOARD SHORTCUTS ==============================
 document.addEventListener('keydown', (e) => {
