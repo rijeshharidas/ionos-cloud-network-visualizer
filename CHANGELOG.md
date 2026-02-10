@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Node dimming persisting after closing detail panel (clearHighlight on close)
 - NFS and VPN status indicator dots not showing (metadata.status fallback)
-- CDN badge matching for subdomains (e.g., www.example.com matching example.com zone)
+- CDN badge matching for subdomains (e.g., `www.example.com` matching `example.com` zone)
 - IP labels not resetting when toggling IP View off
 - README tagline incorrectly mentioning firewall rules
 
