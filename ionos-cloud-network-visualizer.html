@@ -555,6 +555,12 @@
   .ip-block-stat { color: var(--text-muted); }
   .ip-block-stat .used { color: var(--accent); font-weight: 600; }
 
+  /* ---- DNS Panel ---- */
+  .dns-panel { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; max-height: 300px; overflow-y: auto; font-size: 11px; }
+  .dns-zone-card { background: var(--bg-tertiary); border-radius: 6px; padding: 8px 10px; border-left: 3px solid var(--text-muted); transition: background 0.2s; }
+  .dns-zone-card:hover { background: var(--bg-hover); }
+  .cdn-badge { display: inline-block; background: #11C7E6; color: #001B41; padding: 1px 5px; border-radius: 3px; font-weight: 700; font-size: 9px; margin-left: 6px; vertical-align: middle; }
+
   /* ---- Security Badge ---- */
   .sg-badge { font-size: 8px; font-weight: 700; pointer-events: none; }
 
@@ -653,6 +659,11 @@
   <div class="sidebar-section" id="ipBlockSection" style="display:none;">
     <label>Public IPs</label>
     <div class="ip-block-panel" id="ipBlockPanel"></div>
+  </div>
+
+  <div class="sidebar-section" id="dnsSection" style="display:none;">
+    <label>DNS Zones <span id="dnsZoneCount" style="float:right;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;"></span></label>
+    <div class="dns-panel" id="dnsPanel"></div>
   </div>
 
   <!-- Author Footer -->
@@ -875,6 +886,8 @@ const API_BASES = {
   vpn: (loc) => `https://vpn.${loc}.ionos.com`,
   kafka: (loc) => `https://kafka.${loc}.ionos.com`,
   k8s: 'https://api.ionos.com/cloudapi/v6',
+  dns: 'https://dns.de-fra.ionos.com',
+  cdn: 'https://cdn.de-fra.ionos.com',
 };
 
 // ============================== LOCATION FLAGS ==============================
@@ -1417,6 +1430,22 @@ async function fetchIPBlocks() {
 
 async function fetchSecurityGroups(dcId) {
   return safeFetch(`${API_BASES.cloud}/datacenters/${dcId}/securitygroups?depth=2`);
+}
+
+async function fetchDNSZones() {
+  return safeFetch(`${API_BASES.dns}/zones`);
+}
+
+async function fetchDNSRecords(zoneId) {
+  return safeFetch(`${API_BASES.dns}/zones/${zoneId}/records`);
+}
+
+async function fetchReverseDNS() {
+  return safeFetch(`${API_BASES.dns}/reverserecords`);
+}
+
+async function fetchCDNDistributions() {
+  return safeFetch(`${API_BASES.cdn}/distributions`);
 }
 
 // ============================== GRAPH BUILDER ==============================
@@ -2837,6 +2866,38 @@ function buildDetailProps(d) {
     if (data.state) p.push(['State', data.state]);
   }
 
+  // DNS & CDN enrichment: show domain names pointing to this node's public IPs
+  if (forwardDnsMap || reverseIpMap) {
+    const nodeIps = [];
+    if (d.type === 'nat') nodeIps.push(...(data.publicIps || []));
+    else if (d.type === 'alb' || d.type === 'nlb') nodeIps.push(...(data.ips || []));
+    else if (d.type === 'vpn_wg' || d.type === 'vpn_ipsec') { if (data.gatewayIP) nodeIps.push(data.gatewayIP); }
+    else if (d.type === 'server' || d.type === 'cube') {
+      (data.nics || []).forEach(nic => nodeIps.push(...(nic.ips || [])));
+    }
+
+    if (nodeIps.length > 0) {
+      // Forward DNS names (A/AAAA records → this IP)
+      const dnsNames = [];
+      nodeIps.forEach(ip => {
+        const entries = forwardDnsMap?.get(ip);
+        if (entries) entries.forEach(e => {
+          const label = hasCDN(e.zoneName, e.fqdn) ? `${e.fqdn} [CDN]` : e.fqdn;
+          if (!dnsNames.includes(label)) dnsNames.push(label);
+        });
+      });
+      if (dnsNames.length > 0) p.push(['DNS Names', dnsNames.join(', ')]);
+
+      // Reverse DNS hostnames
+      const rNames = [];
+      nodeIps.forEach(ip => {
+        const hostname = reverseIpMap?.get(ip);
+        if (hostname && !rNames.includes(hostname)) rNames.push(hostname);
+      });
+      if (rNames.length > 0) p.push(['Reverse DNS', rNames.join(', ')]);
+    }
+  }
+
   return p.filter(([k, v]) => v !== undefined && v !== null && v !== '');
 }
 
@@ -3108,7 +3169,81 @@ function toggleIPView() {
     // Ensure IP labels and link labels are visible
     d3.selectAll('.node-ip-label, .link-label, .link-label-bg').style('display', '');
     // All links stay visible — only text labels are dimmed via CSS
+    enrichIPLabels();
+  } else {
+    // Restore original IP labels (strip DNS enrichment)
+    resetIPLabels();
   }
+}
+
+function resetIPLabels() {
+  d3.selectAll('.node-ip-label, .link-label').each(function() {
+    const el = d3.select(this);
+    const original = el.attr('data-original-ip');
+    if (original) el.text(original);
+  });
+}
+
+// Check if a domain has CDN coverage: matches if CDN domain equals the zone name,
+// the FQDN itself, or the FQDN is a subdomain of a CDN domain (e.g., CDN on
+// "example.com" covers "www.example.com")
+function hasCDN(zoneName, fqdn) {
+  if (!cdnDomainSet || cdnDomainSet.size === 0) return false;
+  if (cdnDomainSet.has(zoneName)) return true;
+  if (fqdn && cdnDomainSet.has(fqdn)) return true;
+  // Check if FQDN is a subdomain of any CDN domain
+  if (fqdn) {
+    for (const cdnDomain of cdnDomainSet) {
+      if (fqdn.endsWith('.' + cdnDomain) || fqdn === cdnDomain) return true;
+    }
+  }
+  return false;
+}
+
+function enrichIPLabels() {
+  if (!reverseIpMap && !forwardDnsMap) return;
+  // Enrich node IP sublabels with DNS hostnames
+  d3.selectAll('.node-ip-label').each(function() {
+    const el = d3.select(this);
+    const original = el.attr('data-original-ip') || el.text();
+    if (!el.attr('data-original-ip')) el.attr('data-original-ip', original);
+
+    const ip = original.split('/')[0].trim(); // Strip CIDR notation
+    const parts = [];
+
+    // Check reverse DNS
+    const rHostname = reverseIpMap?.get(ip);
+    if (rHostname) parts.push(rHostname);
+
+    // Check forward DNS (A/AAAA records pointing to this IP)
+    const fEntries = forwardDnsMap?.get(ip);
+    if (fEntries) {
+      fEntries.forEach(e => {
+        const label = hasCDN(e.zoneName, e.fqdn) ? `${e.fqdn} [CDN]` : e.fqdn;
+        if (!parts.includes(label) && label !== rHostname) parts.push(label);
+      });
+    }
+
+    if (parts.length > 0) {
+      el.text(`${original} (${parts.join(', ')})`);
+    }
+  });
+
+  // Enrich link labels (IPs on connections)
+  d3.selectAll('.link-label').each(function() {
+    const el = d3.select(this);
+    const original = el.attr('data-original-ip') || el.text();
+    if (!original || !original.trim()) return;
+    if (!el.attr('data-original-ip')) el.attr('data-original-ip', original);
+
+    const ip = original.split('/')[0].trim();
+    const rHostname = reverseIpMap?.get(ip);
+    const fEntries = forwardDnsMap?.get(ip);
+    const dnsName = rHostname || (fEntries ? fEntries[0]?.fqdn : null);
+    if (dnsName) {
+      el.text(`${original} (${dnsName})`);
+    }
+  });
 }
 
 function toggleHighlightsOverlay() {
@@ -3341,6 +3476,123 @@ function renderIPBlockPanel(filterLocation) {
   });
 
   panel.innerHTML = html;
+}
+
+// ── DNS & CDN Panel ──
+let dnsZones = null;
+let reverseIpMap = null;       // Map: IP string → hostname
+let forwardDnsMap = null;      // Map: IP string → [{ zoneName, recordName }]
+let cdnDomainSet = null;       // Set of domain names with CDN distribution
+let dnsRecordCounts = null;    // Map: zoneId → record count
+
+async function loadDNSData() {
+  if (dnsZones) return; // Already loaded (global data, fetch once)
+  try {
+    const [zones, reverseDns, distributions] = await Promise.all([
+      fetchDNSZones(),
+      fetchReverseDNS(),
+      fetchCDNDistributions(),
+    ]);
+
+    if (!zones?.items || zones.items.length === 0) {
+      console.warn('[VDC-Viz] No DNS zones found');
+      return;
+    }
+
+    dnsZones = zones.items;
+    console.log(`[VDC-Viz] Loaded ${dnsZones.length} DNS zone(s)`);
+
+    // Build reverse IP → hostname map
+    reverseIpMap = new Map();
+    if (reverseDns?.items) {
+      reverseDns.items.forEach(rec => {
+        const ip = rec.properties?.ip;
+        const hostname = rec.properties?.name;
+        if (ip && hostname) reverseIpMap.set(ip, hostname);
+      });
+      console.log(`[VDC-Viz] Built reverse DNS map: ${reverseIpMap.size} record(s)`);
+    }
+
+    // Build CDN domain set
+    cdnDomainSet = new Set();
+    if (distributions?.items) {
+      distributions.items.forEach(dist => {
+        const domain = dist.properties?.domain;
+        if (domain) cdnDomainSet.add(domain);
+      });
+      console.log(`[VDC-Viz] CDN distributions: ${cdnDomainSet.size} domain(s) protected`);
+    }
+
+    // Fetch records for each zone → build forward DNS map (IP → domains)
+    forwardDnsMap = new Map();
+    dnsRecordCounts = new Map();
+    await Promise.all(dnsZones.map(async (zone) => {
+      const records = await fetchDNSRecords(zone.id);
+      const items = records?.items || [];
+      const zoneName = zone.properties?.zoneName || zone.id;
+      dnsRecordCounts.set(zone.id, items.length);
+
+      items.forEach(rec => {
+        const rType = rec.properties?.type;
+        const content = rec.properties?.content || '';
+        if ((rType === 'A' || rType === 'AAAA') && content) {
+          const recName = rec.properties?.name || '';
+          const fqdn = recName ? `${recName}.${zoneName}` : zoneName;
+          if (!forwardDnsMap.has(content)) forwardDnsMap.set(content, []);
+          forwardDnsMap.get(content).push({ zoneName, fqdn });
+        }
+      });
+    }));
+
+    console.log(`[VDC-Viz] Forward DNS map: ${forwardDnsMap.size} IP(s) with DNS records`);
+
+    renderDNSPanel();
+    enrichIPLabels();
+  } catch (e) {
+    console.warn('[VDC-Viz] DNS/CDN data fetch failed:', e.message);
+  }
+}
+
+function renderDNSPanel() {
+  const panel = document.getElementById('dnsPanel');
+  const section = document.getElementById('dnsSection');
+  if (!dnsZones || dnsZones.length === 0) {
+    if (section) section.style.display = 'none';
+    return;
+  }
+  if (section) section.style.display = '';
+  const countEl = document.getElementById('dnsZoneCount');
+  if (countEl) countEl.textContent = dnsZones.length;
+
+  let html = '';
+  dnsZones.forEach(zone => {
+    const zoneName = zone.properties?.zoneName || zone.id;
+    const isEnabled = zone.properties?.enabled !== false;
+    const zoneCDN = hasCDN(zoneName, zoneName);
+    const recCount = dnsRecordCounts?.get(zone.id) || 0;
+    const state = zone.metadata?.state || '';
+
+    // Find topology IPs matching this zone's A/AAAA records
+    const matchingIps = [];
+    forwardDnsMap?.forEach((entries, ip) => {
+      if (entries.some(e => e.zoneName === zoneName)) matchingIps.push(ip);
+    });
+
+    const cdnBadge = zoneCDN ? '<span class="cdn-badge">CDN</span>' : '';
+    const stateColor = state === 'AVAILABLE' || state === 'CREATED' ? 'var(--success)' : 'var(--text-muted)';
+
+    html += `<div class="dns-zone-card" style="border-left-color:${stateColor}">
+      <div style="font-weight:600;color:var(--text-primary);margin-bottom:2px;">
+        ${escapeHtml(zoneName)} ${cdnBadge}
+      </div>
+      <div style="color:var(--text-muted);font-size:10px;">
+        ${recCount} record${recCount !== 1 ? 's' : ''} &middot; ${isEnabled ? 'Enabled' : 'Disabled'}
+      </div>
+      ${matchingIps.length > 0 ? `<div style="color:var(--text-secondary);font-size:10px;margin-top:2px;">Topology IPs: ${matchingIps.join(', ')}</div>` : ''}
+    </div>`;
+  });
+
+  if (panel) panel.innerHTML = html;
 }
 
 // ── Security Groups Overlay ──
@@ -3607,8 +3859,9 @@ async function connect() {
       console.log('[VDC-Viz] No user info available');
     }
 
-    // Fetch IP blocks in background (non-blocking)
+    // Fetch IP blocks and DNS/CDN data in background (non-blocking)
     loadIPBlocks();
+    loadDNSData();
   } catch (e) {
     toast(`Connection failed: ${e.message}`, 'error');
     console.error(e);
@@ -3697,9 +3950,10 @@ async function loadVDC() {
     // Update map background to show VDC region
     updateMapBackground(dcLocation);
 
-    // Load security groups and refresh IP block panel in background (non-blocking)
+    // Load security groups, refresh IP/DNS panels in background (non-blocking)
     loadSecurityOverlay(dcId);
     if (ipBlockData) renderIPBlockPanel(dcLocation);
+    if (dnsZones) { renderDNSPanel(); if (ipViewActive) enrichIPLabels(); }
   } catch (e) {
     toast(`Failed to load VDC: ${e.message}`, 'error');
     console.error(e);
@@ -3918,8 +4172,9 @@ async function loadLocation() {
     // Update map background to show location region
     updateMapBackground(loc);
 
-    // Refresh IP block panel filtered to this location
+    // Refresh IP block and DNS panels filtered to this location
     if (ipBlockData) renderIPBlockPanel(loc);
+    if (dnsZones) { renderDNSPanel(); if (ipViewActive) enrichIPLabels(); }
 
   } catch (e) {
     toast(`Failed to load location: ${e.message}`, 'error');

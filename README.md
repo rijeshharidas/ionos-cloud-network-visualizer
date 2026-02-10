@@ -34,7 +34,7 @@
 
 🌐 **Regional Cross-Connect View** — Load all VDCs within a region onto a single canvas to see Private Cross Connect links between data centers. VDCs in the same metro are treated as one region since they can be interconnected.
 
-📡 **IP View** — Toggle IP address labels across the entire topology and inspect public IP block allocations (IPv4 and IPv6) in a dedicated sidebar panel.
+📡 **IP & DNS View** — Toggle IP address labels across the entire topology, enriched with reverse DNS hostnames and forward DNS record names. Public IP block allocations (IPv4 and IPv6) and DNS zones are shown in dedicated sidebar panels. Zones with CDN distributions are flagged with a CDN badge.
 
 🛡️ **Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, and Cross Connect. Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
 
@@ -161,6 +161,8 @@ Each resource type has a distinctive custom SVG icon for instant visual identifi
 | **Security** | VPN Gateways (WireGuard, IPSec) |
 | **Load Balancing** | Application Load Balancers, Network Load Balancers |
 | **Streaming** | Kafka Clusters |
+| **DNS** | Public Zones, Reverse DNS Records |
+| **CDN** | CDN Distributions (indicated on DNS zones) |
 
 ## Architecture
 
@@ -195,6 +197,8 @@ Your API token never leaves your machine.
 | Load Balancers | `/cloudapi/v6` | Per Data Center |
 | Cross Connects | `/cloudapi/v6` | Centralized |
 | Kafka | `kafka.{location}.ionos.com` | Regional |
+| Cloud DNS | `dns.de-fra.ionos.com` | Centralized |
+| CDN | `cdn.de-fra.ionos.com` | Centralized |
 | User Management | `/cloudapi/v6/um` | Centralized |
 
 ## Configuration
