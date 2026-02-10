@@ -18,6 +18,19 @@
 
 ---
 
+<p align="center">
+  <a href="#key-capabilities">Key Capabilities</a> &nbsp;·&nbsp;
+  <a href="#quick-start">Quick Start</a> &nbsp;·&nbsp;
+  <a href="#view-modes">View Modes</a> &nbsp;·&nbsp;
+  <a href="#supported-resource-types">Resources</a> &nbsp;·&nbsp;
+  <a href="#keyboard-shortcuts">Shortcuts</a> &nbsp;·&nbsp;
+  <a href="#architecture">Architecture</a> &nbsp;·&nbsp;
+  <a href="#security">Security</a> &nbsp;·&nbsp;
+  <a href="#contributing">Contributing</a>
+</p>
+
+---
+
 ### Global Map & VDC Drill-Down
 
 [![Global Map and VDC topology drill-down](docs/visualizer.gif)](docs/visualizer.gif)
