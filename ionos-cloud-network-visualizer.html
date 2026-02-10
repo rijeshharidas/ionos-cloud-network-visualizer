@@ -195,7 +195,7 @@
     opacity: 0; transition: opacity 0.6s ease, z-index 0s;
     pointer-events: none;
   }
-  #mapBackground.visible { opacity: 0.72; }
+  #mapBackground.visible { opacity: 0.85; }
   #mapBackground .leaflet-control-container { display: none; }
   #mapBackground .leaflet-tile-pane { filter: grayscale(0.1) brightness(1.1) contrast(1.15); }
 
@@ -1942,6 +1942,8 @@ function showMapOverview() {
   clearMapMarkers();
   mapDrillRegion = null;
   document.getElementById('mapBackBtn').classList.remove('visible');
+  closeDetail();
+  closeHighlightsOverlay();
 
   // Switch to overview mode
   el.classList.remove('visible');
@@ -2764,7 +2766,10 @@ function showDetail(d) {
   panel.classList.add('open');
 }
 
-function closeDetail() { document.getElementById('detailPanel').classList.remove('open'); }
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+  clearHighlight();
+}
 
 function setLoadingStage(stage) {
   const stages = document.querySelectorAll('.loading-stage');
@@ -3023,13 +3028,23 @@ function zoomFit() {
   const svg = d3.select('#graphSvg');
   const width = document.getElementById('mainArea').clientWidth;
   const height = document.getElementById('mainArea').clientHeight;
+  const nodeCount = graphData.nodes.length;
+
+  // Larger padding for small graphs so nodes aren't crammed at edges
+  const pad = nodeCount <= 6 ? 150 : 60;
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   graphData.nodes.forEach(n => {
-    minX = Math.min(minX, n.x - 60); maxX = Math.max(maxX, n.x + 60);
-    minY = Math.min(minY, n.y - 60); maxY = Math.max(maxY, n.y + 60);
+    minX = Math.min(minX, n.x - pad); maxX = Math.max(maxX, n.x + pad);
+    minY = Math.min(minY, n.y - pad); maxY = Math.max(maxY, n.y + pad);
   });
   const dx = maxX - minX, dy = maxY - minY;
-  const scale = Math.min(0.9 * width / dx, 0.9 * height / dy, 2);
+
+  // For small graphs, enforce a minimum bounding box so they don't appear too zoomed out
+  const minSpan = Math.max(width * 0.4, 400);
+  const effDx = Math.max(dx, minSpan);
+  const effDy = Math.max(dy, minSpan * 0.6);
+
+  const scale = Math.min(0.85 * width / effDx, 0.85 * height / effDy, 2);
   const tx = width / 2 - scale * (minX + dx / 2);
   const ty = height / 2 - scale * (minY + dy / 2);
   svg.transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
@@ -3251,6 +3266,13 @@ function toggleHighlightsOverlay() {
   const btn = document.getElementById('hlOverlayBtn');
   const isOpen = overlay.classList.toggle('open');
   btn.classList.toggle('active', isOpen);
+}
+
+function closeHighlightsOverlay() {
+  const overlay = document.getElementById('highlightsOverlay');
+  const btn = document.getElementById('hlOverlayBtn');
+  if (overlay) overlay.classList.remove('open');
+  if (btn) btn.classList.remove('active');
 }
 
 // Helper: returns IP text for a given node (used by IP View mode)
@@ -3875,6 +3897,10 @@ async function loadVDC() {
   const dcId = document.getElementById('dcSelect').value;
   if (!dcId) return;
 
+  // Clean up previous view state
+  closeDetail();
+  closeHighlightsOverlay();
+
   // Cancel any in-flight requests from previous VDC load
   if (currentAbortController) currentAbortController.abort();
   currentAbortController = new AbortController();
@@ -4027,6 +4053,10 @@ function toggleVdc(vdcIdx) {
 async function loadLocation() {
   const loc = document.getElementById('locSelect').value;
   if (!loc) return;
+
+  // Clean up previous view state
+  closeDetail();
+  closeHighlightsOverlay();
 
   // Match all VDCs in this region (e.g. "de/fra" matches "de/fra", "de/fra/1", "de/fra/2")
   const dcsInLoc = datacenters.filter(dc => {
