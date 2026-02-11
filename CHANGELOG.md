@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dynamic location discovery via `/cloudapi/v6/locations` API after authentication
 - Cloud DNS integration: sidebar panel with zone list, record counts, and forward DNS lookup
 - Reverse DNS enrichment on IP View labels (IP addresses show hostnames in parentheses)
-- CDN badge on DNS zones that have CDN distributions configured
+- CDN badge on DNS zones that have CDN distributions configured; muted "No CDN" indicator on zones without CDN
+- Compute View toggle (`C`) showing VM type, cores, RAM, and CPU family on server/cube nodes, color-coded by type (Enterprise/vCPU/Cube/GPU)
 - DNS Names and Reverse DNS rows in node detail panel for resources with public IPs
 - Public IP block sidebar panel showing IPv4 and IPv6 allocations
 - GitHub Sponsors heart icon in sidebar footer

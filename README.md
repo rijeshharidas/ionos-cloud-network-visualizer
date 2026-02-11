@@ -47,7 +47,9 @@
 
 🌐 **Regional Cross-Connect View** — Load all VDCs within a region onto a single canvas to see Private Cross Connect links between data centers. VDCs in the same metro are treated as one region since they can be interconnected.
 
-📡 **IP & DNS View** — Toggle IP address labels across the entire topology, enriched with reverse DNS hostnames and forward DNS record names. Public IP block allocations (IPv4 and IPv6) and DNS zones are shown in dedicated sidebar panels. Zones with CDN distributions are flagged with a CDN badge.
+📡 **IP & DNS View** — Toggle IP address labels across the entire topology, enriched with reverse DNS hostnames and forward DNS record names. Public IP block allocations (IPv4 and IPv6) and DNS zones are shown in dedicated sidebar panels. Zones with CDN distributions are flagged with a CDN badge; zones without CDN show a muted "No CDN" indicator.
+
+🖥️ **Compute View** — Toggle compute details across all server and cube nodes showing VM type, CPU cores, RAM, and CPU family. Color-coded by VM type: cyan for dedicated-core (Enterprise), purple for vCPU, orange for Cube, and rose for GPU instances. Press `C` to toggle.
 
 🛡️ **Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, and Cross Connect. Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
 
@@ -237,6 +239,7 @@ python3 serve.py [options]
 | `F` | Fit graph to view |
 | `L` | Toggle labels |
 | `I` | Toggle IP view |
+| `C` | Toggle compute view |
 | `H` | Toggle highlights overlay |
 | `M` | Toggle map background |
 | `G` | Global map view |

@@ -588,11 +588,38 @@
     transform: scale(1.15);
   }
 
-  .ip-view-active .node-label { opacity: 0.12 !important; }
-  .ip-view-active .node-sublabel:not(.node-ip-label) { opacity: 0.12 !important; }
-  .ip-view-active .node-ip-label { opacity: 1 !important; font-size: 11px !important; fill: #38bdf8 !important; font-weight: 600 !important; }
+  .ip-view-active .node-label { opacity: 0.05 !important; }
+  .ip-view-active .node-sublabel:not(.node-ip-label) { opacity: 0 !important; }
+  .ip-view-active .node-ip-label { opacity: 1 !important; font-weight: 600 !important; fill: #38bdf8 !important; font-size: 10px; }
+  .ip-view-active .node-ip-label .ip-line-addr { font-size: 11px; fill: #38bdf8; }
+  .ip-view-active .node-ip-label .ip-line-dns { font-size: 9px; fill: #7dd3fc; }
+  .ip-view-active .node-ip-label .ip-line-cdn { font-size: 9px; fill: #22d3ee; }
   .ip-view-active .link-label { opacity: 1 !important; fill: #38bdf8 !important; font-weight: 600 !important; }
   .ip-view-active .link-label-bg { opacity: 0.8 !important; }
+  .ip-view-active .link-label .ip-line-dns { font-size: 8px; fill: #7dd3fc; }
+
+  /* ---- Compute View ---- */
+  /* Dim non-compute nodes — visible but de-emphasised */
+  .compute-view-active .node:not([data-ntype="server"]):not([data-ntype="cube"]) { opacity: 0.5 !important; }
+  /* Dim links — still visible for context */
+  .compute-view-active .link { opacity: 0.35 !important; filter: none !important; }
+  .compute-view-active .link.traffic-flow { animation: none !important; }
+  .compute-view-active .link-label, .compute-view-active .link-label-bg { opacity: 0.25 !important; }
+  /* Fade non-compute labels */
+  .compute-view-active .node-label { opacity: 0.4 !important; }
+  .compute-view-active .node[data-ntype="server"] .node-label,
+  .compute-view-active .node[data-ntype="cube"] .node-label { opacity: 1 !important; font-size: 10px !important; }
+  .compute-view-active .node-sublabel:not(.node-compute-label) { opacity: 0.15 !important; }
+  /* Compute labels: 2-line layout (type+cpu on line 1, specs on line 2) */
+  .compute-view-active .node-compute-label { opacity: 1 !important; font-weight: 600 !important; }
+  .compute-view-active .node-compute-label .compute-line-type { font-size: 10px; }
+  .compute-view-active .node-compute-label .compute-line-spec { font-size: 9px; }
+  /* Color by VM type */
+  .compute-view-active .node-compute-label.compute-enterprise { fill: #22d3ee !important; }  /* cyan — dedicated core */
+  .compute-view-active .node-compute-label.compute-vcpu { fill: #a78bfa !important; }       /* purple — vCPU */
+  .compute-view-active .node-compute-label.compute-cube { fill: #fb923c !important; }       /* orange — Cube */
+  .compute-view-active .node-compute-label.compute-gpu { fill: #f43f5e !important; }        /* rose — GPU */
+  .compute-view-active .node-compute-label.compute-other { fill: var(--text-secondary) !important; }
 
   /* ---- IP Block Panel ---- */
   .ip-block-panel { margin-top: 4px; }
@@ -611,6 +638,7 @@
   .dns-zone-card { background: var(--bg-tertiary); border-radius: 6px; padding: 8px 10px; border-left: 3px solid var(--text-muted); transition: background 0.2s; }
   .dns-zone-card:hover { background: var(--bg-hover); }
   .cdn-badge { display: inline-block; background: #11C7E6; color: #001B41; padding: 1px 5px; border-radius: 3px; font-weight: 700; font-size: 9px; margin-left: 6px; vertical-align: middle; }
+  .cdn-badge.cdn-badge-off { background: var(--bg-hover); color: var(--text-muted); font-weight: 600; }
 
   /* ---- Security Badge ---- */
   .sg-badge { font-size: 8px; font-weight: 700; pointer-events: none; }
@@ -851,6 +879,9 @@
     <button onclick="toggleIPView()" id="ipViewBtn" aria-label="Toggle IP view" data-tip="IP view (I)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 9V4h16v5M4 15v5h16v-5"/><text x="12" y="13.5" text-anchor="middle" font-size="8" font-weight="700" font-family="monospace" fill="currentColor" stroke="none">IP</text></svg>
     </button>
+    <button onclick="toggleComputeView()" id="computeViewBtn" aria-label="Toggle compute view" data-tip="Compute view (C)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><text x="12" y="12" text-anchor="middle" font-size="7" font-weight="700" font-family="monospace" fill="currentColor" stroke="none">CPU</text></svg>
+    </button>
     <button onclick="toggleHighlightsOverlay()" id="hlOverlayBtn" aria-label="Toggle highlights" data-tip="Highlights (H)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     </button>
@@ -903,6 +934,7 @@
       <tr><th>F</th><td>Fit to view</td></tr>
       <tr><th>L</th><td>Toggle labels</td></tr>
       <tr><th>I</th><td>Toggle IP view</td></tr>
+      <tr><th>C</th><td>Toggle compute view</td></tr>
       <tr><th>H</th><td>Toggle highlights</td></tr>
       <tr><th>M</th><td>Toggle map background</td></tr>
       <tr><th>G</th><td>Global map view</td></tr>
@@ -2392,6 +2424,7 @@ function renderGraph(data) {
     .data(data.nodes)
     .join('g')
     .attr('class', 'node')
+    .attr('data-ntype', d => d.type)
     .call(d3.drag()
       .on('start', dragStarted)
       .on('drag', dragged)
@@ -2413,7 +2446,15 @@ function renderGraph(data) {
 
   // Sublabels (line 1)
   node.append('text')
-    .attr('class', d => d.type === 'lan' ? 'node-sublabel node-ip-label' : 'node-sublabel')
+    .attr('class', d => {
+      if (d.type === 'lan') return 'node-sublabel node-ip-label';
+      if (d.type === 'server' || d.type === 'cube') {
+        const vmType = (d.data.type || '').toUpperCase();
+        const cls = vmType === 'CUBE' ? 'compute-cube' : vmType === 'VCPU' ? 'compute-vcpu' : vmType === 'ENTERPRISE' ? 'compute-enterprise' : 'compute-other';
+        return `node-sublabel node-compute-label ${cls}`;
+      }
+      return 'node-sublabel';
+    })
     .attr('dy', d => (NODE_TYPES[d.type]?.radius || 28) + 28)
     .text(d => {
       if (d.type === 'lan') {
@@ -3375,6 +3416,8 @@ function toggleIPView() {
   btn.classList.toggle('active', ipViewActive);
 
   if (ipViewActive) {
+    // Deactivate Compute View if active
+    if (computeViewActive) toggleComputeView();
     // Ensure IP labels and link labels are visible
     d3.selectAll('.node-ip-label, .link-label, .link-label-bg').style('display', '');
     // All links stay visible — only text labels are dimmed via CSS
@@ -3385,11 +3428,120 @@ function toggleIPView() {
   }
 }
 
+let computeViewActive = false;
+function toggleComputeView() {
+  computeViewActive = !computeViewActive;
+  const svg = document.getElementById('graphSvg');
+  const btn = document.getElementById('computeViewBtn');
+  svg.classList.toggle('compute-view-active', computeViewActive);
+  btn.classList.toggle('active', computeViewActive);
+
+  if (computeViewActive) {
+    // Deactivate IP View if active
+    if (ipViewActive) toggleIPView();
+    // Enrich labels with detailed compute info (hides originals, appends new text elements)
+    enrichComputeLabels();
+  } else {
+    // Restore original compute sublabels
+    resetComputeLabels();
+  }
+}
+
+function enrichComputeLabels() {
+  // Strategy: hide the original sublabel and append a NEW <text> element
+  // with absolute y positioning on each tspan. This avoids dy/tspan
+  // interaction issues that cause labels to render inside the node circle.
+  d3.selectAll('.node-compute-label').each(function() {
+    const el = d3.select(this);
+    const parent = d3.select(this.parentNode);
+
+    // Save original text for reset
+    if (!el.attr('data-original-compute')) {
+      el.attr('data-original-compute', el.text());
+    }
+
+    // Get node data
+    const nodeData = parent.datum();
+    if (!nodeData || (nodeData.type !== 'server' && nodeData.type !== 'cube')) return;
+
+    // Hide the original sublabel (display:none survives CSS opacity overrides)
+    el.style('display', 'none');
+
+    // Remove any previously created compute-detail label
+    parent.selectAll('.compute-detail-label').remove();
+
+    const radius = NODE_TYPES[nodeData.type]?.radius || 28;
+    const vmType = (nodeData.data.type || '').toUpperCase();
+    const cores = nodeData.data.cores || '?';
+    const ram = formatRAM(nodeData.data.ram);
+    const cpuFamily = nodeData.data.cpuFamily || '';
+    const isGPU = /gpu/i.test(cpuFamily);
+
+    const typeLabel = isGPU ? 'GPU' : vmType === 'CUBE' ? 'CUBE' : vmType === 'VCPU' ? 'vCPU' : vmType === 'ENTERPRISE' ? 'DediCore' : vmType || '?';
+
+    // Determine color class
+    let colorClass = 'compute-other';
+    if (isGPU) colorClass = 'compute-gpu';
+    else if (vmType === 'CUBE') colorClass = 'compute-cube';
+    else if (vmType === 'VCPU') colorClass = 'compute-vcpu';
+    else if (vmType === 'ENTERPRISE') colorClass = 'compute-enterprise';
+
+    // Shorten CPU family: INTEL_SKYLAKE -> Skylake, AMD_EPYC -> Epyc
+    let cpuShort = '';
+    if (cpuFamily && !isGPU) {
+      cpuShort = cpuFamily.replace(/^(INTEL|AMD)_/i, '').replace(/_/g, ' ')
+        .split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+
+    // Create a brand-new <text> element with absolute y positions on tspans
+    // Line 1: Type + CPU family (e.g. "DediCore · Skylake")
+    // Line 2: Cores + RAM (e.g. "3C · 4 GB")
+    const baseY = radius + 30;   // snug below node name label (which sits at radius+16)
+    const lineGap = 11;          // tight vertical gap between lines
+
+    const newText = parent.append('text')
+      .attr('class', `compute-detail-label node-compute-label ${colorClass}`)
+      .attr('text-anchor', 'middle')
+      .style('pointer-events', 'none')
+      .style('font-weight', '600');
+
+    // Line 1: type + CPU on same line
+    const line1 = cpuShort ? `${typeLabel} \u00b7 ${cpuShort}` : typeLabel;
+    newText.append('tspan')
+      .attr('class', 'compute-line-type')
+      .attr('x', 0).attr('y', baseY)
+      .text(line1);
+    // Line 2: cores + RAM
+    newText.append('tspan')
+      .attr('class', 'compute-line-spec')
+      .attr('x', 0).attr('y', baseY + lineGap)
+      .text(`${cores}C \u00b7 ${ram}`);
+  });
+}
+
+function resetComputeLabels() {
+  // Remove the appended compute-detail labels
+  d3.selectAll('.compute-detail-label').remove();
+  // Show the original sublabels again
+  d3.selectAll('.node-compute-label').each(function() {
+    d3.select(this).style('display', null);
+  });
+}
+
 function resetIPLabels() {
-  d3.selectAll('.node-ip-label, .link-label').each(function() {
+  // Remove appended ip-detail labels
+  d3.selectAll('.ip-detail-label').remove();
+  // Show originals and clean up link label tspans
+  d3.selectAll('.node-ip-label').each(function() {
+    d3.select(this).style('display', null);
+  });
+  d3.selectAll('.link-label').each(function() {
     const el = d3.select(this);
     const original = el.attr('data-original-ip');
-    if (original) el.text(original);
+    if (original) {
+      el.selectAll('tspan').remove();
+      el.text(original);
+    }
   });
 }
 
@@ -3411,34 +3563,85 @@ function hasCDN(zoneName, fqdn) {
 
 function enrichIPLabels() {
   if (!reverseIpMap && !forwardDnsMap) return;
-  // Enrich node IP sublabels with DNS hostnames
-  d3.selectAll('.node-ip-label').each(function() {
-    const el = d3.select(this);
-    const original = el.attr('data-original-ip') || el.text();
-    if (!el.attr('data-original-ip')) el.attr('data-original-ip', original);
 
-    const ip = original.split('/')[0].trim(); // Strip CIDR notation
-    const parts = [];
-
-    // Check reverse DNS
+  // Helper: collect DNS entries for an IP
+  function dnsForIp(ip) {
+    const dns = [];
     const rHostname = reverseIpMap?.get(ip);
-    if (rHostname) parts.push(rHostname);
-
-    // Check forward DNS (A/AAAA records pointing to this IP)
+    if (rHostname) dns.push({ name: rHostname, cdn: false });
     const fEntries = forwardDnsMap?.get(ip);
     if (fEntries) {
       fEntries.forEach(e => {
-        const label = hasCDN(e.zoneName, e.fqdn) ? `${e.fqdn} [CDN]` : e.fqdn;
-        if (!parts.includes(label) && label !== rHostname) parts.push(label);
+        const isCdn = hasCDN(e.zoneName, e.fqdn);
+        const label = e.fqdn;
+        if (!dns.some(d => d.name === label) && label !== rHostname) {
+          dns.push({ name: label, cdn: isCdn });
+        }
       });
     }
+    return dns;
+  }
 
-    if (parts.length > 0) {
-      el.text(`${original} (${parts.join(', ')})`);
+  // Enrich node IP sublabels — create new text elements with absolute y positioning
+  d3.selectAll('.node-ip-label').each(function() {
+    const el = d3.select(this);
+    const parent = d3.select(this.parentNode);
+    const original = el.attr('data-original-ip') || el.text();
+    if (!el.attr('data-original-ip')) el.attr('data-original-ip', original);
+    if (!original || !original.trim()) return;
+
+    // Parse IPs (could be comma-separated list)
+    const ips = original.split(',').map(s => s.trim()).filter(Boolean);
+    const allDns = [];
+    ips.forEach(raw => {
+      const ip = raw.split('/')[0].trim();
+      dnsForIp(ip).forEach(d => {
+        if (!allDns.some(x => x.name === d.name)) allDns.push(d);
+      });
+    });
+
+    if (allDns.length === 0) return;
+
+    // Hide original and remove any previous detail label
+    el.style('display', 'none');
+    parent.selectAll('.ip-detail-label').remove();
+
+    // Position: snug below node name (radius+16) with comfortable spacing
+    const nodeData = parent.datum();
+    const radius = NODE_TYPES[nodeData?.type]?.radius || 28;
+    const baseY = radius + 30;   // IP address line
+    const lineGap = 13;          // gap between DNS lines
+
+    const newText = parent.append('text')
+      .attr('class', 'ip-detail-label node-ip-label')
+      .attr('text-anchor', 'middle')
+      .style('pointer-events', 'none')
+      .style('font-weight', '600');
+
+    // Line 1: IP address(es)
+    newText.append('tspan')
+      .attr('class', 'ip-line-addr')
+      .attr('x', 0).attr('y', baseY)
+      .text(truncate(original, 30));
+
+    // Lines 2+: DNS hostnames
+    allDns.slice(0, 3).forEach((d, i) => {
+      const cls = d.cdn ? 'ip-line-cdn' : 'ip-line-dns';
+      const label = d.cdn ? `${d.name} [CDN]` : d.name;
+      newText.append('tspan')
+        .attr('class', cls)
+        .attr('x', 0).attr('y', baseY + lineGap * (i + 1))
+        .text(truncate(label, 32));
+    });
+    if (allDns.length > 3) {
+      newText.append('tspan')
+        .attr('class', 'ip-line-dns')
+        .attr('x', 0).attr('y', baseY + lineGap * 4)
+        .text(`+${allDns.length - 3} more`);
     }
   });
 
-  // Enrich link labels (IPs on connections)
+  // Enrich link labels (IPs on connections) — multiline too
   d3.selectAll('.link-label').each(function() {
     const el = d3.select(this);
     const original = el.attr('data-original-ip') || el.text();
@@ -3446,12 +3649,18 @@ function enrichIPLabels() {
     if (!el.attr('data-original-ip')) el.attr('data-original-ip', original);
 
     const ip = original.split('/')[0].trim();
-    const rHostname = reverseIpMap?.get(ip);
-    const fEntries = forwardDnsMap?.get(ip);
-    const dnsName = rHostname || (fEntries ? fEntries[0]?.fqdn : null);
-    if (dnsName) {
-      el.text(`${original} (${dnsName})`);
-    }
+    const dns = dnsForIp(ip);
+    if (dns.length === 0) return;
+
+    el.text(null);
+    el.append('tspan')
+      .attr('class', 'ip-line-addr')
+      .attr('x', 0).attr('dy', '0')
+      .text(original);
+    el.append('tspan')
+      .attr('class', 'ip-line-dns')
+      .attr('x', 0).attr('dy', '1.15em')
+      .text(truncate(dns[0].name, 28));
   });
 }
 
@@ -3794,7 +4003,9 @@ function renderDNSPanel() {
       if (entries.some(e => e.zoneName === zoneName)) matchingIps.push(ip);
     });
 
-    const cdnBadge = zoneCDN ? '<span class="cdn-badge">CDN</span>' : '';
+    const cdnBadge = zoneCDN
+      ? '<span class="cdn-badge">CDN</span>'
+      : '<span class="cdn-badge cdn-badge-off">No CDN</span>';
     const stateColor = state === 'AVAILABLE' || state === 'CREATED' ? 'var(--success)' : 'var(--text-muted)';
 
     html += `<div class="dns-zone-card" style="border-left-color:${stateColor}">
@@ -4502,6 +4713,7 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'f' || e.key === 'F') zoomFit();
   else if (e.key === 'l' || e.key === 'L') toggleLabels();
   else if (e.key === 'i' || e.key === 'I') toggleIPView();
+  else if (e.key === 'c' || e.key === 'C') toggleComputeView();
   else if (e.key === 'h' || e.key === 'H') toggleHighlightsOverlay();
   else if (e.key === 'm' || e.key === 'M') toggleMapBackground();
   else if (e.key === 'g' || e.key === 'G') setViewMode('map');
