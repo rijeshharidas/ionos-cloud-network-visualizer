@@ -2450,7 +2450,7 @@ function renderGraph(data) {
       if (d.type === 'lan') return 'node-sublabel node-ip-label';
       if (d.type === 'server' || d.type === 'cube') {
         const vmType = (d.data.type || '').toUpperCase();
-        const cls = vmType === 'CUBE' ? 'compute-cube' : vmType === 'VCPU' ? 'compute-vcpu' : vmType === 'ENTERPRISE' ? 'compute-enterprise' : 'compute-other';
+        const cls = vmType === 'CUBE' ? 'compute-cube' : vmType === 'VCPU' ? 'compute-vcpu' : vmType === 'ENTERPRISE' ? 'compute-enterprise' : vmType === 'GPU' ? 'compute-gpu' : 'compute-other';
         return `node-sublabel node-compute-label ${cls}`;
       }
       return 'node-sublabel';
@@ -3475,20 +3475,19 @@ function enrichComputeLabels() {
     const cores = nodeData.data.cores || '?';
     const ram = formatRAM(nodeData.data.ram);
     const cpuFamily = nodeData.data.cpuFamily || '';
-    const isGPU = /gpu/i.test(cpuFamily);
 
-    const typeLabel = isGPU ? 'GPU' : vmType === 'CUBE' ? 'CUBE' : vmType === 'VCPU' ? 'vCPU' : vmType === 'ENTERPRISE' ? 'DediCore' : vmType || '?';
+    const typeLabel = vmType === 'GPU' ? 'GPU' : vmType === 'CUBE' ? 'CUBE' : vmType === 'VCPU' ? 'vCPU' : vmType === 'ENTERPRISE' ? 'DediCore' : vmType || '?';
 
     // Determine color class
     let colorClass = 'compute-other';
-    if (isGPU) colorClass = 'compute-gpu';
+    if (vmType === 'GPU') colorClass = 'compute-gpu';
     else if (vmType === 'CUBE') colorClass = 'compute-cube';
     else if (vmType === 'VCPU') colorClass = 'compute-vcpu';
     else if (vmType === 'ENTERPRISE') colorClass = 'compute-enterprise';
 
     // Shorten CPU family: INTEL_SKYLAKE -> Skylake, AMD_EPYC -> Epyc
     let cpuShort = '';
-    if (cpuFamily && !isGPU) {
+    if (cpuFamily) {
       cpuShort = cpuFamily.replace(/^(INTEL|AMD)_/i, '').replace(/_/g, ' ')
         .split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     }
