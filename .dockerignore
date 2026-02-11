@@ -1,0 +1,17 @@
+.git
+.github
+.gitignore
+.markdownlint-cli2.jsonc
+.skills
+.vscode
+.idea
+node_modules
+docs
+CONTRIBUTING.md
+CHANGELOG.md
+LICENSE
+README.md
+*.log
+.env
+.env.local
+.DS_Store

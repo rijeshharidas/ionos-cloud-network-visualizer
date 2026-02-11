@@ -75,6 +75,15 @@ The server automatically opens your browser at `http://localhost:8080` (with aut
 2. The Global Map loads automatically — explore your regions
 3. Click into any VDC to visualize its full network topology
 
+### Docker
+
+```bash
+docker build -t ionos-cloud-visualizer .
+docker run -p 8080:8080 ionos-cloud-visualizer
+```
+
+Then open `http://localhost:8080` in your browser. No Python installation needed — just Docker.
+
 <details>
 <summary><strong>Installing Python</strong> (click to expand — skip if you already have Python 3.6+)</summary>
 

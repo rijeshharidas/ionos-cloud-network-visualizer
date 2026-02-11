@@ -202,6 +202,10 @@ def main() -> None:
         help=f"Port to listen on (default: {PORT})",
     )
     parser.add_argument(
+        "--host", type=str, default="127.0.0.1",
+        help="Address to bind to (default: 127.0.0.1, use 0.0.0.0 for Docker)",
+    )
+    parser.add_argument(
         "--no-browser", action="store_true",
         help="Don't auto-open the browser",
     )
@@ -221,7 +225,7 @@ def main() -> None:
     server: Optional[http.server.HTTPServer] = None
     for attempt in range(MAX_PORT_RETRIES + 1):
         try:
-            server = http.server.HTTPServer(("127.0.0.1", port), ProxyHandler)
+            server = http.server.HTTPServer((args.host, port), ProxyHandler)
             break
         except OSError:
             if attempt < MAX_PORT_RETRIES:

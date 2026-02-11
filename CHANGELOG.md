@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-02-11
+
+### Added (1.4.0)
+
+- Docker support: Dockerfile and .dockerignore for containerized deployment
+- `--host` flag on serve.py to allow binding to custom addresses (needed for Docker)
+
+### Changed (1.4.0)
+
+- Compute View: condensed to 2-line labels (type + CPU on line 1, cores/RAM on line 2)
+- Compute View: GPU classification now based on VM type instead of CPU family
+- IP View: new text elements with absolute positioning for reliable label layout
+- IP View: all IP labels consistently styled in blue; non-IP content fully dimmed
+- Both views use appended text elements instead of modifying existing ones (fixes label overlap)
+
 ## [1.3.0] - 2026-02-10
 
 ### Added (1.3.0)
