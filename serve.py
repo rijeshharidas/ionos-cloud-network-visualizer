@@ -114,7 +114,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         req.add_header("Authorization", f"Bearer {token}")
         req.add_header("Content-Type", "application/json")
         req.add_header("User-Agent", "IONOS-Cloud-Network-Visualizer/1.1")
-        if contract: # New block
+        if contract:
             req.add_header("X-Contract-Number", contract)
 
         ctx = ssl.create_default_context()
