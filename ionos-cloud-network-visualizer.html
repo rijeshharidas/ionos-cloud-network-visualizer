@@ -1397,6 +1397,8 @@ const SIM_CONFIG = {
 
 // ============================== STATE ==============================
 let apiToken = '';
+let currentContract = '';
+let userContracts = [];
 let datacenters = [];
 let currentDC = null;
 let graphData = { nodes: [], links: [] };
@@ -1426,6 +1428,7 @@ async function apiFetch(url, { signal } = {}) {
   if (useProxy()) {
     fetchUrl = `/proxy?url=${encodeURIComponent(url)}`;
     opts.headers['X-Token'] = apiToken;
+    if (currentContract) opts.headers['X-Contract'] = currentContract;
   }
   const resp = await fetch(fetchUrl, opts);
   if (!resp.ok) {
@@ -1443,6 +1446,22 @@ async function safeFetch(url, opts) {
     console.warn(`Fetch failed for ${url}:`, e.message); return null;
   }
 }
+
+
+// ============================ FETCH CONTRACTS =============================
+
+async function fetchContracts() {
+  const data = await apiFetch('https://api.ionos.com/cloudapi/v6/contracts');
+  return (data && data.items) ? data.items : [];
+}
+
+function handleContractChange(val) {
+  currentContract = val;
+  toast(`Switched to Contract ${val}`, 'info');
+  // Re-fetch datacenters for the new contract context
+  connect(true); 
+}
+
 
 // ============================== DATA FETCHING ==============================
 
@@ -3395,9 +3414,29 @@ function decodeJwtPayload(token) {
 function showUserInfo(user) {
   if (!user) return;
   const items = [];
-  if (user.email) items.push(`<div class="account-info-item"><div class="account-info-label">Email</div><div class="account-info-value">${escapeHtml(user.email)}</div></div>`);
-  if (user.contractNumber) items.push(`<div class="account-info-item"><div class="account-info-label">Contract</div><div class="account-info-value">${escapeHtml(String(user.contractNumber))}</div></div>`);
-  if (items.length === 0) return;
+  
+  if (user.email) {
+    items.push(`<div class="account-info-item"><div class="account-info-label">Email</div><div class="account-info-value">${escapeHtml(user.email)}</div></div>`);
+  }
+
+  if (user.contracts && user.contracts.length > 0) {
+    let contractHtml = '';
+    if (user.contracts.length > 1) {
+      // Multiple contracts: Create Dropdown
+      contractHtml = `<select id="contractSelect" onchange="handleContractChange(this.value)" style="padding:2px 4px; height:auto; font-size:11px; margin-top:2px;">`;
+      user.contracts.forEach(c => {
+        const num = c.properties.contractNumber;
+        const selected = String(num) === String(currentContract) ? 'selected' : '';
+        contractHtml += `<option value="${num}" ${selected}>${num} (${c.properties.owner})</option>`;
+      });
+      contractHtml += `</select>`;
+    } else {
+      // Single contract: Keep as text
+      contractHtml = `<div class="account-info-value">${user.contracts[0].properties.contractNumber}</div>`;
+    }
+    items.push(`<div class="account-info-item"><div class="account-info-label">Contract</div>${contractHtml}</div>`);
+  }
+  
   document.getElementById('accountInfo').innerHTML = items.join('');
   document.getElementById('accountSection').style.display = '';
 }
@@ -4196,7 +4235,7 @@ async function loadAndShowMetrics(serverId) {
 }
 
 // ============================== MAIN FLOWS ==============================
-async function connect() {
+async function connect(isSwitching = false) {
   apiToken = document.getElementById('tokenInput').value.trim();
   if (!apiToken) { toast('Please enter an API token', 'error'); return; }
 
@@ -4205,6 +4244,18 @@ async function connect() {
   btn.textContent = 'Connecting...';
 
   try {
+    // 1. Fetch Contracts first if not already switching
+    if (!isSwitching) {
+        const contracts = await fetchContracts();
+        userContracts = contracts;
+        if (contracts.length > 0) {
+            // Set default if not set
+            if (!currentContract) currentContract = contracts[0].properties.contractNumber;
+            showUserInfo({ ...currentUser, contracts }); 
+        }
+    }
+
+    // 2. Fetch Datacenters (will now use X-Contract header if currentContract is set)
     datacenters = await fetchDatacenters();
     if (datacenters.length === 0) {
       toast('No data centers found', 'warning');
@@ -4283,6 +4334,7 @@ async function connect() {
     }
 
     if (userInfo.email || userInfo.contractNumber) {
+      userInfo.contracts = userContracts;
       currentUser = userInfo;
       showUserInfo(currentUser);
     } else {
