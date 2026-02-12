@@ -1459,7 +1459,12 @@ async function handleContractChange(val) {
   currentContract = val;
   toast(`Switched to Contract ${val}`, 'info');
   // Re-fetch datacenters for the new contract context
-  await connect(true);
+  try {
+    await connect(true);
+  } catch (e) {
+    console.error('Failed to switch contract:', e);
+    toast(`Failed to switch contract: ${e && e.message ? e.message : e}`, 'error');
+  }
 }
 
 
