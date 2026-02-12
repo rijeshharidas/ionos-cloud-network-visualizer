@@ -104,6 +104,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
 
         # Read auth token from header (never from URL)
         token = self.headers.get("X-Token", "")
+        contract = self.headers.get("X-Contract-Number", "")
         if not token:
             self._send_json_error(401, "Missing X-Token header")
             return
@@ -113,6 +114,8 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         req.add_header("Authorization", f"Bearer {token}")
         req.add_header("Content-Type", "application/json")
         req.add_header("User-Agent", "IONOS-Cloud-Network-Visualizer/1.1")
+        if contract:
+            req.add_header("X-Contract-Number", contract)
 
         ctx = ssl.create_default_context()
 

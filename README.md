@@ -57,6 +57,8 @@
 
 🔍 **Canvas Search** — Type-ahead search across all resources with instant highlighting on the canvas. Focus with `Ctrl+F`.
 
+🏢 **Reseller / Multi-Contract Support** — Accounts with multiple contracts (reseller masters) see a contract dropdown after login. Selecting a contract switches the entire view to that contract's resources. The selected contract is passed via the standard `X-Contract-Number` header on every API call.
+
 📤 **Export** — Download topology as PNG, SVG, or JSON for documentation and sharing.
 
 ## Quick Start
@@ -160,9 +162,10 @@ You should see `Python 3.x.x`. Any version from 3.6 onward works.
 
 | Requirement | Details |
 |-------------|---------|
-| **Python 3.6+** | Standard library only — no pip dependencies needed |
+| **Python 3.6+** | Standard library only — no pip dependencies needed (not required if using Docker) |
 | **Modern browser** | Chrome, Firefox, Safari, or Edge |
 | **IONOS Cloud API Token** | Generate at [dcd.ionos.com](https://dcd.ionos.com) under **Management > Token Management** |
+| **Docker** *(optional)* | Required only if running via `docker build` / `docker run` instead of Python directly |
 
 ## View Modes
 
