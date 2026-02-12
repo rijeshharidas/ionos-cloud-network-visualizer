@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-02-12
+
+### Added (1.5.0)
+
+- Resource Table View (`T` key): full-screen overlay with sortable, searchable table of all resources
+- Type filter pills in table view — click to toggle resource types, each with count badge
+- Column sorting (Name, Type, State) with visual sort indicators
+- Text search across name, type, state, details, and IPs with debounced filtering
+- Row click in table closes overlay and zooms to that node on the graph
+- CSV export from table view (filtered rows)
+- Export dropdown menu: consolidated PNG/SVG/JSON buttons into a single dropdown with 6 formats
+- CSV export (all resources, unfiltered) via export dropdown
+- XLSX export: multi-sheet workbook with Resources, Connections, and Summary sheets
+- PDF export: landscape report with topology diagram on page 1 and styled resource inventory table on page 2+
+- SheetJS, jsPDF, and jsPDF-AutoTable libraries loaded via CDN
+
+### Changed (1.5.0)
+
+- Toolbar: 3 individual export buttons replaced by a single export dropdown (reduces toolbar clutter)
+- Export dropdown opens upward from toolbar with section labels (Diagram / Data / Report)
+- Click-outside and Escape key close the export dropdown
+
 ## [1.4.0] - 2026-02-11
 
 ### Added (1.4.0)

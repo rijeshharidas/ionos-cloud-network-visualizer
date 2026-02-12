@@ -11,6 +11,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root {
     --bg-primary: #001B41;
@@ -387,6 +390,45 @@
   .shortcuts-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: flex; align-items: center; justify-content: center; }
   .shortcuts-dialog { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 20px; min-width: 300px; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
 
+  /* ---- Table View Overlay ---- */
+  .table-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; display: flex; align-items: center; justify-content: center; }
+  .table-dialog { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; width: 95vw; max-width: 1200px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.4); overflow: hidden; }
+  .table-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .table-header h2 { font-size: 15px; font-weight: 700; margin: 0; }
+  .table-controls { display: flex; align-items: center; gap: 8px; }
+  #tableSearch { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text-primary); font-size: 12px; width: 200px; outline: none; }
+  #tableSearch:focus { border-color: var(--accent); }
+  #tableSearch::placeholder { color: var(--text-muted); }
+  .table-csv-btn { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .table-csv-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .table-filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  .table-filter-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; background: var(--bg-tertiary); color: var(--text-muted); border: 1px solid transparent; user-select: none; }
+  .table-filter-pill:hover { color: var(--text-primary); background: var(--bg-hover); }
+  .table-filter-pill.active { color: var(--text-primary); border-color: var(--border); }
+  .table-filter-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .table-scroll { flex: 1; overflow: auto; min-height: 0; }
+  .resource-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .resource-table thead { position: sticky; top: 0; z-index: 1; }
+  .resource-table th { background: var(--bg-primary); padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .resource-table th.sortable { cursor: pointer; user-select: none; }
+  .resource-table th.sortable:hover { color: var(--text-primary); }
+  .resource-table th .sort-arrow { margin-left: 4px; font-size: 10px; opacity: 0.4; }
+  .resource-table th.sort-asc .sort-arrow, .resource-table th.sort-desc .sort-arrow { opacity: 1; color: var(--accent); }
+  .resource-table td { padding: 8px 12px; border-bottom: 1px solid var(--bg-tertiary); color: var(--text-secondary); vertical-align: middle; }
+  .resource-table tbody tr { cursor: pointer; transition: background 0.1s; }
+  .resource-table tbody tr:hover { background: var(--bg-tertiary); }
+  .resource-table tbody tr:hover td { color: var(--text-primary); }
+  .table-type-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .table-type-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .table-state { font-size: 11px; font-weight: 500; }
+  .table-state.available, .table-state.running, .table-state.active { color: var(--success); }
+  .table-state.busy, .table-state.deploying, .table-state.provisioning { color: #FFAA00; }
+  .table-state.inactive, .table-state.shutoff, .table-state.suspended { color: var(--text-muted); }
+  .table-state.error, .table-state.failed { color: #ef4444; }
+  .table-ips { font-family: 'SF Mono', 'Consolas', monospace; font-size: 11px; color: #38bdf8; }
+  .table-footer { padding: 10px 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; }
+  .table-empty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
   /* ---- Loading Stages ---- */
   .loading-stages { display: flex; gap: 8px; margin-bottom: 16px; }
   .loading-stage { font-size: 11px; color: var(--text-muted); padding: 4px 10px; border-radius: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); transition: all 0.3s; }
@@ -556,6 +598,27 @@
     opacity: 0; pointer-events: none; transition: opacity 0.15s;
   }
   .toolbar button:hover::after { opacity: 1; }
+
+  /* ---- Export Dropdown ---- */
+  .export-dropdown-wrapper { position: relative; display: inline-flex; }
+  .export-dropdown {
+    position: absolute; bottom: calc(100% + 8px); right: 0;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 8px; min-width: 165px; padding: 4px 0;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.35);
+    opacity: 0; visibility: hidden; transform: translateY(4px);
+    transition: all 0.15s ease; pointer-events: none; z-index: 100;
+  }
+  .export-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto; }
+  .export-dropdown button {
+    display: block; width: 100%; padding: 7px 14px; background: none; border: none;
+    color: var(--text-secondary); font-size: 12px; font-family: inherit;
+    text-align: left; cursor: pointer; transition: all 0.12s;
+  }
+  .export-dropdown button:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .export-dropdown button::after { display: none; }
+  .export-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .export-section-label { padding: 6px 14px 3px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); pointer-events: none; }
 
   /* ---- IP View Mode ---- */
   /* ---- Author Footer ---- */
@@ -888,16 +951,28 @@
     <button onclick="toggleMapBackground()" id="mapToggleBtn" class="active" aria-label="Toggle map background" data-tip="Map background (M)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
     </button>
+    <button onclick="openTableView()" id="tableViewBtn" aria-label="Table view" data-tip="Table view (T)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+    </button>
     <span class="toolbar-divider"></span>
-    <button onclick="exportPNG()" aria-label="Export as PNG" data-tip="Export as PNG">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-    </button>
-    <button onclick="exportSVG()" aria-label="Export as SVG" data-tip="Export as SVG">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h2l2-4 2 6 2-2h2"/></svg>
-    </button>
-    <button onclick="exportJSON()" aria-label="Export as JSON" data-tip="Export as JSON">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg>
-    </button>
+    <div class="export-dropdown-wrapper">
+      <button onclick="toggleExportMenu()" id="exportMenuBtn" aria-label="Export" data-tip="Export">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      </button>
+      <div class="export-dropdown" id="exportDropdown">
+        <div class="export-section-label">Diagram</div>
+        <button onclick="exportPNG()">PNG Image</button>
+        <button onclick="exportSVG()">SVG Vector</button>
+        <div class="export-sep"></div>
+        <div class="export-section-label">Data</div>
+        <button onclick="exportJSON()">JSON Topology</button>
+        <button onclick="exportCSV()">CSV Table</button>
+        <button onclick="exportXLSX()">XLSX Workbook</button>
+        <div class="export-sep"></div>
+        <div class="export-section-label">Report</div>
+        <button onclick="exportPDF()">PDF Report</button>
+      </div>
+    </div>
     <span class="toolbar-divider"></span>
     <button onclick="resetView()" aria-label="Reset view" data-tip="Reset view (R)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9"/><path d="M3 3v6h6"/></svg>
@@ -938,9 +1013,32 @@
       <tr><th>H</th><td>Toggle highlights</td></tr>
       <tr><th>M</th><td>Toggle map background</td></tr>
       <tr><th>G</th><td>Global map view</td></tr>
+      <tr><th>T</th><td>Resource table view</td></tr>
       <tr><th>R</th><td>Reset view (clear filters)</td></tr>
       <tr><th>?</th><td>Show this help</td></tr>
     </table>
+  </div>
+</div>
+
+<!-- Table View Overlay -->
+<div class="table-overlay" id="tableOverlay" style="display:none;" onclick="closeTableView()" role="dialog" aria-modal="true" aria-label="Resource table">
+  <div class="table-dialog" onclick="event.stopPropagation()">
+    <div class="table-header">
+      <h2>Resource Table</h2>
+      <div class="table-controls">
+        <input type="text" id="tableSearch" placeholder="Search resources..." oninput="filterTable()">
+        <button class="table-csv-btn" onclick="exportTableCSV()">&#8681; CSV</button>
+        <button class="detail-close" onclick="closeTableView()">&times;</button>
+      </div>
+    </div>
+    <div class="table-filters" id="tableFilters"></div>
+    <div class="table-scroll">
+      <table class="resource-table" id="resourceTable">
+        <thead id="resourceTableHead"></thead>
+        <tbody id="resourceTableBody"></tbody>
+      </table>
+    </div>
+    <div class="table-footer" id="tableFooter"></div>
   </div>
 </div>
 
@@ -3788,6 +3886,7 @@ function exportPNG() {
     a.href = canvas.toDataURL('image/png');
     a.click();
     toast('PNG exported', 'success');
+    closeExportMenu();
   };
   img.onerror = () => toast('PNG export failed — try a smaller zoom level', 'error');
   // Unicode-safe Base64 encode (replaces deprecated unescape)
@@ -3822,6 +3921,7 @@ function exportSVG() {
   a.click();
   URL.revokeObjectURL(a.href);
   toast('SVG exported', 'success');
+  closeExportMenu();
 }
 
 function exportJSON() {
@@ -3856,6 +3956,512 @@ function exportJSON() {
   a.click();
   URL.revokeObjectURL(a.href);
   toast('JSON topology exported', 'success');
+  closeExportMenu();
+}
+
+// ============================== TABLE VIEW ==============================
+let tableRows = [];
+let activeTableFilters = new Set();
+let tableSortCol = null;
+let tableSortDir = 'asc';
+let tableFilterTimeout = null;
+
+function buildTableRow(n) {
+  const data = n.data || {};
+  const cfg = NODE_TYPES[n.type] || {};
+  const typeLabel = cfg.label || n.type;
+  const state = data.state || data.vmState || '';
+
+  // Build type-specific details summary
+  let details = '';
+  if (n.type === 'server' || n.type === 'cube') {
+    const vmType = (data.type || 'ENTERPRISE').toUpperCase();
+    const tl = vmType === 'GPU' ? 'GPU' : vmType === 'CUBE' ? 'CUBE' : vmType === 'VCPU' ? 'vCPU' : vmType === 'ENTERPRISE' ? 'DediCore' : vmType;
+    const parts = [tl];
+    if (data.cores) parts.push(`${data.cores}C`);
+    if (data.ram) parts.push(formatRAM(data.ram));
+    details = parts.join(' \u00b7 ');
+  } else if (n.type === 'postgres' || n.type === 'mariadb' || n.type === 'mysql') {
+    const parts = [];
+    if (data.version) parts.push(`v${data.version}`);
+    if (data.instances) parts.push(`${data.instances} inst`);
+    if (data.cores) parts.push(`${data.cores}C`);
+    if (data.ram) parts.push(formatRAM(data.ram));
+    details = parts.join(' \u00b7 ');
+  } else if (n.type === 'mongodb') {
+    const parts = [];
+    if (data.version) parts.push(`v${data.version}`);
+    if (data.type) parts.push(data.type);
+    if (data.instances) parts.push(`${data.instances} inst`);
+    details = parts.join(' \u00b7 ');
+  } else if (n.type === 'nat') {
+    details = (data.publicIps || []).join(', ');
+  } else if (n.type === 'alb' || n.type === 'nlb') {
+    const parts = [];
+    if (data.listenerLan) parts.push(`Listener LAN ${data.listenerLan}`);
+    if (data.targetLan) parts.push(`Target LAN ${data.targetLan}`);
+    details = parts.join(' \u2192 ');
+  } else if (n.type === 'k8s_np') {
+    const parts = [];
+    if (data.k8sVersion) parts.push(`v${data.k8sVersion}`);
+    if (data.nodeCount) parts.push(`${data.nodeCount} nodes`);
+    if (data.coresCount) parts.push(`${data.coresCount}C`);
+    details = parts.join(' \u00b7 ');
+  } else if (n.type === 'vpn_wg' || n.type === 'vpn_ipsec') {
+    details = data.gatewayIP || data.interfaceIPv4 || '';
+  } else if (n.type === 'nfs') {
+    details = data.size || '';
+  } else if (n.type === 'kafka') {
+    const parts = [];
+    if (data.version) parts.push(`v${data.version}`);
+    if (data.size) parts.push(data.size);
+    details = parts.join(' \u00b7 ');
+  } else if (n.type === 'lan') {
+    details = data.isPublic ? 'Public' : (data.cidr || 'Private');
+  } else if (n.type === 'pcc') {
+    details = data.pccId || '';
+  }
+
+  // Collect all IPs
+  const ips = [];
+  if (data.nics) data.nics.forEach(nic => { if (nic.ips) ips.push(...nic.ips); });
+  if (data.publicIps) ips.push(...data.publicIps);
+  if (data.ips) ips.push(...data.ips);
+  if (data.lbPrivateIps) ips.push(...data.lbPrivateIps);
+  if (data.gatewayIP) ips.push(data.gatewayIP);
+  if (data.interfaceIPv4) ips.push(data.interfaceIPv4);
+  if (data.interfaceIPv6) ips.push(data.interfaceIPv6);
+  if (data.brokerAddresses) ips.push(...(Array.isArray(data.brokerAddresses) ? data.brokerAddresses : []));
+
+  return {
+    id: n.id,
+    name: n.name || n.id,
+    typeLabel,
+    typeKey: n.type,
+    typeColor: cfg.color || '#6b7280',
+    state,
+    details,
+    ips: [...new Set(ips)].join(', '),
+  };
+}
+
+function openTableView() {
+  if (!graphData || !graphData.nodes || !graphData.nodes.length) {
+    toast('No data to display', 'warning');
+    return;
+  }
+  tableRows = graphData.nodes
+    .filter(n => n.type !== 'internet')
+    .map(buildTableRow);
+
+  activeTableFilters = new Set(tableRows.map(r => r.typeKey));
+  tableSortCol = 'name';
+  tableSortDir = 'asc';
+
+  const searchEl = document.getElementById('tableSearch');
+  if (searchEl) searchEl.value = '';
+
+  renderTypeFilters();
+  renderTableView();
+  document.getElementById('tableOverlay').style.display = '';
+  setTimeout(() => { const s = document.getElementById('tableSearch'); if (s) s.focus(); }, 100);
+}
+
+function closeTableView() {
+  document.getElementById('tableOverlay').style.display = 'none';
+}
+
+function renderTypeFilters() {
+  const container = document.getElementById('tableFilters');
+  if (!container) return;
+
+  // Count per type
+  const counts = {};
+  tableRows.forEach(r => { counts[r.typeKey] = (counts[r.typeKey] || 0) + 1; });
+
+  // Sort by count descending
+  const types = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+
+  let html = '';
+  types.forEach(t => {
+    const cfg = NODE_TYPES[t] || {};
+    const label = cfg.label || t;
+    const color = cfg.color || '#6b7280';
+    const active = activeTableFilters.has(t) ? ' active' : '';
+    html += `<span class="table-filter-pill${active}" data-type="${t}" onclick="toggleTableFilter('${t}')"><span class="table-filter-dot" style="background:${color}"></span>${escapeHtml(label)} (${counts[t]})</span>`;
+  });
+  container.innerHTML = html;
+}
+
+function toggleTableFilter(typeKey) {
+  if (activeTableFilters.has(typeKey)) {
+    activeTableFilters.delete(typeKey);
+  } else {
+    activeTableFilters.add(typeKey);
+  }
+  renderTypeFilters();
+  renderTableView();
+}
+
+function getFilteredSortedRows() {
+  const searchVal = (document.getElementById('tableSearch')?.value || '').toLowerCase();
+
+  let rows = tableRows.filter(r => activeTableFilters.has(r.typeKey));
+
+  if (searchVal) {
+    rows = rows.filter(r =>
+      r.name.toLowerCase().includes(searchVal) ||
+      r.typeLabel.toLowerCase().includes(searchVal) ||
+      r.state.toLowerCase().includes(searchVal) ||
+      r.details.toLowerCase().includes(searchVal) ||
+      r.ips.toLowerCase().includes(searchVal)
+    );
+  }
+
+  if (tableSortCol) {
+    const dir = tableSortDir === 'asc' ? 1 : -1;
+    rows.sort((a, b) => {
+      const av = (a[tableSortCol] || '').toLowerCase();
+      const bv = (b[tableSortCol] || '').toLowerCase();
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }
+
+  return rows;
+}
+
+function renderTableView() {
+  const thead = document.getElementById('resourceTableHead');
+  const tbody = document.getElementById('resourceTableBody');
+  const footer = document.getElementById('tableFooter');
+  if (!thead || !tbody) return;
+
+  const cols = [
+    { key: 'name', label: 'Name', sortable: true },
+    { key: 'typeLabel', label: 'Type', sortable: true },
+    { key: 'state', label: 'State', sortable: true },
+    { key: 'details', label: 'Details', sortable: false },
+    { key: 'ips', label: 'IPs', sortable: false },
+  ];
+
+  // Render header
+  let headHtml = '<tr>';
+  cols.forEach(col => {
+    const isSorted = tableSortCol === col.key;
+    let cls = col.sortable ? ' class="sortable' : ' class="';
+    if (isSorted) cls += ` sort-${tableSortDir}`;
+    cls += '"';
+    const arrow = col.sortable ? `<span class="sort-arrow">${isSorted ? (tableSortDir === 'asc' ? '\u25B2' : '\u25BC') : '\u25B8'}</span>` : '';
+    const click = col.sortable ? ` onclick="sortTable('${col.key}')"` : '';
+    headHtml += `<th${cls}${click}>${col.label}${arrow}</th>`;
+  });
+  headHtml += '</tr>';
+  thead.innerHTML = headHtml;
+
+  // Get filtered and sorted rows
+  const rows = getFilteredSortedRows();
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="table-empty">No resources match the current filters</td></tr>`;
+  } else {
+    let bodyHtml = '';
+    rows.forEach(r => {
+      const stateClass = r.state ? ` ${r.state.toLowerCase()}` : '';
+      bodyHtml += `<tr onclick="tableRowClick('${escapeHtml(r.id)}')">`;
+      bodyHtml += `<td><strong>${escapeHtml(r.name)}</strong></td>`;
+      bodyHtml += `<td><span class="table-type-badge"><span class="table-type-dot" style="background:${r.typeColor}"></span>${escapeHtml(r.typeLabel)}</span></td>`;
+      bodyHtml += `<td><span class="table-state${stateClass}">${escapeHtml(r.state)}</span></td>`;
+      bodyHtml += `<td>${escapeHtml(r.details)}</td>`;
+      bodyHtml += `<td class="table-ips">${escapeHtml(r.ips)}</td>`;
+      bodyHtml += '</tr>';
+    });
+    tbody.innerHTML = bodyHtml;
+  }
+
+  // Footer
+  if (footer) {
+    footer.innerHTML = `Showing ${rows.length} of ${tableRows.length} resources`;
+  }
+}
+
+function sortTable(colKey) {
+  if (tableSortCol === colKey) {
+    tableSortDir = tableSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    tableSortCol = colKey;
+    tableSortDir = 'asc';
+  }
+  renderTableView();
+}
+
+function filterTable() {
+  clearTimeout(tableFilterTimeout);
+  tableFilterTimeout = setTimeout(renderTableView, 200);
+}
+
+function tableRowClick(nodeId) {
+  closeTableView();
+  focusNode(nodeId);
+}
+
+function exportTableCSV() {
+  const rows = getFilteredSortedRows();
+  if (rows.length === 0) { toast('No rows to export', 'warning'); return; }
+
+  const csvEscape = (val) => {
+    const s = String(val || '');
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  };
+
+  const header = ['Name', 'Type', 'State', 'Details', 'IPs'];
+  const lines = [header.join(',')];
+  rows.forEach(r => {
+    lines.push([
+      csvEscape(r.name),
+      csvEscape(r.typeLabel),
+      csvEscape(r.state),
+      csvEscape(r.details),
+      csvEscape(r.ips),
+    ].join(','));
+  });
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.download = `vdc-resources-${currentDC?.properties?.name || 'export'}.csv`;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`CSV exported (${rows.length} rows)`, 'success');
+}
+
+// ============================== EXPORT DROPDOWN ==============================
+function toggleExportMenu() {
+  const dd = document.getElementById('exportDropdown');
+  const btn = document.getElementById('exportMenuBtn');
+  const isOpen = dd.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+  if (isOpen) {
+    setTimeout(() => document.addEventListener('click', _closeExportOutside), 0);
+  } else {
+    document.removeEventListener('click', _closeExportOutside);
+  }
+}
+
+function closeExportMenu() {
+  const dd = document.getElementById('exportDropdown');
+  const btn = document.getElementById('exportMenuBtn');
+  if (dd) dd.classList.remove('open');
+  if (btn) btn.classList.remove('active');
+  document.removeEventListener('click', _closeExportOutside);
+}
+
+function _closeExportOutside(e) {
+  if (!document.querySelector('.export-dropdown-wrapper')?.contains(e.target)) {
+    closeExportMenu();
+  }
+}
+
+// ── CSV Export (all resources, unfiltered) ──
+function exportCSV() {
+  if (!graphData || !graphData.nodes || !graphData.nodes.length) {
+    toast('No data to export', 'warning'); closeExportMenu(); return;
+  }
+  const rows = graphData.nodes.filter(n => n.type !== 'internet').map(buildTableRow);
+
+  const csvEscape = (val) => {
+    const s = String(val || '');
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  };
+
+  const header = ['Name', 'Type', 'State', 'Details', 'IPs'];
+  const lines = [header.join(',')];
+  rows.forEach(r => {
+    lines.push([csvEscape(r.name), csvEscape(r.typeLabel), csvEscape(r.state), csvEscape(r.details), csvEscape(r.ips)].join(','));
+  });
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.download = `vdc-resources-${currentDC?.properties?.name || 'export'}.csv`;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`CSV exported (${rows.length} rows)`, 'success');
+  closeExportMenu();
+}
+
+// ── XLSX Export (multi-sheet workbook) ──
+function exportXLSX() {
+  if (!graphData || !graphData.nodes || !graphData.nodes.length) {
+    toast('No data to export', 'warning'); closeExportMenu(); return;
+  }
+  if (typeof XLSX === 'undefined') {
+    toast('XLSX library not loaded', 'error'); closeExportMenu(); return;
+  }
+
+  const rows = graphData.nodes.filter(n => n.type !== 'internet').map(buildTableRow);
+  const dcName = currentDC?.properties?.name || 'export';
+  const dcLocation = currentDC?.properties?.location || '';
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Resources
+  const resData = [['Name', 'Type', 'State', 'Details', 'IPs'], ...rows.map(r => [r.name, r.typeLabel, r.state, r.details, r.ips])];
+  const resSheet = XLSX.utils.aoa_to_sheet(resData);
+  resSheet['!cols'] = [{ wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 32 }, { wch: 24 }];
+  XLSX.utils.book_append_sheet(wb, resSheet, 'Resources');
+
+  // Sheet 2: Connections
+  const nodeMap = graphData._nodeMap || new Map(graphData.nodes.map(n => [n.id, n]));
+  const linkData = [['Source', 'Target', 'Link Type', 'Label']];
+  (graphData.links || []).forEach(l => {
+    const srcId = typeof l.source === 'object' ? l.source.id : l.source;
+    const tgtId = typeof l.target === 'object' ? l.target.id : l.target;
+    const srcName = nodeMap.get(srcId)?.name || srcId;
+    const tgtName = nodeMap.get(tgtId)?.name || tgtId;
+    const linkCfg = LINK_TYPES[l.linkType] || {};
+    linkData.push([srcName, tgtName, linkCfg.label || l.linkType || '', l.label || '']);
+  });
+  const linkSheet = XLSX.utils.aoa_to_sheet(linkData);
+  linkSheet['!cols'] = [{ wch: 28 }, { wch: 28 }, { wch: 18 }, { wch: 22 }];
+  XLSX.utils.book_append_sheet(wb, linkSheet, 'Connections');
+
+  // Sheet 3: Summary
+  const typeCounts = {};
+  rows.forEach(r => { typeCounts[r.typeLabel] = (typeCounts[r.typeLabel] || 0) + 1; });
+  const sumData = [
+    ['Metric', 'Value'],
+    ['VDC Name', dcName],
+    ['Location', dcLocation],
+    ['Export Date', new Date().toISOString()],
+    ['Total Resources', rows.length],
+    ['Total Connections', graphData.links?.length || 0],
+    ['', ''],
+    ['Resource Type', 'Count'],
+    ...Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).map(([t, c]) => [t, c]),
+  ];
+  const sumSheet = XLSX.utils.aoa_to_sheet(sumData);
+  sumSheet['!cols'] = [{ wch: 22 }, { wch: 16 }];
+  XLSX.utils.book_append_sheet(wb, sumSheet, 'Summary');
+
+  XLSX.writeFile(wb, `vdc-${dcName}.xlsx`);
+  toast('XLSX workbook exported', 'success');
+  closeExportMenu();
+}
+
+// ── PDF Export (diagram + resource table report) ──
+function exportPDF() {
+  if (!graphData || !graphData.nodes || !graphData.nodes.length) {
+    toast('No data to export', 'warning'); closeExportMenu(); return;
+  }
+  if (typeof jspdf === 'undefined') {
+    toast('PDF library not loaded', 'error'); closeExportMenu(); return;
+  }
+
+  const dcName = currentDC?.properties?.name || 'export';
+  const dcLocation = currentDC?.properties?.location || '';
+  const rows = graphData.nodes.filter(n => n.type !== 'internet').map(buildTableRow);
+
+  // Render SVG to canvas (same approach as exportPNG)
+  const svgEl = document.getElementById('graphSvg');
+  const bbox = svgEl.getBoundingClientRect();
+  const clone = svgEl.cloneNode(true);
+  clone.setAttribute('width', bbox.width);
+  clone.setAttribute('height', bbox.height);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+  const cs = getComputedStyle(document.documentElement);
+  const bgPrimary = cs.getPropertyValue('--bg-primary').trim() || '#001B41';
+  const textPrimary = cs.getPropertyValue('--text-primary').trim() || '#f1f5f9';
+  const textSecondary = cs.getPropertyValue('--text-secondary').trim() || '#a0c4e8';
+
+  const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  styleEl.textContent = `
+    .node-label { font-family: Inter, sans-serif; font-size: 11px; fill: ${textPrimary}; text-anchor: middle; font-weight: 600; }
+    .node-sublabel { font-family: Inter, sans-serif; font-size: 9px; fill: ${textSecondary}; text-anchor: middle; }
+    .link { stroke-width: 2; stroke-opacity: 0.35; }
+    .link-label { font-family: Inter, sans-serif; font-size: 10px; fill: ${textSecondary}; text-anchor: middle; font-weight: 500; }
+    .link-label-bg { fill: ${bgPrimary}; fill-opacity: 0.7; }
+    .node.dimmed { opacity: 0.12; }
+    .link.dimmed { stroke-opacity: 0.04; }
+  `;
+  clone.insertBefore(styleEl, clone.firstChild);
+
+  const svgStr = new XMLSerializer().serializeToString(clone);
+  const canvas = document.createElement('canvas');
+  canvas.width = bbox.width * 1.5;
+  canvas.height = bbox.height * 1.5;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(1.5, 1.5);
+  ctx.fillStyle = bgPrimary;
+  ctx.fillRect(0, 0, bbox.width, bbox.height);
+
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, bbox.width, bbox.height);
+
+    const doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+
+    // Title bar
+    doc.setFillColor(0, 27, 65);
+    doc.rect(0, 0, pageW, 20, 'F');
+    doc.setFontSize(14);
+    doc.setTextColor(241, 245, 249);
+    doc.text(`VDC: ${dcName}`, 10, 13);
+    doc.setFontSize(9);
+    doc.setTextColor(160, 196, 232);
+    const meta = [dcLocation, new Date().toLocaleDateString()].filter(Boolean).join(' \u00b7 ');
+    doc.text(meta, pageW - 10, 13, { align: 'right' });
+
+    // Topology diagram
+    const imgData = canvas.toDataURL('image/png');
+    const imgW = pageW - 20;
+    const imgH = Math.min((bbox.height / bbox.width) * imgW, pageH - 35);
+    doc.addImage(imgData, 'PNG', 10, 24, imgW, imgH);
+
+    // Resource table on new page
+    doc.addPage('a4', 'landscape');
+    doc.setFillColor(0, 27, 65);
+    doc.rect(0, 0, pageW, 16, 'F');
+    doc.setFontSize(12);
+    doc.setTextColor(241, 245, 249);
+    doc.text('Resource Inventory', 10, 11);
+    doc.setFontSize(8);
+    doc.setTextColor(160, 196, 232);
+    doc.text(`${rows.length} resources`, pageW - 10, 11, { align: 'right' });
+
+    const tableData = rows.map(r => [r.name, r.typeLabel, r.state, r.details, r.ips]);
+
+    doc.autoTable({
+      head: [['Name', 'Type', 'State', 'Details', 'IPs']],
+      body: tableData,
+      startY: 20,
+      margin: { left: 10, right: 10 },
+      styles: { fontSize: 8, textColor: [241, 245, 249], fillColor: [0, 38, 77], cellPadding: 2.5, lineWidth: 0.1, lineColor: [26, 74, 122] },
+      headStyles: { fillColor: [0, 27, 65], textColor: [17, 199, 230], fontStyle: 'bold', fontSize: 8 },
+      alternateRowStyles: { fillColor: [0, 51, 102] },
+      columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 30 }, 2: { cellWidth: 25 }, 3: { cellWidth: 65 }, 4: { cellWidth: 'auto' } },
+    });
+
+    doc.save(`vdc-${dcName}-report.pdf`);
+    toast('PDF report exported', 'success');
+    closeExportMenu();
+  };
+
+  img.onerror = () => {
+    toast('PDF export failed — try a smaller zoom level', 'error');
+    closeExportMenu();
+  };
+
+  const utf8Bytes = new TextEncoder().encode(svgStr);
+  const binStr = Array.from(utf8Bytes, b => String.fromCharCode(b)).join('');
+  img.src = 'data:image/svg+xml;base64,' + btoa(binStr);
 }
 
 // ── IP Block Panel ──
@@ -4751,6 +5357,9 @@ document.addEventListener('keydown', (e) => {
   const isInput = tag === 'input' || tag === 'textarea' || tag === 'select';
 
   if (e.key === 'Escape') {
+    if (document.getElementById('exportDropdown')?.classList.contains('open')) { closeExportMenu(); return; }
+    const tableOv = document.getElementById('tableOverlay');
+    if (tableOv && tableOv.style.display !== 'none') { closeTableView(); return; }
     document.getElementById('shortcutsOverlay').style.display = 'none';
     closeDetail();
     clearSearch();
@@ -4775,6 +5384,7 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'h' || e.key === 'H') toggleHighlightsOverlay();
   else if (e.key === 'm' || e.key === 'M') toggleMapBackground();
   else if (e.key === 'g' || e.key === 'G') setViewMode('map');
+  else if (e.key === 't' || e.key === 'T') openTableView();
   else if (e.key === 'r' || e.key === 'R') resetView();
 });
 </script>

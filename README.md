@@ -59,7 +59,9 @@
 
 🏢 **Reseller / Multi-Contract Support** — Accounts with multiple contracts (reseller masters) see a contract dropdown after login. Selecting a contract switches the entire view to that contract's resources. The selected contract is passed via the standard `X-Contract-Number` header on every API call.
 
-📤 **Export** — Download topology as PNG, SVG, or JSON for documentation and sharing.
+📋 **Resource Table View** — Press `T` to open a full-screen searchable, sortable table of all resources. Type filter pills let you isolate specific resource types, column headers sort by name/type/state, and a text search filters across all columns. Click any row to zoom to that node on the graph. Export the filtered view as CSV directly from the table.
+
+📤 **Export** — A unified export dropdown consolidates all formats in one place: PNG and SVG for diagrams, JSON/CSV/XLSX for data, and PDF for shareable reports. The XLSX workbook includes three sheets (Resources, Connections, Summary). The PDF report renders the topology diagram on page one with a styled resource inventory table on subsequent pages.
 
 ## Quick Start
 
@@ -254,6 +256,7 @@ python3 serve.py [options]
 | `C` | Toggle compute view |
 | `H` | Toggle highlights overlay |
 | `M` | Toggle map background |
+| `T` | Resource table view |
 | `G` | Global map view |
 | `R` | Reset view |
 
