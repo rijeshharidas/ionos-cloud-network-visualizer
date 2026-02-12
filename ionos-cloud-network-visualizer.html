@@ -1425,10 +1425,10 @@ async function apiFetch(url, { signal } = {}) {
   };
   if (signal) opts.signal = signal;
   let fetchUrl = url;
+  if (currentContract) opts.headers['X-Contract-Number'] = currentContract;
   if (useProxy()) {
     fetchUrl = `/proxy?url=${encodeURIComponent(url)}`;
     opts.headers['X-Token'] = apiToken;
-    if (currentContract) opts.headers['X-Contract'] = currentContract;
   }
   const resp = await fetch(fetchUrl, opts);
   if (!resp.ok) {
@@ -1455,11 +1455,11 @@ async function fetchContracts() {
   return (data && data.items) ? data.items : [];
 }
 
-function handleContractChange(val) {
+async function handleContractChange(val) {
   currentContract = val;
   toast(`Switched to Contract ${val}`, 'info');
   // Re-fetch datacenters for the new contract context
-  connect(true); 
+  await connect(true);
 }
 
 
@@ -3425,14 +3425,16 @@ function showUserInfo(user) {
       // Multiple contracts: Create Dropdown
       contractHtml = `<select id="contractSelect" onchange="handleContractChange(this.value)" style="padding:2px 4px; height:auto; font-size:11px; margin-top:2px;">`;
       user.contracts.forEach(c => {
-        const num = c.properties.contractNumber;
-        const selected = String(num) === String(currentContract) ? 'selected' : '';
-        contractHtml += `<option value="${num}" ${selected}>${num} (${c.properties.owner})</option>`;
+        const num = String(c.properties.contractNumber).replace(/[<>"&]/g, '');
+        const owner = (c.properties.owner || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const selected = num === String(currentContract) ? 'selected' : '';
+        contractHtml += `<option value="${num}" ${selected}>${num} (${owner})</option>`;
       });
       contractHtml += `</select>`;
     } else {
       // Single contract: Keep as text
-      contractHtml = `<div class="account-info-value">${user.contracts[0].properties.contractNumber}</div>`;
+      const num = String(user.contracts[0].properties.contractNumber).replace(/[<>"&]/g, '');
+      contractHtml = `<div class="account-info-value">${num}</div>`;
     }
     items.push(`<div class="account-info-item"><div class="account-info-label">Contract</div>${contractHtml}</div>`);
   }
@@ -4251,7 +4253,7 @@ async function connect(isSwitching = false) {
         if (contracts.length > 0) {
             // Set default if not set
             if (!currentContract) currentContract = contracts[0].properties.contractNumber;
-            showUserInfo({ ...currentUser, contracts }); 
+            showUserInfo({ ...(currentUser || {}), contracts });
         }
     }
 

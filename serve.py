@@ -104,7 +104,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
 
         # Read auth token from header (never from URL)
         token = self.headers.get("X-Token", "")
-        contract = self.headers.get("X-Contract", "")
+        contract = self.headers.get("X-Contract-Number", "")
         if not token:
             self._send_json_error(401, "Missing X-Token header")
             return
