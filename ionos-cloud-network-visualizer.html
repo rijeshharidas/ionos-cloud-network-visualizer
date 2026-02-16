@@ -153,6 +153,7 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text-primary);
+    font-family: inherit;
     font-size: 13px;
     outline: none;
     transition: border-color 0.2s;
@@ -168,6 +169,7 @@
     padding: 8px 16px;
     border: none;
     border-radius: 6px;
+    font-family: inherit;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -2664,7 +2666,7 @@ const ICON_DRAW = {
     // "NAT" label inside circle
     g.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
       .attr('font-size', s * 0.2).attr('font-weight', '700').attr('fill', c)
-      .attr('font-family', 'Arial, sans-serif').text('N');
+      .attr('font-family', 'Inter, sans-serif').text('N');
     // Four directional arrows (up, down, left, right)
     const arrowLen = s * 0.35, arrowStart = r + s * 0.06, headSize = s * 0.1;
     [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([dx, dy]) => {
@@ -2756,7 +2758,7 @@ const ICON_DRAW = {
     const kx = -lw - s * 0.2, ky = 0, kh = s * 0.3;
     g.append('text').attr('x', kx).attr('y', ky + kh * 0.35)
       .attr('text-anchor', 'middle').attr('font-size', s * 0.35).attr('font-weight', '800')
-      .attr('fill', c).attr('font-family', 'Arial, sans-serif').text('K');
+      .attr('fill', c).attr('font-family', 'Inter, sans-serif').text('K');
   },
 
   pcc(g, s, c) {
