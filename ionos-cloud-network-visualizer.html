@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IONOS Cloud Network Visualizer</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23003068'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='22' fill='white'%3EI%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="ionos-vector-logo-seeklogo/ionos-seeklogo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -35,6 +35,25 @@
     --detail-width: 380px;
   }
 
+  html[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e8ecf1;
+    --bg-hover: #e0e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #1e293b;
+    --text-muted: #64748b;
+    --border: #cbd5e1;
+    --accent: #0284c7;
+    --accent-hover: #0369a1;
+    --accent-glow: rgba(2, 132, 199, 0.12);
+  }
+  html[data-theme="light"] #mapBackground .leaflet-tile-pane { filter: grayscale(0.05) brightness(1.02) contrast(1.05); }
+  html[data-theme="light"] #mapBackground.overview-mode.pre-login .leaflet-tile-pane { filter: brightness(0.92); }
+  html[data-theme="light"] #mapBackground.overview-mode.pre-login { opacity: 0.6; }
+  html[data-theme="light"] .map-cluster-bubble { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+  html[data-theme="light"] .toast { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
@@ -64,7 +83,7 @@
   .sidebar::-webkit-scrollbar-thumb:hover { background: var(--border); }
 
   .sidebar-header {
-    padding: 20px;
+    padding: 14px 20px 12px;
     border-bottom: 1px solid var(--border);
     background: linear-gradient(180deg, rgba(17, 199, 230, 0.06) 0%, transparent 100%);
   }
@@ -73,11 +92,15 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 4px;
   }
 
   .sidebar-header .brand-logo {
     flex-shrink: 0;
+  }
+
+  .sidebar-header .brand-title {
+    flex: 1;
+    min-width: 0;
   }
 
   .sidebar-header h1 {
@@ -85,18 +108,27 @@
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.3px;
-    line-height: 1.2;
+    line-height: 1.15;
+    margin: 0;
   }
 
   .sidebar-header h1 span.brand-cloud {
     color: var(--accent);
   }
 
-  .sidebar-header .subtitle {
+  .sidebar-header .brand-subtitle {
     font-size: 11px;
     color: var(--text-muted);
-    margin-top: 4px;
-    padding-left: 42px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    margin-top: 1px;
+  }
+
+  .sidebar-header .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .sidebar-section {
@@ -147,6 +179,8 @@
   .btn-primary { background: var(--accent); color: white; }
   .btn-primary:hover { background: var(--accent-hover); }
   .btn-primary:disabled { background: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed; }
+  .btn-disconnect { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .btn-disconnect:hover { background: rgba(239,68,68,0.25); color: #fca5a5; }
   .view-mode-btn { border: 1px solid var(--border); transition: all 0.2s; }
   .view-mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
   .view-mode-btn:not(.active) { background: var(--bg-tertiary); color: var(--text-secondary); }
@@ -653,13 +687,24 @@
 
   .ip-view-active .node-label { opacity: 0.05 !important; }
   .ip-view-active .node-sublabel:not(.node-ip-label) { opacity: 0 !important; }
-  .ip-view-active .node-ip-label { opacity: 1 !important; font-weight: 600 !important; fill: #38bdf8 !important; font-size: 10px; }
-  .ip-view-active .node-ip-label .ip-line-addr { font-size: 11px; fill: #38bdf8; }
-  .ip-view-active .node-ip-label .ip-line-dns { font-size: 9px; fill: #7dd3fc; }
-  .ip-view-active .node-ip-label .ip-line-cdn { font-size: 9px; fill: #22d3ee; }
-  .ip-view-active .link-label { opacity: 1 !important; fill: #38bdf8 !important; font-weight: 600 !important; }
-  .ip-view-active .link-label-bg { opacity: 0.8 !important; }
-  .ip-view-active .link-label .ip-line-dns { font-size: 8px; fill: #7dd3fc; }
+  .ip-view-active .node-ip-label {
+    opacity: 1 !important; font-weight: 600 !important; fill: #38bdf8 !important; font-size: 10px;
+    text-shadow: 0 0 6px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.6);
+    paint-order: stroke; stroke: rgba(0,10,30,0.5); stroke-width: 3px; stroke-linejoin: round;
+  }
+  .ip-view-active .node-ip-label .ip-line-addr { font-size: 12px; fill: #38bdf8; font-weight: 700; letter-spacing: 0.3px; }
+  .ip-view-active .node-ip-label .ip-line-dns { font-size: 10px; fill: #7dd3fc; font-weight: 500; }
+  .ip-view-active .node-ip-label .ip-line-cdn { font-size: 10px; fill: #22d3ee; font-weight: 500; }
+  .ip-view-active .ip-detail-label { font-size: 12px !important; }
+  .ip-view-active .link-label { opacity: 0 !important; }
+  .ip-view-active .link-label-bg { opacity: 0 !important; }
+  html[data-theme="light"] .ip-view-active .node-ip-label {
+    fill: #0369a1 !important;
+    stroke: rgba(255,255,255,0.6); stroke-width: 3px;
+  }
+  html[data-theme="light"] .ip-view-active .node-ip-label .ip-line-addr { fill: #0369a1; }
+  html[data-theme="light"] .ip-view-active .node-ip-label .ip-line-dns { fill: #0284c7; }
+  html[data-theme="light"] .ip-view-active .node-ip-label .ip-line-cdn { fill: #0891b2; }
 
   /* ---- Compute View ---- */
   /* Dim non-compute nodes — visible but de-emphasised */
@@ -703,8 +748,97 @@
   .cdn-badge { display: inline-block; background: #11C7E6; color: #001B41; padding: 1px 5px; border-radius: 3px; font-weight: 700; font-size: 9px; margin-left: 6px; vertical-align: middle; }
   .cdn-badge.cdn-badge-off { background: var(--bg-hover); color: var(--text-muted); font-weight: 600; }
 
+  /* ---- Language Dropdown ---- */
+  .locale-dropdown-wrapper { position: relative; display: inline-flex; margin-left: auto; flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
+  .locale-toggle {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    cursor: pointer; background: rgba(17,199,230,0.1); color: var(--text-secondary);
+    border: 1px solid rgba(17,199,230,0.2); transition: all 0.15s ease; line-height: 1;
+  }
+  .locale-toggle:hover { background: rgba(17,199,230,0.18); color: var(--text-primary); }
+  .locale-toggle .locale-flag { font-size: 14px; line-height: 1; }
+  .locale-toggle .locale-caret { font-size: 8px; opacity: 0.6; }
+  .locale-menu {
+    position: absolute; top: calc(100% + 4px); right: 0; min-width: 140px;
+    background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px;
+    padding: 4px 0; box-shadow: 0 4px 16px rgba(0,0,0,0.35); z-index: 50;
+    opacity: 0; visibility: hidden; transform: translateY(-4px);
+    transition: all 0.15s ease; pointer-events: none;
+  }
+  .locale-menu.open { opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto; }
+  .locale-menu button {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 7px 12px; background: none; border: none; color: var(--text-secondary);
+    font-size: 12px; cursor: pointer; text-align: left; transition: background 0.1s;
+  }
+  .locale-menu button::after { display: none; }
+  .locale-menu button:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .locale-menu button.active { color: var(--accent); font-weight: 600; }
+  .locale-menu button .locale-flag { font-size: 16px; }
+  .locale-menu button .locale-check { margin-left: auto; opacity: 0; font-size: 12px; color: var(--accent); }
+  .locale-menu button.active .locale-check { opacity: 1; }
+
+  /* ---- Theme Toggle ---- */
+  .theme-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 6px; font-size: 16px; line-height: 1;
+    cursor: pointer; background: rgba(17,199,230,0.1); color: var(--text-secondary);
+    border: 1px solid rgba(17,199,230,0.2); transition: all 0.15s ease; flex-shrink: 0;
+  }
+  .theme-toggle:hover { background: rgba(17,199,230,0.18); color: var(--text-primary); }
+
+  /* ---- VDC Favorites ---- */
+  .vdc-controls-wrapper { display: flex; gap: 6px; align-items: center; }
+  .vdc-controls-wrapper select { flex: 1; min-width: 0; }
+  .pin-vdc-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 6px; font-size: 16px; line-height: 1;
+    cursor: pointer; background: var(--bg-tertiary); color: var(--text-muted);
+    border: 1px solid var(--border); transition: all 0.2s ease; flex-shrink: 0;
+  }
+  .pin-vdc-btn:hover { background: var(--bg-hover); color: var(--ionos-amber); border-color: var(--ionos-amber); }
+  .pin-vdc-btn.pinned { color: var(--ionos-amber); border-color: var(--ionos-amber); background: rgba(255,170,0,0.1); }
+
   /* ---- Security Badge ---- */
   .sg-badge { font-size: 8px; font-weight: 700; pointer-events: none; }
+
+  /* ---- Security Posture Overlay ---- */
+  .security-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .security-panel {
+    background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 14px;
+    padding: 28px 32px; width: 560px; max-width: 92vw; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .security-panel h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .security-metrics { display: flex; flex-direction: column; gap: 14px; }
+  .security-metric {
+    background: var(--bg-tertiary); border-radius: 10px; padding: 14px 16px;
+    border-left: 4px solid var(--text-muted); cursor: pointer; transition: background 0.15s;
+  }
+  .security-metric:hover { background: var(--bg-hover); }
+  .security-metric.metric-good { border-left-color: #10b981; }
+  .security-metric.metric-warning { border-left-color: #f59e0b; }
+  .security-metric.metric-danger { border-left-color: #ef4444; }
+  .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .metric-label { font-weight: 600; font-size: 13px; }
+  .metric-value { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+  .metric-value.good { color: #10b981; }
+  .metric-value.warning { color: #f59e0b; }
+  .metric-value.danger { color: #ef4444; }
+  .metric-bar-container {
+    height: 6px; background: var(--bg-primary); border-radius: 3px; overflow: hidden;
+  }
+  .metric-bar {
+    height: 100%; border-radius: 3px; transition: width 0.4s ease;
+  }
+  .metric-bar.good { background: #10b981; }
+  .metric-bar.warning { background: #f59e0b; }
+  .metric-bar.danger { background: #ef4444; }
+  .metric-desc { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
 
   /* ---- Toast ---- */
   .toast-container {
@@ -745,72 +879,99 @@
     <div class="brand-row">
       <div class="brand-logo">
         <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- IONOS official logo mark -->
-          <rect width="64" height="64" rx="12" fill="#003D8F"/>
-          <text x="32" y="39" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="19" fill="white" letter-spacing="0.5">IONOS</text>
+          <defs><linearGradient id="ionosBg" x1="0" y1="0" x2="64" y2="64"><stop offset="0%" stop-color="#0047AB"/><stop offset="100%" stop-color="#003080"/></linearGradient></defs>
+          <rect width="64" height="64" rx="14" fill="url(#ionosBg)"/>
+          <g transform="translate(5,20) scale(0.65)">
+            <path d="M1.985 23.984c-.526.003-1.04-.18-1.414-.585C.195 23.024 0 22.51 0 21.983V1.953C.01 1.432.225.936.599.572.973.208 1.475.006 1.998.01c.437-.006.864.134 1.212.399.348.265.596.639.704 1.061l.033.14v.087c.019.107.027.215.026.324v19.975c.002.261-.048.52-.148.761a2.02 2.02 0 01-1.84 1.227z" fill="white"/>
+            <path d="M17.671 23.994c-1.605-.001-3.143-.637-4.278-1.768-1.135-1.131-1.773-2.664-1.774-4.264V6.032C11.619 4.432 12.257 2.898 13.392 1.767 14.527.635 16.066 0 17.671 0s3.144.635 4.279 1.767C23.085 2.898 23.722 4.432 23.722 6.032v11.93c-.001 1.6-.639 3.133-1.773 4.264-1.135 1.131-2.674 1.767-4.278 1.768zm0-20.351c-.636 0-1.245.252-1.695.7-.449.448-.703 1.055-.704 1.689v11.93c-.004.315.056.627.175.919.119.291.296.556.519.778.223.223.489.399.781.517.292.119.605.179.921.175.636-.001 1.245-.253 1.695-.701.449-.448.703-1.055.703-1.688V6.032c-.009-.631-.264-1.234-.711-1.68-.448-.447-1.053-.701-1.684-.71z" fill="white"/>
+            <path d="M35.02 12.306v9.884a1.83 1.83 0 01-.535 1.286 1.84 1.84 0 01-2.581 0 1.83 1.83 0 01-.535-1.286V4.749l3.651 7.557zm9.859 6.947V1.819a1.84 1.84 0 00-3.654 0v9.875l3.654 7.559zM34.848 1.032v-.035a1.84 1.84 0 00-1.653-.971c-.124 0-.247.013-.367.039-.41.08-.78.301-1.044.625-.263.323-.404.729-.399 1.146v.418L41.41 22.996a1.84 1.84 0 003.469-.805v-.412S35.118 1.586 34.848 1.032z" fill="white"/>
+            <path d="M58.524 23.994c-1.605-.002-3.143-.638-4.277-1.769-1.135-1.13-1.773-2.664-1.774-4.263V6.032c0-.792.156-1.577.461-2.308a6.06 6.06 0 013.53-3.265A6.09 6.09 0 0158.524 0c.795 0 1.582.156 2.316.459a6.06 6.06 0 013.531 3.265c.304.731.46 1.516.46 2.308v11.93c-.001 1.6-.638 3.133-1.773 4.263-1.135 1.131-2.674 1.768-4.278 1.769zm0-20.351c-.636.001-1.245.253-1.694.701-.45.448-.703 1.055-.704 1.688v11.93c-.004.315.056.627.175.919.119.291.296.556.519.778.223.223.489.399.781.517.292.119.605.179.921.175.636-.001 1.245-.253 1.694-.701.45-.448.703-1.055.704-1.688V6.032c-.009-.631-.264-1.234-.711-1.68-.448-.447-1.053-.701-1.685-.71z" fill="white"/>
+            <path d="M76.332 23.997c-.408.001-.815-.04-1.215-.123-.86-.177-1.674-.532-2.388-1.042a5.69 5.69 0 01-1.76-1.917l-.023-.042a1.83 1.83 0 01-.15-1.36 1.84 1.84 0 01.822-1.094c.28-.168.6-.256.926-.256.325 0 .644.087.925.25.28.164.512.399.671.682l.062.103.195.262.26.263c.338.291.747.489 1.186.573.355.068.72.062 1.073-.018a2.72 2.72 0 001.834-2.012c.03-.362-.018-.726-.14-1.067a2.18 2.18 0 00-.571-.914S72.223 9.849 72.093 9.677l-.296-.437c-.7-1.09-1.017-2.382-.9-3.671.066-.893.331-1.761.778-2.538l.26-.453c.473-.674 1.091-1.234 1.809-1.638l.296-.21c1.381-.757 3.006-.944 4.524-.536 1.519.424 2.81 1.424 3.596 2.787a1.82 1.82 0 01.235.67 1.84 1.84 0 01-.281 1.38 1.84 1.84 0 01-2.541.543c-.279-.163-.509-.397-.666-.678a2.73 2.73 0 00-.679-.737 2.74 2.74 0 00-.922-.393 2.76 2.76 0 00-2.049.437 2.72 2.72 0 00-.909 2.163c-.028.337.015.676.127.995.112.319.29.611.523.857l5.629 5.786c.849.878 1.42 1.986 1.642 3.185.221 1.199.084 2.437-.396 3.559a5.74 5.74 0 01-2.302 2.749 5.76 5.76 0 01-3.442 1.025h.01z" fill="white"/>
+          </g>
         </svg>
       </div>
-      <h1><span class="brand-cloud">IONOS Cloud</span><br>Network Visualizer</h1>
-    </div>
-    <div class="subtitle">Cloud Network Topology Visualizer</div>
-  </div>
+      <div class="brand-title">
+        <h1><span class="brand-cloud">IONOS Cloud</span></h1>
+        <div class="brand-subtitle">Network Visualizer</div>
+      </div>
+      <div class="header-controls">
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" data-i18n-tip="theme.toggle" data-tip="Toggle theme">&#9788;</button>
+        <div class="locale-dropdown-wrapper">
+        <button class="locale-toggle" id="localeToggle" onclick="toggleLocaleMenu()">
+          <span class="locale-flag" id="localeFlagDisplay">&#127468;&#127463;</span>
+          <span id="localeCodeDisplay">EN</span>
+          <span class="locale-caret">&#9662;</span>
+        </button>
+        <div class="locale-menu" id="localeMenu">
+          <button class="locale-btn active" data-lang="en" onclick="setLocale('en')"><span class="locale-flag">&#127468;&#127463;</span> English<span class="locale-check">&#10003;</span></button>
+          <button class="locale-btn" data-lang="de" onclick="setLocale('de')"><span class="locale-flag">&#127465;&#127466;</span> Deutsch<span class="locale-check">&#10003;</span></button>
+          <button class="locale-btn" data-lang="es" onclick="setLocale('es')"><span class="locale-flag">&#127466;&#127480;</span> Espa&#241;ol<span class="locale-check">&#10003;</span></button>
+          <button class="locale-btn" data-lang="fr" onclick="setLocale('fr')"><span class="locale-flag">&#127467;&#127479;</span> Fran&#231;ais<span class="locale-check">&#10003;</span></button>
+        </div>
+      </div>
+      </div><!-- /header-controls -->
+    </div><!-- /brand-row -->
+  </div><!-- /sidebar-header -->
 
   <div class="sidebar-section account-section" id="accountSection" style="display:none;">
     <div class="account-info" id="accountInfo"></div>
   </div>
 
   <div class="sidebar-section">
-    <label for="tokenInput">API Token</label>
-    <input type="password" id="tokenInput" placeholder="Paste your IONOS Cloud API token">
-    <button class="btn btn-primary" id="connectBtn" onclick="connect()">Connect</button>
+    <label for="tokenInput" data-i18n="sidebar.apiToken">API Token</label>
+    <input type="password" id="tokenInput" placeholder="Paste your IONOS Cloud API token" data-i18n-placeholder="sidebar.tokenPlaceholder">
+    <button class="btn btn-primary" id="connectBtn" onclick="connect()" data-i18n="sidebar.connect">Connect</button>
   </div>
 
   <div class="sidebar-section">
-    <label>View Mode</label>
+    <label data-i18n="sidebar.viewMode">View Mode</label>
     <div class="view-mode-group">
-      <button class="btn btn-primary btn-sm view-mode-btn active" id="viewModeMap" onclick="setViewMode('map')">Global Map</button>
-      <button class="btn btn-secondary btn-sm view-mode-btn" id="viewModeSingle" onclick="setViewMode('single')">Single VDC</button>
-      <button class="btn btn-secondary btn-sm view-mode-btn" id="viewModeLocation" onclick="setViewMode('location')">By Location</button>
+      <button class="btn btn-primary btn-sm view-mode-btn active" id="viewModeMap" onclick="setViewMode('map')" data-i18n="sidebar.globalMap">Global Map</button>
+      <button class="btn btn-secondary btn-sm view-mode-btn" id="viewModeSingle" onclick="setViewMode('single')" data-i18n="sidebar.singleVdc">Single VDC</button>
+      <button class="btn btn-secondary btn-sm view-mode-btn" id="viewModeLocation" onclick="setViewMode('location')" data-i18n="sidebar.byLocation">By Location</button>
     </div>
     <div id="mapView">
-      <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;padding:4px 0;">
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;padding:4px 0;" data-i18n="sidebar.mapInstruction">
         Click a region bubble on the map to see VDCs at that location, then select a VDC to view its topology.
       </div>
     </div>
     <div id="singleVdcView" style="display:none;">
-      <label style="margin-top:4px;">Virtual Data Center</label>
-      <select id="dcSelect" disabled onchange="loadVDC()">
-        <option value="">-- Connect first --</option>
-      </select>
-      <button class="btn btn-secondary" id="refreshBtn" onclick="loadVDC()" disabled>Refresh</button>
+      <label style="margin-top:4px;" data-i18n="sidebar.vdc">Virtual Data Center</label>
+      <div class="vdc-controls-wrapper">
+        <select id="dcSelect" disabled onchange="loadVDC(); updatePinButton();">
+          <option value="" data-i18n="sidebar.connectFirst">-- Connect first --</option>
+        </select>
+        <button class="pin-vdc-btn" id="pinVdcBtn" onclick="togglePinVDC()" title="Pin VDC" data-i18n-tip="sidebar.pinVdc" disabled>&#9734;</button>
+      </div>
+      <button class="btn btn-secondary" id="refreshBtn" onclick="loadVDC()" disabled data-i18n="sidebar.refresh">Refresh</button>
     </div>
     <div id="locationView" style="display:none;">
-      <label style="margin-top:4px;">Location</label>
+      <label style="margin-top:4px;" data-i18n="sidebar.location">Location</label>
       <select id="locSelect" disabled onchange="loadLocation()">
-        <option value="">-- Connect first --</option>
+        <option value="" data-i18n="sidebar.connectFirst">-- Connect first --</option>
       </select>
-      <button class="btn btn-secondary" id="refreshLocBtn" onclick="loadLocation()" disabled>Refresh</button>
+      <button class="btn btn-secondary" id="refreshLocBtn" onclick="loadLocation()" disabled data-i18n="sidebar.refresh">Refresh</button>
     </div>
   </div>
 
   <div class="sidebar-section" id="legendSection" style="display:none;">
-    <label>Resources <span id="totalCount" style="float:right;font-weight:400;text-transform:none;letter-spacing:0;"></span></label>
+    <label><span data-i18n="sidebar.resources">Resources</span> <span id="totalCount" style="float:right;font-weight:400;text-transform:none;letter-spacing:0;"></span></label>
     <ul class="legend-list" id="legendList"></ul>
   </div>
 
   <div class="sidebar-section" id="ipBlockSection" style="display:none;">
-    <label>Public IPs</label>
+    <label data-i18n="sidebar.publicIps">Public IPs</label>
     <div class="ip-block-panel" id="ipBlockPanel"></div>
   </div>
 
   <div class="sidebar-section" id="dnsSection" style="display:none;">
-    <label>DNS Zones <span id="dnsZoneCount" style="float:right;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;"></span></label>
+    <label><span data-i18n="sidebar.dnsZones">DNS Zones</span> <span id="dnsZoneCount" style="float:right;font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;"></span></label>
     <div class="dns-panel" id="dnsPanel"></div>
   </div>
 
   <!-- Author Footer -->
   <div class="sidebar-footer">
-    <span class="author-text">Built by Rijesh Haridas</span>
+    <span class="author-text" data-i18n="sidebar.builtBy">Built by Rijesh Haridas</span>
     <div class="author-links">
       <a href="https://www.linkedin.com/in/rijesh-haridas" target="_blank" rel="noopener noreferrer" title="LinkedIn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
@@ -828,12 +989,12 @@
 <!-- Main Visualization -->
 <div class="main-area" id="mainArea">
   <div id="mapBackground"></div>
-  <button class="map-back-btn" id="mapBackBtn" onclick="showMapOverview()">&#x2190; All Regions</button>
+  <button class="map-back-btn" id="mapBackBtn" onclick="showMapOverview()" data-i18n="map.allRegions">&#x2190; All Regions</button>
   <button class="sidebar-expand" id="sidebarExpand" onclick="toggleSidebar()" title="Show sidebar">&#x25B6;</button>
   <div class="canvas-search" id="searchSection" style="display:none;">
     <div class="search-box">
       <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Search resources..." oninput="searchNodes(this.value)">
+      <input type="text" id="searchInput" placeholder="Search resources..." data-i18n-placeholder="search.placeholder" oninput="searchNodes(this.value)">
       <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none;">&times;</button>
     </div>
     <div class="search-results" id="searchResults"></div>
@@ -841,36 +1002,47 @@
 
   <!-- Highlights Overlay -->
   <div class="highlights-overlay" id="highlightsOverlay">
-    <div class="hl-title">Highlights</div>
+    <div class="hl-title" data-i18n="highlights.title">Highlights</div>
     <div class="highlight-checkbox">
       <input type="checkbox" id="hlFirewall" onchange="applyHighlights()">
       <span class="hl-dot hl-dot-firewall"></span>
-      <span>Firewall Active</span>
+      <span data-i18n="highlights.firewall">Firewall Active</span>
     </div>
     <div class="highlight-checkbox">
       <input type="checkbox" id="hlFlowLogs" onchange="applyHighlights()">
       <span class="hl-dot hl-dot-flowlogs"></span>
-      <span>Flow Logs</span>
+      <span data-i18n="highlights.flowLogs">Flow Logs</span>
     </div>
     <div class="highlight-checkbox">
       <input type="checkbox" id="hlSecGroups" onchange="applyHighlights()">
       <span class="hl-dot hl-dot-secgroups"></span>
-      <span>Security Groups</span>
+      <span data-i18n="highlights.secGroups">Security Groups</span>
     </div>
     <div class="highlight-checkbox">
       <input type="checkbox" id="hlIPv6" onchange="applyHighlights()">
       <span class="hl-dot hl-dot-ipv6"></span>
-      <span>IPv6 Enabled</span>
+      <span data-i18n="highlights.ipv6">IPv6 Enabled</span>
     </div>
     <div class="highlight-checkbox">
       <input type="checkbox" id="hlFailover" onchange="applyHighlights()">
       <span class="hl-dot hl-dot-failover"></span>
-      <span>IP Failover</span>
+      <span data-i18n="highlights.ipFailover">IP Failover</span>
     </div>
     <div class="highlight-checkbox">
       <input type="checkbox" id="hlPCC" onchange="applyHighlights()">
       <span class="hl-dot hl-dot-pcc"></span>
-      <span>Cross Connect</span>
+      <span data-i18n="highlights.crossConnect">Cross Connect</span>
+    </div>
+  </div>
+
+  <!-- Security Posture Overlay -->
+  <div class="security-overlay" id="securityOverlay" style="display:none;" onclick="closeSecurityOverlay()" role="dialog" aria-modal="true">
+    <div class="security-panel" onclick="event.stopPropagation()">
+      <div class="detail-header">
+        <h2 data-i18n="security.title">Security Posture</h2>
+        <button class="detail-close" onclick="closeSecurityOverlay()">&times;</button>
+      </div>
+      <div class="security-metrics" id="securityMetrics"></div>
     </div>
   </div>
 
@@ -878,36 +1050,43 @@
     <div class="onboarding">
       <div class="onboarding-header">
         <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="64" height="64" rx="12" fill="#003D8F"/>
-          <text x="32" y="39" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="19" fill="white" letter-spacing="0.5">IONOS</text>
+          <defs><linearGradient id="ionosBg2" x1="0" y1="0" x2="64" y2="64"><stop offset="0%" stop-color="#0047AB"/><stop offset="100%" stop-color="#003080"/></linearGradient></defs>
+          <rect width="64" height="64" rx="14" fill="url(#ionosBg2)"/>
+          <g transform="translate(5,20) scale(0.65)">
+            <path d="M1.985 23.984c-.526.003-1.04-.18-1.414-.585C.195 23.024 0 22.51 0 21.983V1.953C.01 1.432.225.936.599.572.973.208 1.475.006 1.998.01c.437-.006.864.134 1.212.399.348.265.596.639.704 1.061l.033.14v.087c.019.107.027.215.026.324v19.975c.002.261-.048.52-.148.761a2.02 2.02 0 01-1.84 1.227z" fill="white"/>
+            <path d="M17.671 23.994c-1.605-.001-3.143-.637-4.278-1.768-1.135-1.131-1.773-2.664-1.774-4.264V6.032C11.619 4.432 12.257 2.898 13.392 1.767 14.527.635 16.066 0 17.671 0s3.144.635 4.279 1.767C23.085 2.898 23.722 4.432 23.722 6.032v11.93c-.001 1.6-.639 3.133-1.773 4.264-1.135 1.131-2.674 1.767-4.278 1.768zm0-20.351c-.636 0-1.245.252-1.695.7-.449.448-.703 1.055-.704 1.689v11.93c-.004.315.056.627.175.919.119.291.296.556.519.778.223.223.489.399.781.517.292.119.605.179.921.175.636-.001 1.245-.253 1.695-.701.449-.448.703-1.055.703-1.688V6.032c-.009-.631-.264-1.234-.711-1.68-.448-.447-1.053-.701-1.684-.71z" fill="white"/>
+            <path d="M35.02 12.306v9.884a1.83 1.83 0 01-.535 1.286 1.84 1.84 0 01-2.581 0 1.83 1.83 0 01-.535-1.286V4.749l3.651 7.557zm9.859 6.947V1.819a1.84 1.84 0 00-3.654 0v9.875l3.654 7.559zM34.848 1.032v-.035a1.84 1.84 0 00-1.653-.971c-.124 0-.247.013-.367.039-.41.08-.78.301-1.044.625-.263.323-.404.729-.399 1.146v.418L41.41 22.996a1.84 1.84 0 003.469-.805v-.412S35.118 1.586 34.848 1.032z" fill="white"/>
+            <path d="M58.524 23.994c-1.605-.002-3.143-.638-4.277-1.769-1.135-1.13-1.773-2.664-1.774-4.263V6.032c0-.792.156-1.577.461-2.308a6.06 6.06 0 013.53-3.265A6.09 6.09 0 0158.524 0c.795 0 1.582.156 2.316.459a6.06 6.06 0 013.531 3.265c.304.731.46 1.516.46 2.308v11.93c-.001 1.6-.638 3.133-1.773 4.263-1.135 1.131-2.674 1.768-4.278 1.769zm0-20.351c-.636.001-1.245.253-1.694.701-.45.448-.703 1.055-.704 1.688v11.93c-.004.315.056.627.175.919.119.291.296.556.519.778.223.223.489.399.781.517.292.119.605.179.921.175.636-.001 1.245-.253 1.694-.701.45-.448.703-1.055.704-1.688V6.032c-.009-.631-.264-1.234-.711-1.68-.448-.447-1.053-.701-1.685-.71z" fill="white"/>
+            <path d="M76.332 23.997c-.408.001-.815-.04-1.215-.123-.86-.177-1.674-.532-2.388-1.042a5.69 5.69 0 01-1.76-1.917l-.023-.042a1.83 1.83 0 01-.15-1.36 1.84 1.84 0 01.822-1.094c.28-.168.6-.256.926-.256.325 0 .644.087.925.25.28.164.512.399.671.682l.062.103.195.262.26.263c.338.291.747.489 1.186.573.355.068.72.062 1.073-.018a2.72 2.72 0 001.834-2.012c.03-.362-.018-.726-.14-1.067a2.18 2.18 0 00-.571-.914S72.223 9.849 72.093 9.677l-.296-.437c-.7-1.09-1.017-2.382-.9-3.671.066-.893.331-1.761.778-2.538l.26-.453c.473-.674 1.091-1.234 1.809-1.638l.296-.21c1.381-.757 3.006-.944 4.524-.536 1.519.424 2.81 1.424 3.596 2.787a1.82 1.82 0 01.235.67 1.84 1.84 0 01-.281 1.38 1.84 1.84 0 01-2.541.543c-.279-.163-.509-.397-.666-.678a2.73 2.73 0 00-.679-.737 2.74 2.74 0 00-.922-.393 2.76 2.76 0 00-2.049.437 2.72 2.72 0 00-.909 2.163c-.028.337.015.676.127.995.112.319.29.611.523.857l5.629 5.786c.849.878 1.42 1.986 1.642 3.185.221 1.199.084 2.437-.396 3.559a5.74 5.74 0 01-2.302 2.749 5.76 5.76 0 01-3.442 1.025h.01z" fill="white"/>
+          </g>
         </svg>
-        <h2>IONOS Cloud Network Visualizer</h2>
-        <p>Visualize your Virtual Data Center network topology in seconds</p>
+        <h2 data-i18n="onboarding.title">IONOS Cloud Network Visualizer</h2>
+        <p data-i18n="onboarding.subtitle">Visualize your Virtual Data Center network topology in seconds</p>
       </div>
       <div class="onboarding-steps">
         <div class="onboarding-step">
           <div class="step-number">1</div>
           <div class="step-content">
-            <div class="step-title">Get API Token</div>
-            <div class="step-desc">Generate a token at <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> under Management → Token Management</div>
+            <div class="step-title" data-i18n="onboarding.step1Title">Get API Token</div>
+            <div class="step-desc" data-i18n-html="onboarding.step1Desc">Generate a token at <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> under Management → Token Management</div>
           </div>
         </div>
         <div class="onboarding-step">
           <div class="step-number">2</div>
           <div class="step-content">
-            <div class="step-title">Connect</div>
-            <div class="step-desc">Paste the token in the sidebar and click Connect</div>
+            <div class="step-title" data-i18n="onboarding.step2Title">Connect</div>
+            <div class="step-desc" data-i18n="onboarding.step2Desc">Paste the token in the sidebar and click Connect</div>
           </div>
         </div>
         <div class="onboarding-step">
           <div class="step-number">3</div>
           <div class="step-content">
-            <div class="step-title">Explore</div>
-            <div class="step-desc">Select a VDC and explore your network topology interactively</div>
+            <div class="step-title" data-i18n="onboarding.step3Title">Explore</div>
+            <div class="step-desc" data-i18n="onboarding.step3Desc">Select a VDC and explore your network topology interactively</div>
           </div>
         </div>
       </div>
-      <div class="onboarding-footer">
+      <div class="onboarding-footer" data-i18n-html="onboarding.shortcutHint">
         Press <kbd>?</kbd> for keyboard shortcuts
       </div>
     </div>
@@ -917,68 +1096,68 @@
 
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-stages" id="loadingStages">
-      <div class="loading-stage" data-stage="0">Authenticating</div>
-      <div class="loading-stage" data-stage="1">Servers & LANs</div>
-      <div class="loading-stage" data-stage="2">Managed Services</div>
-      <div class="loading-stage" data-stage="3">Building Graph</div>
+      <div class="loading-stage" data-stage="0" data-i18n="loading.authenticating">Authenticating</div>
+      <div class="loading-stage" data-stage="1" data-i18n="loading.serversLans">Servers & LANs</div>
+      <div class="loading-stage" data-stage="2" data-i18n="loading.managedServices">Managed Services</div>
+      <div class="loading-stage" data-stage="3" data-i18n="loading.buildingGraph">Building Graph</div>
     </div>
     <div class="loading-bar"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
-    <div class="loading-text" id="loadingText">Loading resources...</div>
+    <div class="loading-text" id="loadingText" data-i18n="loading.resources">Loading resources...</div>
   </div>
 
   <div class="toolbar" id="toolbar" style="display:none;">
-    <button onclick="zoomIn()" aria-label="Zoom in" data-tip="Zoom in (+)">
+    <button onclick="zoomIn()" aria-label="Zoom in" data-tip="Zoom in (+)" data-i18n-tip="toolbar.zoomIn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6M11 8v6"/></svg>
     </button>
-    <button onclick="zoomOut()" aria-label="Zoom out" data-tip="Zoom out (-)">
+    <button onclick="zoomOut()" aria-label="Zoom out" data-tip="Zoom out (-)" data-i18n-tip="toolbar.zoomOut">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6"/></svg>
     </button>
-    <button onclick="zoomFit()" aria-label="Fit to view" data-tip="Fit to view (F)">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
-    </button>
-    <button onclick="toggleLabels()" aria-label="Toggle labels" data-tip="Toggle labels (L)">
+    <button onclick="toggleLabels()" aria-label="Toggle labels" data-tip="Toggle labels (L)" data-i18n-tip="toolbar.labels">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
     </button>
-    <button onclick="toggleIPView()" id="ipViewBtn" aria-label="Toggle IP view" data-tip="IP view (I)">
+    <button onclick="toggleIPView()" id="ipViewBtn" aria-label="Toggle IP view" data-tip="IP view (I)" data-i18n-tip="toolbar.ipView">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 9V4h16v5M4 15v5h16v-5"/><text x="12" y="13.5" text-anchor="middle" font-size="8" font-weight="700" font-family="monospace" fill="currentColor" stroke="none">IP</text></svg>
     </button>
-    <button onclick="toggleComputeView()" id="computeViewBtn" aria-label="Toggle compute view" data-tip="Compute view (C)">
+    <button onclick="toggleComputeView()" id="computeViewBtn" aria-label="Toggle compute view" data-tip="Compute view (C)" data-i18n-tip="toolbar.computeView">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><text x="12" y="12" text-anchor="middle" font-size="7" font-weight="700" font-family="monospace" fill="currentColor" stroke="none">CPU</text></svg>
     </button>
-    <button onclick="toggleHighlightsOverlay()" id="hlOverlayBtn" aria-label="Toggle highlights" data-tip="Highlights (H)">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <button onclick="toggleHighlightsOverlay()" id="hlOverlayBtn" aria-label="Toggle highlights" data-tip="Highlights (H)" data-i18n-tip="toolbar.highlights">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
     </button>
-    <button onclick="toggleMapBackground()" id="mapToggleBtn" class="active" aria-label="Toggle map background" data-tip="Map background (M)">
+    <button onclick="toggleMapBackground()" id="mapToggleBtn" class="active" aria-label="Toggle map background" data-tip="Map background (M)" data-i18n-tip="toolbar.mapBg">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
     </button>
-    <button onclick="openTableView()" id="tableViewBtn" aria-label="Table view" data-tip="Table view (T)">
+    <button onclick="openSecurityOverlay()" id="securityBtn" aria-label="Security posture" data-tip="Security posture (S)" data-i18n-tip="toolbar.security">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+    </button>
+    <button onclick="openTableView()" id="tableViewBtn" aria-label="Table view" data-tip="Table view (T)" data-i18n-tip="toolbar.tableView">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
     </button>
     <span class="toolbar-divider"></span>
     <div class="export-dropdown-wrapper">
-      <button onclick="toggleExportMenu()" id="exportMenuBtn" aria-label="Export" data-tip="Export">
+      <button onclick="toggleExportMenu()" id="exportMenuBtn" aria-label="Export" data-tip="Export" data-i18n-tip="toolbar.export">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
       </button>
       <div class="export-dropdown" id="exportDropdown">
-        <div class="export-section-label">Diagram</div>
-        <button onclick="exportPNG()">PNG Image</button>
-        <button onclick="exportSVG()">SVG Vector</button>
+        <div class="export-section-label" data-i18n="export.diagram">Diagram</div>
+        <button onclick="exportPNG()" data-i18n="export.png">PNG Image</button>
+        <button onclick="exportSVG()" data-i18n="export.svg">SVG Vector</button>
         <div class="export-sep"></div>
-        <div class="export-section-label">Data</div>
-        <button onclick="exportJSON()">JSON Topology</button>
-        <button onclick="exportCSV()">CSV Table</button>
-        <button onclick="exportXLSX()">XLSX Workbook</button>
+        <div class="export-section-label" data-i18n="export.data">Data</div>
+        <button onclick="exportJSON()" data-i18n="export.json">JSON Topology</button>
+        <button onclick="exportCSV()" data-i18n="export.csv">CSV Table</button>
+        <button onclick="exportXLSX()" data-i18n="export.xlsx">XLSX Workbook</button>
         <div class="export-sep"></div>
-        <div class="export-section-label">Report</div>
-        <button onclick="exportPDF()">PDF Report</button>
+        <div class="export-section-label" data-i18n="export.report">Report</div>
+        <button onclick="exportPDF()" data-i18n="export.pdf">PDF Report</button>
       </div>
     </div>
     <span class="toolbar-divider"></span>
-    <button onclick="resetView()" aria-label="Reset view" data-tip="Reset view (R)">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9"/><path d="M3 3v6h6"/></svg>
+    <button onclick="resetView()" aria-label="Reset view" data-tip="Reset & fit view (R)" data-i18n-tip="toolbar.resetView">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
     </button>
     <span class="toolbar-divider"></span>
-    <button onclick="setViewMode('map')" aria-label="Global map view" data-tip="Global map (G)">
+    <button onclick="setViewMode('map')" aria-label="Global map view" data-tip="Global map (G)" data-i18n-tip="toolbar.globalMap">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"/></svg>
     </button>
   </div>
@@ -999,23 +1178,23 @@
 <div class="shortcuts-overlay" id="shortcutsOverlay" style="display:none;" onclick="this.style.display='none'" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
   <div class="shortcuts-dialog" onclick="event.stopPropagation()">
     <div class="detail-header">
-      <h2>Keyboard Shortcuts</h2>
+      <h2 data-i18n="shortcuts.title">Keyboard Shortcuts</h2>
       <button class="detail-close" onclick="document.getElementById('shortcutsOverlay').style.display='none'">&times;</button>
     </div>
     <table class="detail-table">
-      <tr><th>Esc</th><td>Close panel / overlay</td></tr>
-      <tr><th>Ctrl+F</th><td>Focus search bar</td></tr>
-      <tr><th>+ / -</th><td>Zoom in / out</td></tr>
-      <tr><th>F</th><td>Fit to view</td></tr>
-      <tr><th>L</th><td>Toggle labels</td></tr>
-      <tr><th>I</th><td>Toggle IP view</td></tr>
-      <tr><th>C</th><td>Toggle compute view</td></tr>
-      <tr><th>H</th><td>Toggle highlights</td></tr>
-      <tr><th>M</th><td>Toggle map background</td></tr>
-      <tr><th>G</th><td>Global map view</td></tr>
-      <tr><th>T</th><td>Resource table view</td></tr>
-      <tr><th>R</th><td>Reset view (clear filters)</td></tr>
-      <tr><th>?</th><td>Show this help</td></tr>
+      <tr><th>Esc</th><td data-i18n="shortcuts.close">Close panel / overlay</td></tr>
+      <tr><th>Ctrl+F</th><td data-i18n="shortcuts.search">Focus search bar</td></tr>
+      <tr><th>+ / -</th><td data-i18n="shortcuts.zoomInOut">Zoom in / out</td></tr>
+      <tr><th>L</th><td data-i18n="shortcuts.labels">Toggle labels</td></tr>
+      <tr><th>I</th><td data-i18n="shortcuts.ipView">Toggle IP view</td></tr>
+      <tr><th>C</th><td data-i18n="shortcuts.computeView">Toggle compute view</td></tr>
+      <tr><th>H</th><td data-i18n="shortcuts.highlights">Toggle highlights</td></tr>
+      <tr><th>M</th><td data-i18n="shortcuts.mapBg">Toggle map background</td></tr>
+      <tr><th>G</th><td data-i18n="shortcuts.globalMap">Global map view</td></tr>
+      <tr><th>T</th><td data-i18n="shortcuts.tableView">Resource table view</td></tr>
+      <tr><th>F / R</th><td data-i18n="shortcuts.resetView">Reset & fit to view</td></tr>
+      <tr><th>S</th><td data-i18n="shortcuts.security">Security posture</td></tr>
+      <tr><th>?</th><td data-i18n="shortcuts.help">Show this help</td></tr>
     </table>
   </div>
 </div>
@@ -1024,9 +1203,9 @@
 <div class="table-overlay" id="tableOverlay" style="display:none;" onclick="closeTableView()" role="dialog" aria-modal="true" aria-label="Resource table">
   <div class="table-dialog" onclick="event.stopPropagation()">
     <div class="table-header">
-      <h2>Resource Table</h2>
+      <h2 data-i18n="table.title">Resource Table</h2>
       <div class="table-controls">
-        <input type="text" id="tableSearch" placeholder="Search resources..." oninput="filterTable()">
+        <input type="text" id="tableSearch" placeholder="Search resources..." data-i18n-placeholder="table.searchPlaceholder" oninput="filterTable()">
         <button class="table-csv-btn" onclick="exportTableCSV()">&#8681; CSV</button>
         <button class="detail-close" onclick="closeTableView()">&times;</button>
       </div>
@@ -1110,8 +1289,1126 @@ const DC_CLOUD_TYPE = {
 
 // Cloud type label for tooltips
 function cloudLabel(region) {
-  const t = DC_CLOUD_TYPE[region] || 'public';
-  return t === 'both' ? 'Public & Private Cloud' : t === 'private' ? 'Private Cloud' : 'Public Cloud';
+  const ct = DC_CLOUD_TYPE[region] || 'public';
+  return ct === 'both' ? 'Public & Private Cloud' : ct === 'private' ? 'Private Cloud' : 'Public Cloud';
+}
+
+// ==================== TRANSLATIONS (i18n) ====================
+const TRANSLATIONS = {
+  en: {
+    // Sidebar
+    'sidebar.apiToken': 'API Token',
+    'sidebar.tokenPlaceholder': 'Paste your IONOS Cloud API token',
+    'sidebar.connect': 'Connect',
+    'sidebar.disconnect': 'Disconnect',
+    'sidebar.viewMode': 'View Mode',
+    'sidebar.globalMap': 'Global Map',
+    'sidebar.singleVdc': 'Single VDC',
+    'sidebar.byLocation': 'By Location',
+    'sidebar.mapInstruction': 'Click a region bubble on the map to see VDCs at that location, then select a VDC to view its topology.',
+    'sidebar.vdc': 'Virtual Data Center',
+    'sidebar.location': 'Location',
+    'sidebar.connectFirst': '-- Connect first --',
+    'sidebar.refresh': 'Refresh',
+    'sidebar.resources': 'Resources',
+    'sidebar.publicIps': 'Public IPs',
+    'sidebar.dnsZones': 'DNS Zones',
+    'sidebar.builtBy': 'Built by Rijesh Haridas',
+    'sidebar.pinVdc': 'Pin / Unpin VDC',
+    // Account
+    'account.email': 'Email',
+    'account.contract': 'Contract',
+    // Toolbar
+    'toolbar.zoomIn': 'Zoom in (+)',
+    'toolbar.zoomOut': 'Zoom out (-)',
+    'toolbar.fitView': 'Reset & fit view (F)',
+    'toolbar.labels': 'Toggle labels (L)',
+    'toolbar.ipView': 'IP view (I)',
+    'toolbar.computeView': 'Compute view (C)',
+    'toolbar.highlights': 'Highlights (H)',
+    'toolbar.mapBg': 'Map background (M)',
+    'toolbar.tableView': 'Table view (T)',
+    'toolbar.export': 'Export',
+    'toolbar.resetView': 'Reset & fit view (R)',
+    'toolbar.globalMap': 'Global map (G)',
+    // Onboarding
+    'onboarding.title': 'IONOS Cloud Network Visualizer',
+    'onboarding.subtitle': 'Visualize your Virtual Data Center network topology in seconds',
+    'onboarding.step1Title': 'Get API Token',
+    'onboarding.step1Desc': 'Generate a token at <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> under Management \u2192 Token Management',
+    'onboarding.step2Title': 'Connect',
+    'onboarding.step2Desc': 'Paste the token in the sidebar and click Connect',
+    'onboarding.step3Title': 'Explore',
+    'onboarding.step3Desc': 'Select a VDC and explore your network topology interactively',
+    'onboarding.shortcutHint': 'Press <kbd>?</kbd> for keyboard shortcuts',
+    // Shortcuts
+    'shortcuts.title': 'Keyboard Shortcuts',
+    'shortcuts.close': 'Close panel / overlay',
+    'shortcuts.search': 'Focus search bar',
+    'shortcuts.zoomInOut': 'Zoom in / out',
+    'shortcuts.fitView': 'Reset & fit to view',
+    'shortcuts.labels': 'Toggle labels',
+    'shortcuts.ipView': 'Toggle IP view',
+    'shortcuts.computeView': 'Toggle compute view',
+    'shortcuts.highlights': 'Toggle highlights',
+    'shortcuts.mapBg': 'Toggle map background',
+    'shortcuts.globalMap': 'Global map view',
+    'shortcuts.tableView': 'Resource table view',
+    'shortcuts.resetView': 'Reset & fit to view',
+    'shortcuts.help': 'Show this help',
+    // Security
+    'toolbar.security': 'Security posture (S)',
+    'security.title': 'Security Posture',
+    'security.firewall': 'Firewall Coverage',
+    'security.firewallGood': 'Excellent — most servers have active firewall rules',
+    'security.firewallWarn': 'Moderate — consider enabling firewalls on more servers',
+    'security.firewallBad': 'Low — many servers lack firewall protection',
+    'security.flowlogs': 'Flow Logs',
+    'security.flowlogsGood': 'Good flow log coverage for traffic monitoring',
+    'security.flowlogsWarn': 'Limited flow log coverage — consider enabling for visibility',
+    'security.secgroups': 'Security Groups',
+    'security.secgroupsGood': 'Most servers are protected by security groups',
+    'security.secgroupsWarn': 'Some servers lack security group protection',
+    'security.secgroupsBad': 'Many servers have no security groups assigned',
+    'security.privateLans': 'Private LANs',
+    'security.privateLansDesc': 'Private LANs reduce exposure to the public internet',
+    'security.natGwActive': '{count} NAT Gateway(s) detected \u2014 private LANs have secure outbound access',
+    'security.natGwSuggest': 'Tip: Add a NAT Gateway for secure outbound internet access from private LANs',
+    'security.ipv6': 'IPv6 Adoption',
+    'security.ipv6Good': 'Strong IPv6 adoption across your LANs',
+    'security.ipv6Bad': 'Low IPv6 adoption — consider enabling for future-readiness',
+    'security.highlightEnabled': '{name} highlight enabled',
+    'shortcuts.security': 'Security posture',
+    'toast.noVdcLoaded': 'Load a VDC first to view security posture',
+    // Highlights
+    'highlights.title': 'Highlights',
+    'highlights.firewall': 'Firewall Active',
+    'highlights.flowLogs': 'Flow Logs',
+    'highlights.secGroups': 'Security Groups',
+    'highlights.ipv6': 'IPv6 Enabled',
+    'highlights.ipFailover': 'IP Failover',
+    'highlights.crossConnect': 'Cross Connect',
+    // Table
+    'table.title': 'Resource Table',
+    'table.searchPlaceholder': 'Search resources...',
+    'table.csv': 'CSV',
+    'table.name': 'Name',
+    'table.type': 'Type',
+    'table.state': 'State',
+    'table.details': 'Details',
+    'table.ips': 'IPs',
+    'table.showing': 'Showing {count} of {total} resources',
+    'table.noMatch': 'No resources match the current filters',
+    // Export
+    'export.diagram': 'Diagram',
+    'export.data': 'Data',
+    'export.report': 'Report',
+    'export.png': 'PNG Image',
+    'export.svg': 'SVG Vector',
+    'export.json': 'JSON Topology',
+    'export.csv': 'CSV Table',
+    'export.xlsx': 'XLSX Workbook',
+    'export.pdf': 'PDF Report',
+    // Toast
+    'toast.pngExported': 'PNG exported',
+    'toast.pngFailed': 'PNG export failed \u2014 try a smaller zoom level',
+    'toast.svgExported': 'SVG exported',
+    'toast.jsonExported': 'JSON topology exported',
+    'toast.csvExported': 'CSV exported ({count} rows)',
+    'toast.xlsxExported': 'XLSX workbook exported',
+    'toast.pdfExported': 'PDF report exported',
+    'toast.pdfFailed': 'PDF export failed \u2014 try a smaller zoom level',
+    'toast.noData': 'No data to export',
+    'toast.noRows': 'No rows to export',
+    'toast.noDisplay': 'No data to display',
+    'toast.enterToken': 'Please enter an API token',
+    'toast.noDataCenters': 'No data centers found',
+    'toast.foundDcs': 'Found {count} data center(s)',
+    'toast.connectionFailed': 'Connection failed: {error}',
+    'toast.disconnected': 'Disconnected',
+    'toast.loadedResources': 'Loaded {count} resources',
+    'toast.loadFailed': 'Failed to load VDC: {error}',
+    'toast.noVdcsLocation': 'No VDCs at this location',
+    'toast.loadedLocation': 'Loaded {dcCount} VDC(s) with {nodeCount} total resources',
+    'toast.locationFailed': 'Failed to load location: {error}',
+    'toast.contractSwitched': 'Switched to Contract {id}',
+    'toast.contractFailed': 'Failed to switch contract: {error}',
+    'toast.xlsxNotLoaded': 'XLSX library not loaded',
+    'toast.pdfNotLoaded': 'PDF library not loaded',
+    // Detail
+    'detail.connectedResources': 'Connected Resources',
+    'detail.networkMetrics': 'Network Metrics',
+    'detail.nics': 'Network Interfaces (NICs)',
+    'detail.securityRules': 'Security Group Rules',
+    'detail.noRules': 'No rules defined',
+    'detail.ruleDir': 'Dir',
+    'detail.ruleProto': 'Protocol',
+    'detail.rulePorts': 'Ports',
+    'detail.ruleSource': 'Source',
+    'detail.ruleTarget': 'Target',
+    'detail.ruleAll': 'All',
+    'detail.ruleAny': 'Any',
+    'detail.loading': 'Loading...',
+    'detail.lanId': 'LAN ID',
+    'detail.public': 'Public',
+    'detail.ipv4Cidr': 'IPv4 CIDR',
+    'detail.ipv6Cidr': 'IPv6 CIDR',
+    'detail.crossConnect': 'Cross Connect',
+    'detail.ipFailover': 'IP Failover',
+    'detail.state': 'State',
+    'detail.type': 'Type',
+    'detail.cores': 'Cores',
+    'detail.ram': 'RAM',
+    'detail.cpu': 'CPU',
+    'detail.vmState': 'VM State',
+    'detail.version': 'Version',
+    'detail.instances': 'Instances',
+    'detail.storage': 'Storage',
+    'detail.dns': 'DNS',
+    'detail.publicIps': 'Public IPs',
+    'detail.privateIps': 'Private IPs',
+    'detail.listenerLan': 'Listener LAN',
+    'detail.targetLan': 'Target LAN',
+    'detail.pccId': 'PCC ID',
+    'detail.cluster': 'Cluster',
+    'detail.k8sVersion': 'K8s Version',
+    'detail.nodes': 'Nodes',
+    'detail.coresPerNode': 'Cores/Node',
+    'detail.ramPerNode': 'RAM/Node',
+    'detail.size': 'Size',
+    'detail.gatewayIp': 'Gateway IP',
+    'detail.ifaceIpv4': 'Interface IPv4',
+    'detail.ifaceIpv6': 'Interface IPv6',
+    'detail.dnsNames': 'DNS Names',
+    'detail.reverseDns': 'Reverse DNS',
+    'detail.yes': 'Yes',
+    'detail.no': 'No',
+    'detail.noData': 'No data',
+    // Loading
+    'loading.authenticating': 'Authenticating',
+    'loading.serversLans': 'Servers & LANs',
+    'loading.managedServices': 'Managed Services',
+    'loading.buildingGraph': 'Building Graph',
+    'loading.resources': 'Loading resources...',
+    'loading.fetchingDetails': 'Fetching data center details...',
+    'loading.fetchingServers': 'Fetching servers, LANs, and managed services...',
+    'loading.resolvingNics': 'Resolving server NICs...',
+    'loading.fetchingK8s': 'Fetching Kubernetes node pools...',
+    'loading.buildingViz': 'Building visualization...',
+    'loading.loadingVdcs': 'Loading {count} VDC(s) at {location}...',
+    'loading.fetchingShared': 'Fetching shared managed services...',
+    'loading.fetchingVdc': 'Fetching VDC {index}/{total}: {name}...',
+    'loading.mergingGraphs': 'Merging VDC graphs...',
+    // Search
+    'search.placeholder': 'Search resources...',
+    'search.noMatches': 'No matches found',
+    'search.matchCount': '{count} match(es)',
+    'search.andMore': '...and {count} more',
+    // Map
+    'map.allRegions': '\u2190 All Regions',
+    // Misc
+    'theme.toggle': 'Toggle theme',
+    'total': 'total',
+  },
+  de: {
+    'sidebar.apiToken': 'API-Token',
+    'sidebar.tokenPlaceholder': 'IONOS Cloud API-Token hier einf\u00fcgen',
+    'sidebar.connect': 'Verbinden',
+    'sidebar.disconnect': 'Trennen',
+    'sidebar.viewMode': 'Ansicht',
+    'sidebar.globalMap': 'Weltkarte',
+    'sidebar.singleVdc': 'Einzelnes VDC',
+    'sidebar.byLocation': 'Nach Standort',
+    'sidebar.mapInstruction': 'Klicken Sie auf eine Region, um die VDCs an diesem Standort anzuzeigen, und w\u00e4hlen Sie dann ein VDC aus.',
+    'sidebar.vdc': 'Virtuelles Rechenzentrum',
+    'sidebar.location': 'Standort',
+    'sidebar.connectFirst': '-- Zuerst verbinden --',
+    'sidebar.refresh': 'Aktualisieren',
+    'sidebar.resources': 'Ressourcen',
+    'sidebar.publicIps': '\u00d6ffentliche IPs',
+    'sidebar.dnsZones': 'DNS-Zonen',
+    'sidebar.builtBy': 'Erstellt von Rijesh Haridas',
+    'sidebar.pinVdc': 'VDC anheften / lösen',
+    'account.email': 'E-Mail',
+    'account.contract': 'Vertrag',
+    'toolbar.zoomIn': 'Vergr\u00f6\u00dfern (+)',
+    'toolbar.zoomOut': 'Verkleinern (-)',
+    'toolbar.fitView': 'Zur\u00fccksetzen & Einpassen (F)',
+    'toolbar.labels': 'Beschriftungen (L)',
+    'toolbar.ipView': 'IP-Ansicht (I)',
+    'toolbar.computeView': 'Compute-Ansicht (C)',
+    'toolbar.highlights': 'Hervorhebungen (H)',
+    'toolbar.mapBg': 'Kartenhintergrund (M)',
+    'toolbar.tableView': 'Tabellenansicht (T)',
+    'toolbar.export': 'Exportieren',
+    'toolbar.resetView': 'Zur\u00fccksetzen & Einpassen (R)',
+    'toolbar.globalMap': 'Weltkarte (G)',
+    'onboarding.title': 'IONOS Cloud Netzwerk-Visualizer',
+    'onboarding.subtitle': 'Visualisieren Sie Ihre Rechenzentrums-Topologie in Sekunden',
+    'onboarding.step1Title': 'API-Token erhalten',
+    'onboarding.step1Desc': 'Erstellen Sie einen Token auf <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> unter Verwaltung \u2192 Token-Verwaltung',
+    'onboarding.step2Title': 'Verbinden',
+    'onboarding.step2Desc': 'F\u00fcgen Sie den Token in die Seitenleiste ein und klicken Sie auf Verbinden',
+    'onboarding.step3Title': 'Erkunden',
+    'onboarding.step3Desc': 'W\u00e4hlen Sie ein VDC und erkunden Sie Ihre Netzwerktopologie interaktiv',
+    'onboarding.shortcutHint': 'Dr\u00fccken Sie <kbd>?</kbd> f\u00fcr Tastaturk\u00fcrzel',
+    'shortcuts.title': 'Tastaturk\u00fcrzel',
+    'shortcuts.close': 'Panel / Overlay schlie\u00dfen',
+    'shortcuts.search': 'Suchleiste fokussieren',
+    'shortcuts.zoomInOut': 'Vergr\u00f6\u00dfern / Verkleinern',
+    'shortcuts.fitView': 'Zur\u00fccksetzen & Einpassen',
+    'shortcuts.labels': 'Beschriftungen umschalten',
+    'shortcuts.ipView': 'IP-Ansicht umschalten',
+    'shortcuts.computeView': 'Compute-Ansicht umschalten',
+    'shortcuts.highlights': 'Hervorhebungen umschalten',
+    'shortcuts.mapBg': 'Kartenhintergrund umschalten',
+    'shortcuts.globalMap': 'Weltkarte',
+    'shortcuts.tableView': 'Ressourcentabelle',
+    'shortcuts.resetView': 'Zur\u00fccksetzen & Einpassen',
+    'shortcuts.help': 'Hilfe anzeigen',
+    // Security
+    'toolbar.security': 'Sicherheitsstatus (S)',
+    'security.title': 'Sicherheitsstatus',
+    'security.firewall': 'Firewall-Abdeckung',
+    'security.firewallGood': 'Ausgezeichnet — die meisten Server haben aktive Firewall-Regeln',
+    'security.firewallWarn': 'Mäßig — erwägen Sie Firewalls auf mehr Servern zu aktivieren',
+    'security.firewallBad': 'Niedrig — vielen Servern fehlt Firewall-Schutz',
+    'security.flowlogs': 'Flow Logs',
+    'security.flowlogsGood': 'Gute Flow-Log-Abdeckung für Verkehrsüberwachung',
+    'security.flowlogsWarn': 'Begrenzte Flow-Log-Abdeckung — erwägen Sie die Aktivierung',
+    'security.secgroups': 'Sicherheitsgruppen',
+    'security.secgroupsGood': 'Die meisten Server sind durch Sicherheitsgruppen geschützt',
+    'security.secgroupsWarn': 'Einigen Servern fehlt Sicherheitsgruppen-Schutz',
+    'security.secgroupsBad': 'Vielen Servern sind keine Sicherheitsgruppen zugewiesen',
+    'security.privateLans': 'Private LANs',
+    'security.privateLansDesc': 'Private LANs reduzieren die Exposition zum öffentlichen Internet',
+    'security.natGwActive': '{count} NAT-Gateway(s) erkannt \u2014 private LANs haben sicheren ausgehenden Zugang',
+    'security.natGwSuggest': 'Tipp: F\u00fcgen Sie ein NAT-Gateway f\u00fcr sicheren ausgehenden Internetzugang von privaten LANs hinzu',
+    'security.ipv6': 'IPv6-Einführung',
+    'security.ipv6Good': 'Starke IPv6-Einführung in Ihren LANs',
+    'security.ipv6Bad': 'Geringe IPv6-Einführung — erwägen Sie die Aktivierung',
+    'security.highlightEnabled': '{name} Hervorhebung aktiviert',
+    'shortcuts.security': 'Sicherheitsstatus',
+    'toast.noVdcLoaded': 'Laden Sie zuerst ein VDC, um den Sicherheitsstatus anzuzeigen',
+    'highlights.title': 'Hervorhebungen',
+    'highlights.firewall': 'Firewall aktiv',
+    'highlights.flowLogs': 'Flow Logs',
+    'highlights.secGroups': 'Sicherheitsgruppen',
+    'highlights.ipv6': 'IPv6 aktiviert',
+    'highlights.ipFailover': 'IP-Failover',
+    'highlights.crossConnect': 'Cross Connect',
+    'table.title': 'Ressourcentabelle',
+    'table.searchPlaceholder': 'Ressourcen suchen...',
+    'table.csv': 'CSV',
+    'table.name': 'Name',
+    'table.type': 'Typ',
+    'table.state': 'Status',
+    'table.details': 'Details',
+    'table.ips': 'IPs',
+    'table.showing': '{count} von {total} Ressourcen',
+    'table.noMatch': 'Keine Ressourcen entsprechen den aktuellen Filtern',
+    'export.diagram': 'Diagramm',
+    'export.data': 'Daten',
+    'export.report': 'Bericht',
+    'export.png': 'PNG-Bild',
+    'export.svg': 'SVG-Vektor',
+    'export.json': 'JSON-Topologie',
+    'export.csv': 'CSV-Tabelle',
+    'export.xlsx': 'XLSX-Arbeitsmappe',
+    'export.pdf': 'PDF-Bericht',
+    'toast.pngExported': 'PNG exportiert',
+    'toast.pngFailed': 'PNG-Export fehlgeschlagen \u2014 versuchen Sie eine kleinere Zoomstufe',
+    'toast.svgExported': 'SVG exportiert',
+    'toast.jsonExported': 'JSON-Topologie exportiert',
+    'toast.csvExported': 'CSV exportiert ({count} Zeilen)',
+    'toast.xlsxExported': 'XLSX-Arbeitsmappe exportiert',
+    'toast.pdfExported': 'PDF-Bericht exportiert',
+    'toast.pdfFailed': 'PDF-Export fehlgeschlagen \u2014 versuchen Sie eine kleinere Zoomstufe',
+    'toast.noData': 'Keine Daten zum Exportieren',
+    'toast.noRows': 'Keine Zeilen zum Exportieren',
+    'toast.noDisplay': 'Keine Daten vorhanden',
+    'toast.enterToken': 'Bitte API-Token eingeben',
+    'toast.noDataCenters': 'Keine Rechenzentren gefunden',
+    'toast.foundDcs': '{count} Rechenzentrum/en gefunden',
+    'toast.connectionFailed': 'Verbindung fehlgeschlagen: {error}',
+    'toast.disconnected': 'Verbindung getrennt',
+    'toast.loadedResources': '{count} Ressourcen geladen',
+    'toast.loadFailed': 'VDC laden fehlgeschlagen: {error}',
+    'toast.noVdcsLocation': 'Keine VDCs an diesem Standort',
+    'toast.loadedLocation': '{dcCount} VDC(s) mit {nodeCount} Ressourcen geladen',
+    'toast.locationFailed': 'Standort laden fehlgeschlagen: {error}',
+    'toast.contractSwitched': 'Zu Vertrag {id} gewechselt',
+    'toast.contractFailed': 'Vertragswechsel fehlgeschlagen: {error}',
+    'toast.xlsxNotLoaded': 'XLSX-Bibliothek nicht geladen',
+    'toast.pdfNotLoaded': 'PDF-Bibliothek nicht geladen',
+    'detail.connectedResources': 'Verbundene Ressourcen',
+    'detail.networkMetrics': 'Netzwerk-Metriken',
+    'detail.nics': 'Netzwerk-Interfaces (NICs)',
+    'detail.securityRules': 'Sicherheitsgruppen-Regeln',
+    'detail.noRules': 'Keine Regeln definiert',
+    'detail.ruleDir': 'Richt.',
+    'detail.ruleProto': 'Protokoll',
+    'detail.rulePorts': 'Ports',
+    'detail.ruleSource': 'Quelle',
+    'detail.ruleTarget': 'Ziel',
+    'detail.ruleAll': 'Alle',
+    'detail.ruleAny': 'Alle',
+    'detail.loading': 'Laden...',
+    'detail.lanId': 'LAN-ID',
+    'detail.public': '\u00d6ffentlich',
+    'detail.ipv4Cidr': 'IPv4-CIDR',
+    'detail.ipv6Cidr': 'IPv6-CIDR',
+    'detail.crossConnect': 'Cross Connect',
+    'detail.ipFailover': 'IP-Failover',
+    'detail.state': 'Status',
+    'detail.type': 'Typ',
+    'detail.cores': 'Kerne',
+    'detail.ram': 'RAM',
+    'detail.cpu': 'CPU',
+    'detail.vmState': 'VM-Status',
+    'detail.version': 'Version',
+    'detail.instances': 'Instanzen',
+    'detail.storage': 'Speicher',
+    'detail.dns': 'DNS',
+    'detail.publicIps': '\u00d6ffentliche IPs',
+    'detail.privateIps': 'Private IPs',
+    'detail.listenerLan': 'Listener-LAN',
+    'detail.targetLan': 'Ziel-LAN',
+    'detail.pccId': 'PCC-ID',
+    'detail.cluster': 'Cluster',
+    'detail.k8sVersion': 'K8s-Version',
+    'detail.nodes': 'Knoten',
+    'detail.coresPerNode': 'Kerne/Knoten',
+    'detail.ramPerNode': 'RAM/Knoten',
+    'detail.size': 'Gr\u00f6\u00dfe',
+    'detail.gatewayIp': 'Gateway-IP',
+    'detail.ifaceIpv4': 'Interface IPv4',
+    'detail.ifaceIpv6': 'Interface IPv6',
+    'detail.dnsNames': 'DNS-Namen',
+    'detail.reverseDns': 'Reverse DNS',
+    'detail.yes': 'Ja',
+    'detail.no': 'Nein',
+    'detail.noData': 'Keine Daten',
+    'loading.authenticating': 'Authentifizierung',
+    'loading.serversLans': 'Server & LANs',
+    'loading.managedServices': 'Managed Services',
+    'loading.buildingGraph': 'Graph erstellen',
+    'loading.resources': 'Ressourcen laden...',
+    'loading.fetchingDetails': 'Rechenzentrum-Details abrufen...',
+    'loading.fetchingServers': 'Server, LANs und Managed Services abrufen...',
+    'loading.resolvingNics': 'Server-NICs aufl\u00f6sen...',
+    'loading.fetchingK8s': 'Kubernetes-Node-Pools abrufen...',
+    'loading.buildingViz': 'Visualisierung erstellen...',
+    'loading.loadingVdcs': '{count} VDC(s) an {location} laden...',
+    'loading.fetchingShared': 'Gemeinsame Managed Services abrufen...',
+    'loading.fetchingVdc': 'VDC {index}/{total} abrufen: {name}...',
+    'loading.mergingGraphs': 'VDC-Graphen zusammenf\u00fchren...',
+    'search.placeholder': 'Ressourcen suchen...',
+    'search.noMatches': 'Keine Treffer',
+    'search.matchCount': '{count} Treffer',
+    'search.andMore': '...und {count} weitere',
+    'map.allRegions': '\u2190 Alle Regionen',
+    'theme.toggle': 'Design umschalten',
+    'total': 'Gesamt',
+  },
+  es: {
+    'sidebar.apiToken': 'Token API',
+    'sidebar.tokenPlaceholder': 'Pegue su token de la API de IONOS Cloud',
+    'sidebar.connect': 'Conectar',
+    'sidebar.disconnect': 'Desconectar',
+    'sidebar.viewMode': 'Vista',
+    'sidebar.globalMap': 'Mapa global',
+    'sidebar.singleVdc': 'VDC individual',
+    'sidebar.byLocation': 'Por ubicaci\u00f3n',
+    'sidebar.mapInstruction': 'Haga clic en una regi\u00f3n del mapa para ver los VDCs en esa ubicaci\u00f3n y seleccione uno para ver su topolog\u00eda.',
+    'sidebar.vdc': 'Centro de datos virtual',
+    'sidebar.location': 'Ubicaci\u00f3n',
+    'sidebar.connectFirst': '-- Conectar primero --',
+    'sidebar.refresh': 'Actualizar',
+    'sidebar.resources': 'Recursos',
+    'sidebar.publicIps': 'IPs p\u00fablicas',
+    'sidebar.dnsZones': 'Zonas DNS',
+    'sidebar.builtBy': 'Creado por Rijesh Haridas',
+    'sidebar.pinVdc': 'Fijar / Desfijar VDC',
+    'account.email': 'Correo',
+    'account.contract': 'Contrato',
+    'toolbar.zoomIn': 'Acercar (+)',
+    'toolbar.zoomOut': 'Alejar (-)',
+    'toolbar.fitView': 'Restablecer y ajustar (F)',
+    'toolbar.labels': 'Etiquetas (L)',
+    'toolbar.ipView': 'Vista IP (I)',
+    'toolbar.computeView': 'Vista de c\u00f3mputo (C)',
+    'toolbar.highlights': 'Resaltados (H)',
+    'toolbar.mapBg': 'Fondo de mapa (M)',
+    'toolbar.tableView': 'Vista de tabla (T)',
+    'toolbar.export': 'Exportar',
+    'toolbar.resetView': 'Restablecer y ajustar (R)',
+    'toolbar.globalMap': 'Mapa global (G)',
+    'onboarding.title': 'IONOS Cloud Visualizador de Red',
+    'onboarding.subtitle': 'Visualice la topolog\u00eda de su centro de datos virtual en segundos',
+    'onboarding.step1Title': 'Obtener token API',
+    'onboarding.step1Desc': 'Genere un token en <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> en Gesti\u00f3n \u2192 Gesti\u00f3n de tokens',
+    'onboarding.step2Title': 'Conectar',
+    'onboarding.step2Desc': 'Pegue el token en la barra lateral y haga clic en Conectar',
+    'onboarding.step3Title': 'Explorar',
+    'onboarding.step3Desc': 'Seleccione un VDC y explore su topolog\u00eda de red de forma interactiva',
+    'onboarding.shortcutHint': 'Pulse <kbd>?</kbd> para ver atajos de teclado',
+    'shortcuts.title': 'Atajos de teclado',
+    'shortcuts.close': 'Cerrar panel / superposici\u00f3n',
+    'shortcuts.search': 'Enfocar barra de b\u00fasqueda',
+    'shortcuts.zoomInOut': 'Acercar / Alejar',
+    'shortcuts.fitView': 'Restablecer y ajustar vista',
+    'shortcuts.labels': 'Alternar etiquetas',
+    'shortcuts.ipView': 'Alternar vista IP',
+    'shortcuts.computeView': 'Alternar vista de c\u00f3mputo',
+    'shortcuts.highlights': 'Alternar resaltados',
+    'shortcuts.mapBg': 'Alternar fondo de mapa',
+    'shortcuts.globalMap': 'Vista de mapa global',
+    'shortcuts.tableView': 'Tabla de recursos',
+    'shortcuts.resetView': 'Restablecer y ajustar vista',
+    'shortcuts.help': 'Mostrar esta ayuda',
+    // Security
+    'toolbar.security': 'Postura de seguridad (S)',
+    'security.title': 'Postura de Seguridad',
+    'security.firewall': 'Cobertura de Firewall',
+    'security.firewallGood': 'Excelente — la mayoría de los servidores tienen reglas de firewall activas',
+    'security.firewallWarn': 'Moderada — considere activar firewalls en más servidores',
+    'security.firewallBad': 'Baja — muchos servidores carecen de protección de firewall',
+    'security.flowlogs': 'Flow Logs',
+    'security.flowlogsGood': 'Buena cobertura de flow logs para monitoreo de tráfico',
+    'security.flowlogsWarn': 'Cobertura limitada de flow logs — considere habilitarlos',
+    'security.secgroups': 'Grupos de Seguridad',
+    'security.secgroupsGood': 'La mayoría de los servidores están protegidos por grupos de seguridad',
+    'security.secgroupsWarn': 'Algunos servidores carecen de protección de grupos de seguridad',
+    'security.secgroupsBad': 'Muchos servidores no tienen grupos de seguridad asignados',
+    'security.privateLans': 'LANs Privadas',
+    'security.privateLansDesc': 'Las LANs privadas reducen la exposición a internet público',
+    'security.natGwActive': '{count} NAT Gateway(s) detectados \u2014 las LANs privadas tienen acceso saliente seguro',
+    'security.natGwSuggest': 'Consejo: A\u00f1ada un NAT Gateway para acceso seguro a internet desde LANs privadas',
+    'security.ipv6': 'Adopción de IPv6',
+    'security.ipv6Good': 'Fuerte adopción de IPv6 en sus LANs',
+    'security.ipv6Bad': 'Baja adopción de IPv6 — considere habilitarlo',
+    'security.highlightEnabled': 'Resaltado de {name} activado',
+    'shortcuts.security': 'Postura de seguridad',
+    'toast.noVdcLoaded': 'Cargue primero un VDC para ver la postura de seguridad',
+    'highlights.title': 'Resaltados',
+    'highlights.firewall': 'Firewall activo',
+    'highlights.flowLogs': 'Flow Logs',
+    'highlights.secGroups': 'Grupos de seguridad',
+    'highlights.ipv6': 'IPv6 habilitado',
+    'highlights.ipFailover': 'IP Failover',
+    'highlights.crossConnect': 'Cross Connect',
+    'table.title': 'Tabla de recursos',
+    'table.searchPlaceholder': 'Buscar recursos...',
+    'table.csv': 'CSV',
+    'table.name': 'Nombre',
+    'table.type': 'Tipo',
+    'table.state': 'Estado',
+    'table.details': 'Detalles',
+    'table.ips': 'IPs',
+    'table.showing': 'Mostrando {count} de {total} recursos',
+    'table.noMatch': 'Ning\u00fan recurso coincide con los filtros actuales',
+    'export.diagram': 'Diagrama',
+    'export.data': 'Datos',
+    'export.report': 'Informe',
+    'export.png': 'Imagen PNG',
+    'export.svg': 'Vector SVG',
+    'export.json': 'Topolog\u00eda JSON',
+    'export.csv': 'Tabla CSV',
+    'export.xlsx': 'Libro XLSX',
+    'export.pdf': 'Informe PDF',
+    'toast.pngExported': 'PNG exportado',
+    'toast.pngFailed': 'Exportaci\u00f3n PNG fallida \u2014 pruebe un nivel de zoom menor',
+    'toast.svgExported': 'SVG exportado',
+    'toast.jsonExported': 'Topolog\u00eda JSON exportada',
+    'toast.csvExported': 'CSV exportado ({count} filas)',
+    'toast.xlsxExported': 'Libro XLSX exportado',
+    'toast.pdfExported': 'Informe PDF exportado',
+    'toast.pdfFailed': 'Exportaci\u00f3n PDF fallida \u2014 pruebe un nivel de zoom menor',
+    'toast.noData': 'No hay datos para exportar',
+    'toast.noRows': 'No hay filas para exportar',
+    'toast.noDisplay': 'No hay datos para mostrar',
+    'toast.enterToken': 'Introduzca un token API',
+    'toast.noDataCenters': 'No se encontraron centros de datos',
+    'toast.foundDcs': '{count} centro(s) de datos encontrado(s)',
+    'toast.connectionFailed': 'Conexi\u00f3n fallida: {error}',
+    'toast.disconnected': 'Desconectado',
+    'toast.loadedResources': '{count} recursos cargados',
+    'toast.loadFailed': 'Error al cargar VDC: {error}',
+    'toast.noVdcsLocation': 'No hay VDCs en esta ubicaci\u00f3n',
+    'toast.loadedLocation': '{dcCount} VDC(s) con {nodeCount} recursos cargados',
+    'toast.locationFailed': 'Error al cargar ubicaci\u00f3n: {error}',
+    'toast.contractSwitched': 'Cambiado al contrato {id}',
+    'toast.contractFailed': 'Error al cambiar contrato: {error}',
+    'toast.xlsxNotLoaded': 'Biblioteca XLSX no cargada',
+    'toast.pdfNotLoaded': 'Biblioteca PDF no cargada',
+    'detail.connectedResources': 'Recursos conectados',
+    'detail.networkMetrics': 'M\u00e9tricas de red',
+    'detail.nics': 'Interfaces de red (NICs)',
+    'detail.securityRules': 'Reglas de grupo de seguridad',
+    'detail.noRules': 'Sin reglas definidas',
+    'detail.ruleDir': 'Dir',
+    'detail.ruleProto': 'Protocolo',
+    'detail.rulePorts': 'Puertos',
+    'detail.ruleSource': 'Origen',
+    'detail.ruleTarget': 'Destino',
+    'detail.ruleAll': 'Todos',
+    'detail.ruleAny': 'Cualquiera',
+    'detail.loading': 'Cargando...',
+    'detail.lanId': 'ID de LAN',
+    'detail.public': 'P\u00fablica',
+    'detail.ipv4Cidr': 'CIDR IPv4',
+    'detail.ipv6Cidr': 'CIDR IPv6',
+    'detail.crossConnect': 'Cross Connect',
+    'detail.ipFailover': 'IP Failover',
+    'detail.state': 'Estado',
+    'detail.type': 'Tipo',
+    'detail.cores': 'N\u00facleos',
+    'detail.ram': 'RAM',
+    'detail.cpu': 'CPU',
+    'detail.vmState': 'Estado VM',
+    'detail.version': 'Versi\u00f3n',
+    'detail.instances': 'Instancias',
+    'detail.storage': 'Almacenamiento',
+    'detail.dns': 'DNS',
+    'detail.publicIps': 'IPs p\u00fablicas',
+    'detail.privateIps': 'IPs privadas',
+    'detail.listenerLan': 'LAN de escucha',
+    'detail.targetLan': 'LAN de destino',
+    'detail.pccId': 'ID PCC',
+    'detail.cluster': 'Cl\u00faster',
+    'detail.k8sVersion': 'Versi\u00f3n K8s',
+    'detail.nodes': 'Nodos',
+    'detail.coresPerNode': 'N\u00facleos/Nodo',
+    'detail.ramPerNode': 'RAM/Nodo',
+    'detail.size': 'Tama\u00f1o',
+    'detail.gatewayIp': 'IP de puerta de enlace',
+    'detail.ifaceIpv4': 'Interfaz IPv4',
+    'detail.ifaceIpv6': 'Interfaz IPv6',
+    'detail.dnsNames': 'Nombres DNS',
+    'detail.reverseDns': 'DNS inverso',
+    'detail.yes': 'S\u00ed',
+    'detail.no': 'No',
+    'detail.noData': 'Sin datos',
+    'loading.authenticating': 'Autenticando',
+    'loading.serversLans': 'Servidores y LANs',
+    'loading.managedServices': 'Servicios gestionados',
+    'loading.buildingGraph': 'Construyendo grafo',
+    'loading.resources': 'Cargando recursos...',
+    'loading.fetchingDetails': 'Obteniendo detalles del centro de datos...',
+    'loading.fetchingServers': 'Obteniendo servidores, LANs y servicios gestionados...',
+    'loading.resolvingNics': 'Resolviendo NICs de servidores...',
+    'loading.fetchingK8s': 'Obteniendo pools de nodos Kubernetes...',
+    'loading.buildingViz': 'Construyendo visualizaci\u00f3n...',
+    'loading.loadingVdcs': 'Cargando {count} VDC(s) en {location}...',
+    'loading.fetchingShared': 'Obteniendo servicios gestionados compartidos...',
+    'loading.fetchingVdc': 'Obteniendo VDC {index}/{total}: {name}...',
+    'loading.mergingGraphs': 'Fusionando grafos de VDC...',
+    'search.placeholder': 'Buscar recursos...',
+    'search.noMatches': 'Sin coincidencias',
+    'search.matchCount': '{count} coincidencia(s)',
+    'search.andMore': '...y {count} m\u00e1s',
+    'map.allRegions': '\u2190 Todas las regiones',
+    'theme.toggle': 'Cambiar tema',
+    'total': 'total',
+  },
+  fr: {
+    'sidebar.apiToken': 'Jeton API',
+    'sidebar.tokenPlaceholder': 'Collez votre jeton API IONOS Cloud',
+    'sidebar.connect': 'Connecter',
+    'sidebar.disconnect': 'Déconnecter',
+    'sidebar.viewMode': 'Mode de vue',
+    'sidebar.globalMap': 'Carte mondiale',
+    'sidebar.singleVdc': 'VDC unique',
+    'sidebar.byLocation': 'Par site',
+    'sidebar.mapInstruction': 'Cliquez sur une r\u00e9gion de la carte pour voir les VDCs \u00e0 cet emplacement, puis s\u00e9lectionnez un VDC pour afficher sa topologie.',
+    'sidebar.vdc': 'Centre de donn\u00e9es virtuel',
+    'sidebar.location': 'Site',
+    'sidebar.connectFirst': '-- Connecter d\'abord --',
+    'sidebar.refresh': 'Actualiser',
+    'sidebar.resources': 'Ressources',
+    'sidebar.publicIps': 'IPs publiques',
+    'sidebar.dnsZones': 'Zones DNS',
+    'sidebar.builtBy': 'Cr\u00e9\u00e9 par Rijesh Haridas',
+    'sidebar.pinVdc': '\u00c9pingler / D\u00e9tacher VDC',
+    'account.email': 'E-mail',
+    'account.contract': 'Contrat',
+    'toolbar.zoomIn': 'Zoom avant (+)',
+    'toolbar.zoomOut': 'Zoom arri\u00e8re (-)',
+    'toolbar.fitView': 'R\u00e9initialiser et ajuster (F)',
+    'toolbar.labels': '\u00c9tiquettes (L)',
+    'toolbar.ipView': 'Vue IP (I)',
+    'toolbar.computeView': 'Vue calcul (C)',
+    'toolbar.highlights': 'Mises en \u00e9vidence (H)',
+    'toolbar.mapBg': 'Fond de carte (M)',
+    'toolbar.tableView': 'Vue tableau (T)',
+    'toolbar.export': 'Exporter',
+    'toolbar.resetView': 'R\u00e9initialiser et ajuster (R)',
+    'toolbar.globalMap': 'Carte mondiale (G)',
+    'onboarding.title': 'IONOS Cloud Visualiseur R\u00e9seau',
+    'onboarding.subtitle': 'Visualisez la topologie de votre centre de donn\u00e9es virtuel en quelques secondes',
+    'onboarding.step1Title': 'Obtenir un jeton API',
+    'onboarding.step1Desc': 'G\u00e9n\u00e9rez un jeton sur <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> sous Gestion \u2192 Gestion des jetons',
+    'onboarding.step2Title': 'Connecter',
+    'onboarding.step2Desc': 'Collez le jeton dans la barre lat\u00e9rale et cliquez sur Connecter',
+    'onboarding.step3Title': 'Explorer',
+    'onboarding.step3Desc': 'S\u00e9lectionnez un VDC et explorez votre topologie r\u00e9seau de mani\u00e8re interactive',
+    'onboarding.shortcutHint': 'Appuyez sur <kbd>?</kbd> pour les raccourcis clavier',
+    'shortcuts.title': 'Raccourcis clavier',
+    'shortcuts.close': 'Fermer panneau / superposition',
+    'shortcuts.search': 'Focus barre de recherche',
+    'shortcuts.zoomInOut': 'Zoom avant / arri\u00e8re',
+    'shortcuts.fitView': 'R\u00e9initialiser et ajuster la vue',
+    'shortcuts.labels': 'Basculer \u00e9tiquettes',
+    'shortcuts.ipView': 'Basculer vue IP',
+    'shortcuts.computeView': 'Basculer vue calcul',
+    'shortcuts.highlights': 'Basculer mises en \u00e9vidence',
+    'shortcuts.mapBg': 'Basculer fond de carte',
+    'shortcuts.globalMap': 'Vue carte mondiale',
+    'shortcuts.tableView': 'Tableau des ressources',
+    'shortcuts.resetView': 'R\u00e9initialiser et ajuster la vue',
+    'shortcuts.help': 'Afficher cette aide',
+    // Security
+    'toolbar.security': 'Posture de sécurité (S)',
+    'security.title': 'Posture de Sécurité',
+    'security.firewall': 'Couverture Pare-feu',
+    'security.firewallGood': 'Excellent — la plupart des serveurs ont des règles pare-feu actives',
+    'security.firewallWarn': 'Modérée — envisagez d\'activer les pare-feux sur plus de serveurs',
+    'security.firewallBad': 'Faible — de nombreux serveurs manquent de protection pare-feu',
+    'security.flowlogs': 'Flow Logs',
+    'security.flowlogsGood': 'Bonne couverture flow logs pour la surveillance du trafic',
+    'security.flowlogsWarn': 'Couverture flow logs limitée — envisagez l\'activation',
+    'security.secgroups': 'Groupes de Sécurité',
+    'security.secgroupsGood': 'La plupart des serveurs sont protégés par des groupes de sécurité',
+    'security.secgroupsWarn': 'Certains serveurs manquent de protection par groupes de sécurité',
+    'security.secgroupsBad': 'De nombreux serveurs n\'ont pas de groupes de sécurité',
+    'security.privateLans': 'LANs Privés',
+    'security.privateLansDesc': 'Les LANs priv\u00e9s r\u00e9duisent l\'exposition \u00e0 l\'internet public',
+    'security.natGwActive': '{count} passerelle(s) NAT d\u00e9tect\u00e9e(s) \u2014 les LANs priv\u00e9s ont un acc\u00e8s sortant s\u00e9curis\u00e9',
+    'security.natGwSuggest': 'Astuce : Ajoutez une passerelle NAT pour un acc\u00e8s internet sortant s\u00e9curis\u00e9 depuis les LANs priv\u00e9s',
+    'security.ipv6': 'Adoption IPv6',
+    'security.ipv6Good': 'Forte adoption IPv6 dans vos LANs',
+    'security.ipv6Bad': 'Faible adoption IPv6 — envisagez l\'activation',
+    'security.highlightEnabled': 'Surbrillance {name} activée',
+    'shortcuts.security': 'Posture de sécurité',
+    'toast.noVdcLoaded': 'Chargez d\'abord un VDC pour voir la posture de sécurité',
+    'highlights.title': 'Mises en \u00e9vidence',
+    'highlights.firewall': 'Pare-feu actif',
+    'highlights.flowLogs': 'Flow Logs',
+    'highlights.secGroups': 'Groupes de s\u00e9curit\u00e9',
+    'highlights.ipv6': 'IPv6 activ\u00e9',
+    'highlights.ipFailover': 'IP Failover',
+    'highlights.crossConnect': 'Cross Connect',
+    'table.title': 'Tableau des ressources',
+    'table.searchPlaceholder': 'Rechercher des ressources...',
+    'table.csv': 'CSV',
+    'table.name': 'Nom',
+    'table.type': 'Type',
+    'table.state': '\u00c9tat',
+    'table.details': 'D\u00e9tails',
+    'table.ips': 'IPs',
+    'table.showing': '{count} sur {total} ressources',
+    'table.noMatch': 'Aucune ressource ne correspond aux filtres actuels',
+    'export.diagram': 'Diagramme',
+    'export.data': 'Donn\u00e9es',
+    'export.report': 'Rapport',
+    'export.png': 'Image PNG',
+    'export.svg': 'Vecteur SVG',
+    'export.json': 'Topologie JSON',
+    'export.csv': 'Tableau CSV',
+    'export.xlsx': 'Classeur XLSX',
+    'export.pdf': 'Rapport PDF',
+    'toast.pngExported': 'PNG export\u00e9',
+    'toast.pngFailed': '\u00c9chec de l\'export PNG \u2014 essayez un zoom plus petit',
+    'toast.svgExported': 'SVG export\u00e9',
+    'toast.jsonExported': 'Topologie JSON export\u00e9e',
+    'toast.csvExported': 'CSV export\u00e9 ({count} lignes)',
+    'toast.xlsxExported': 'Classeur XLSX export\u00e9',
+    'toast.pdfExported': 'Rapport PDF export\u00e9',
+    'toast.pdfFailed': '\u00c9chec de l\'export PDF \u2014 essayez un zoom plus petit',
+    'toast.noData': 'Aucune donn\u00e9e \u00e0 exporter',
+    'toast.noRows': 'Aucune ligne \u00e0 exporter',
+    'toast.noDisplay': 'Aucune donn\u00e9e \u00e0 afficher',
+    'toast.enterToken': 'Veuillez entrer un jeton API',
+    'toast.noDataCenters': 'Aucun centre de donn\u00e9es trouv\u00e9',
+    'toast.foundDcs': '{count} centre(s) de donn\u00e9es trouv\u00e9(s)',
+    'toast.connectionFailed': '\u00c9chec de la connexion : {error}',
+    'toast.disconnected': 'Déconnecté',
+    'toast.loadedResources': '{count} ressources charg\u00e9es',
+    'toast.loadFailed': '\u00c9chec du chargement VDC : {error}',
+    'toast.noVdcsLocation': 'Aucun VDC \u00e0 cet emplacement',
+    'toast.loadedLocation': '{dcCount} VDC(s) avec {nodeCount} ressources charg\u00e9(e)s',
+    'toast.locationFailed': '\u00c9chec du chargement du site : {error}',
+    'toast.contractSwitched': 'Contrat {id} s\u00e9lectionn\u00e9',
+    'toast.contractFailed': '\u00c9chec du changement de contrat : {error}',
+    'toast.xlsxNotLoaded': 'Biblioth\u00e8que XLSX non charg\u00e9e',
+    'toast.pdfNotLoaded': 'Biblioth\u00e8que PDF non charg\u00e9e',
+    'detail.connectedResources': 'Ressources connect\u00e9es',
+    'detail.networkMetrics': 'M\u00e9triques r\u00e9seau',
+    'detail.nics': 'Interfaces r\u00e9seau (NICs)',
+    'detail.securityRules': 'R\u00e8gles de groupe de s\u00e9curit\u00e9',
+    'detail.noRules': 'Aucune r\u00e8gle d\u00e9finie',
+    'detail.ruleDir': 'Dir',
+    'detail.ruleProto': 'Protocole',
+    'detail.rulePorts': 'Ports',
+    'detail.ruleSource': 'Source',
+    'detail.ruleTarget': 'Cible',
+    'detail.ruleAll': 'Tous',
+    'detail.ruleAny': 'Tout',
+    'detail.loading': 'Chargement...',
+    'detail.lanId': 'ID LAN',
+    'detail.public': 'Publique',
+    'detail.ipv4Cidr': 'CIDR IPv4',
+    'detail.ipv6Cidr': 'CIDR IPv6',
+    'detail.crossConnect': 'Cross Connect',
+    'detail.ipFailover': 'IP Failover',
+    'detail.state': '\u00c9tat',
+    'detail.type': 'Type',
+    'detail.cores': 'C\u0153urs',
+    'detail.ram': 'RAM',
+    'detail.cpu': 'CPU',
+    'detail.vmState': '\u00c9tat VM',
+    'detail.version': 'Version',
+    'detail.instances': 'Instances',
+    'detail.storage': 'Stockage',
+    'detail.dns': 'DNS',
+    'detail.publicIps': 'IPs publiques',
+    'detail.privateIps': 'IPs priv\u00e9es',
+    'detail.listenerLan': 'LAN d\'\u00e9coute',
+    'detail.targetLan': 'LAN cible',
+    'detail.pccId': 'ID PCC',
+    'detail.cluster': 'Cluster',
+    'detail.k8sVersion': 'Version K8s',
+    'detail.nodes': 'N\u0153uds',
+    'detail.coresPerNode': 'C\u0153urs/N\u0153ud',
+    'detail.ramPerNode': 'RAM/N\u0153ud',
+    'detail.size': 'Taille',
+    'detail.gatewayIp': 'IP passerelle',
+    'detail.ifaceIpv4': 'Interface IPv4',
+    'detail.ifaceIpv6': 'Interface IPv6',
+    'detail.dnsNames': 'Noms DNS',
+    'detail.reverseDns': 'DNS inverse',
+    'detail.yes': 'Oui',
+    'detail.no': 'Non',
+    'detail.noData': 'Pas de donn\u00e9es',
+    'loading.authenticating': 'Authentification',
+    'loading.serversLans': 'Serveurs et LANs',
+    'loading.managedServices': 'Services g\u00e9r\u00e9s',
+    'loading.buildingGraph': 'Construction du graphe',
+    'loading.resources': 'Chargement des ressources...',
+    'loading.fetchingDetails': 'R\u00e9cup\u00e9ration des d\u00e9tails du centre de donn\u00e9es...',
+    'loading.fetchingServers': 'R\u00e9cup\u00e9ration des serveurs, LANs et services g\u00e9r\u00e9s...',
+    'loading.resolvingNics': 'R\u00e9solution des NICs serveurs...',
+    'loading.fetchingK8s': 'R\u00e9cup\u00e9ration des pools Kubernetes...',
+    'loading.buildingViz': 'Construction de la visualisation...',
+    'loading.loadingVdcs': 'Chargement de {count} VDC(s) \u00e0 {location}...',
+    'loading.fetchingShared': 'R\u00e9cup\u00e9ration des services g\u00e9r\u00e9s partag\u00e9s...',
+    'loading.fetchingVdc': 'R\u00e9cup\u00e9ration VDC {index}/{total} : {name}...',
+    'loading.mergingGraphs': 'Fusion des graphes VDC...',
+    'search.placeholder': 'Rechercher des ressources...',
+    'search.noMatches': 'Aucun r\u00e9sultat',
+    'search.matchCount': '{count} r\u00e9sultat(s)',
+    'search.andMore': '...et {count} de plus',
+    'map.allRegions': '\u2190 Toutes les r\u00e9gions',
+    'theme.toggle': 'Changer de thème',
+    'total': 'total',
+  },
+};
+let currentLocale = 'en';
+
+function t(key, params) {
+  const str = TRANSLATIONS[currentLocale]?.[key] || TRANSLATIONS.en[key] || key;
+  if (!params) return str;
+  return str.replace(/\{(\w+)\}/g, (_, k) => params[k] != null ? params[k] : '');
+}
+
+function setLocale(lang) {
+  if (!TRANSLATIONS[lang]) return;
+  currentLocale = lang;
+  try { localStorage.setItem('ionos-viz-locale', lang); } catch(e) {}
+  translatePage();
+  updateLocaleButtons();
+}
+
+function detectLocale() {
+  try {
+    const saved = localStorage.getItem('ionos-viz-locale');
+    if (saved && TRANSLATIONS[saved]) return saved;
+  } catch(e) {}
+  const browserLang = (navigator.language || '').substring(0, 2).toLowerCase();
+  return TRANSLATIONS[browserLang] ? browserLang : 'en';
+}
+
+function translatePage() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.dataset.i18nHtml);
+  });
+  document.querySelectorAll('[data-i18n-tip]').forEach(el => {
+    el.setAttribute('data-tip', t(el.dataset.i18nTip));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    el.setAttribute('aria-label', t(el.dataset.i18nAria));
+  });
+}
+
+const LOCALE_FLAGS = { en: '\u{1F1EC}\u{1F1E7}', de: '\u{1F1E9}\u{1F1EA}', es: '\u{1F1EA}\u{1F1F8}', fr: '\u{1F1EB}\u{1F1F7}' };
+
+function updateLocaleButtons() {
+  document.querySelectorAll('.locale-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLocale);
+  });
+  const flagEl = document.getElementById('localeFlagDisplay');
+  const codeEl = document.getElementById('localeCodeDisplay');
+  if (flagEl) flagEl.textContent = LOCALE_FLAGS[currentLocale] || LOCALE_FLAGS.en;
+  if (codeEl) codeEl.textContent = currentLocale.toUpperCase();
+  closeLocaleMenu();
+}
+
+function toggleLocaleMenu() {
+  const menu = document.getElementById('localeMenu');
+  const isOpen = menu.classList.toggle('open');
+  if (isOpen) {
+    setTimeout(() => document.addEventListener('click', _closeLocaleOutside), 0);
+  } else {
+    document.removeEventListener('click', _closeLocaleOutside);
+  }
+}
+function closeLocaleMenu() {
+  const menu = document.getElementById('localeMenu');
+  if (menu) menu.classList.remove('open');
+  document.removeEventListener('click', _closeLocaleOutside);
+}
+function _closeLocaleOutside(e) {
+  const wrapper = document.querySelector('.locale-dropdown-wrapper');
+  if (wrapper && !wrapper.contains(e.target)) closeLocaleMenu();
+}
+
+// ============================== THEME ==============================
+let currentTheme = 'dark';
+
+function detectTheme() {
+  try {
+    const saved = localStorage.getItem('ionos-viz-theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch(e) {}
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+  return 'dark';
+}
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  updateThemeButton();
+  updateMapTheme();
+}
+
+function toggleTheme() {
+  const next = currentTheme === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('ionos-viz-theme', next); } catch(e) {}
+  applyTheme(next);
+}
+
+function updateThemeButton() {
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = currentTheme === 'dark' ? '\u2600' : '\u{1F319}';
+}
+
+// ============================== VDC FAVORITES ==============================
+let vdcFavorites = [];
+
+function loadFavorites() {
+  try {
+    const saved = localStorage.getItem('ionos-viz-favorites');
+    vdcFavorites = saved ? JSON.parse(saved) : [];
+    if (!Array.isArray(vdcFavorites)) vdcFavorites = [];
+  } catch(e) { vdcFavorites = []; }
+}
+
+function saveFavorites() {
+  try { localStorage.setItem('ionos-viz-favorites', JSON.stringify(vdcFavorites)); } catch(e) {}
+}
+
+function isFavorite(vdcId) {
+  return vdcFavorites.includes(vdcId);
+}
+
+function togglePinVDC() {
+  const sel = document.getElementById('dcSelect');
+  const vdcId = sel.value;
+  if (!vdcId) return;
+  if (isFavorite(vdcId)) {
+    vdcFavorites = vdcFavorites.filter(id => id !== vdcId);
+  } else {
+    vdcFavorites.push(vdcId);
+  }
+  saveFavorites();
+  reorderVDCOptions();
+  updatePinButton();
+}
+
+function updatePinButton() {
+  const btn = document.getElementById('pinVdcBtn');
+  const sel = document.getElementById('dcSelect');
+  if (!btn) return;
+  const vdcId = sel.value;
+  btn.disabled = !vdcId;
+  if (vdcId && isFavorite(vdcId)) {
+    btn.classList.add('pinned');
+    btn.textContent = '\u2605'; // filled star
+  } else {
+    btn.classList.remove('pinned');
+    btn.textContent = '\u2606'; // outline star
+  }
+}
+
+function reorderVDCOptions() {
+  const sel = document.getElementById('dcSelect');
+  if (!sel) return;
+  const currentVal = sel.value;
+  const opts = Array.from(sel.options);
+  const placeholder = opts.find(o => !o.value);
+  const favOpts = opts.filter(o => o.value && isFavorite(o.value));
+  const normalOpts = opts.filter(o => o.value && !isFavorite(o.value));
+
+  sel.innerHTML = '';
+  if (placeholder) sel.appendChild(placeholder);
+
+  favOpts.forEach(o => sel.appendChild(o));
+
+  if (favOpts.length > 0 && normalOpts.length > 0) {
+    const sep = document.createElement('option');
+    sep.disabled = true;
+    sep.textContent = '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
+    sel.appendChild(sep);
+  }
+
+  normalOpts.forEach(o => sel.appendChild(o));
+  sel.value = currentVal;
+}
+
+
+// ============================== SECURITY POSTURE ==============================
+function getSecurityPosture() {
+  if (!graphData || !graphData.nodes) return null;
+  const servers = graphData.nodes.filter(n => n.type === 'server' || n.type === 'cube' || n.type === 'vcpu');
+  const lans = graphData.nodes.filter(n => n.type === 'lan');
+
+  let fwActive = 0, flowLogsActive = 0, sgActive = 0;
+  servers.forEach(s => {
+    let hasFw = false, hasFL = false, hasSG = false;
+    if (s.data && s.data.nics) {
+      s.data.nics.forEach(nic => {
+        if (nic.firewall) hasFw = true;
+        if (nic.flowLogsEnabled) hasFL = true;
+      });
+    }
+    if (s.data && (s.data.securityGroupCount > 0 || (s.data.securityGroups && s.data.securityGroups.length > 0))) hasSG = true;
+    if (hasFw) fwActive++;
+    if (hasFL) flowLogsActive++;
+    if (hasSG) sgActive++;
+  });
+
+  let privateLans = 0, ipv6Lans = 0;
+  lans.forEach(l => {
+    if (l.data && !l.data.isPublic) privateLans++;
+    if (l.data && l.data.ipv6Cidr) ipv6Lans++;
+  });
+
+  const natGateways = graphData.nodes.filter(n => n.type === 'nat');
+
+  return {
+    firewall: { count: fwActive, total: servers.length },
+    flowLogs: { count: flowLogsActive, total: servers.length },
+    secGroups: { count: sgActive, total: servers.length },
+    privateLans: { count: privateLans, total: lans.length, natCount: natGateways.length },
+    ipv6: { count: ipv6Lans, total: lans.length },
+  };
+}
+
+function metricLevel(pct, invert) {
+  if (invert) { return pct <= 30 ? 'good' : pct <= 60 ? 'warning' : 'danger'; }
+  return pct >= 80 ? 'good' : pct >= 50 ? 'warning' : 'danger';
+}
+
+function renderSecurityPosture() {
+  const container = document.getElementById('securityMetrics');
+  if (!container) return;
+  const data = getSecurityPosture();
+  if (!data) { container.innerHTML = '<p style="color:var(--text-muted);">' + t('toast.noDisplay') + '</p>'; return; }
+
+  const metrics = [
+    { key: 'firewall', label: t('security.firewall'), count: data.firewall.count, total: data.firewall.total, highlight: 'hlFirewall' },
+    { key: 'flowLogs', label: t('security.flowlogs'), count: data.flowLogs.count, total: data.flowLogs.total, highlight: 'hlFlowLogs' },
+    { key: 'secGroups', label: t('security.secgroups'), count: data.secGroups.count, total: data.secGroups.total, highlight: 'hlSecGroups' },
+    { key: 'privateLans', label: t('security.privateLans'), count: data.privateLans.count, total: data.privateLans.total, invert: false, natCount: data.privateLans.natCount },
+    { key: 'ipv6', label: t('security.ipv6'), count: data.ipv6.count, total: data.ipv6.total, highlight: 'hlIPv6' },
+  ];
+
+  container.innerHTML = '';
+  metrics.forEach(m => {
+    const pct = m.total > 0 ? Math.round((m.count / m.total) * 100) : 0;
+    const level = m.total === 0 ? 'good' : metricLevel(pct, m.invert);
+    const card = document.createElement('div');
+    card.className = 'security-metric metric-' + level;
+    card.innerHTML =
+      '<div class="metric-header">' +
+        '<span class="metric-label">' + m.label + '</span>' +
+        '<span class="metric-value ' + level + '">' + m.count + ' / ' + m.total + ' (' + pct + '%)</span>' +
+      '</div>' +
+      '<div class="metric-bar-container"><div class="metric-bar ' + level + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="metric-desc">' + getMetricDesc(m.key, pct, level, m) + '</div>';
+    if (m.highlight) {
+      card.style.cursor = 'pointer';
+      card.onclick = function() {
+        const cb = document.getElementById(m.highlight);
+        if (cb) { cb.checked = true; applyHighlights(); }
+        closeSecurityOverlay();
+        toast(t('security.highlightEnabled', { name: m.label }), 'info');
+      };
+    }
+    container.appendChild(card);
+  });
+}
+
+function getMetricDesc(key, pct, level, metric) {
+  if (key === 'firewall') return level === 'good' ? t('security.firewallGood') : level === 'warning' ? t('security.firewallWarn') : t('security.firewallBad');
+  if (key === 'flowLogs') return level === 'good' ? t('security.flowlogsGood') : t('security.flowlogsWarn');
+  if (key === 'secGroups') return level === 'good' ? t('security.secgroupsGood') : level === 'warning' ? t('security.secgroupsWarn') : t('security.secgroupsBad');
+  if (key === 'privateLans') {
+    let desc = t('security.privateLansDesc');
+    const natCount = metric && metric.natCount != null ? metric.natCount : 0;
+    if (natCount > 0) {
+      desc += '<br><span style="color:var(--success);font-weight:600;">\u2714 ' + t('security.natGwActive', { count: natCount }) + '</span>';
+    } else if (metric && metric.count > 0) {
+      desc += '<br><span style="color:var(--warning);font-weight:600;">\u26A0 ' + t('security.natGwSuggest') + '</span>';
+    }
+    return desc;
+  }
+  if (key === 'ipv6') return level === 'good' ? t('security.ipv6Good') : t('security.ipv6Bad');
+  return '';
+}
+
+function openSecurityOverlay() {
+  if (!graphData || !graphData.nodes || graphData.nodes.length === 0) {
+    toast(t('toast.noVdcLoaded'), 'error');
+    return;
+  }
+  renderSecurityPosture();
+  document.getElementById('securityOverlay').style.display = '';
+}
+
+function closeSecurityOverlay() {
+  document.getElementById('securityOverlay').style.display = 'none';
 }
 
 // Extract base region from location: "de/fra/1" → "de/fra", "de/fra" → "de/fra"
@@ -1555,13 +2852,13 @@ async function fetchContracts() {
 
 async function handleContractChange(val) {
   currentContract = val;
-  toast(`Switched to Contract ${val}`, 'info');
+  toast(t('toast.contractSwitched', {id: val}), 'info');
   // Re-fetch datacenters for the new contract context
   try {
     await connect(true);
   } catch (e) {
     console.error('Failed to switch contract:', e);
-    toast(`Failed to switch contract: ${e && e.message ? e.message : e}`, 'error');
+    toast(t('toast.contractFailed', {error: e && e.message ? e.message : e}), 'error');
   }
 }
 
@@ -1706,7 +3003,7 @@ async function fetchIPBlocks() {
 }
 
 async function fetchSecurityGroups(dcId) {
-  return safeFetch(`${API_BASES.cloud}/datacenters/${dcId}/securitygroups?depth=2`);
+  return safeFetch(`${API_BASES.cloud}/datacenters/${dcId}/securitygroups?depth=3`);
 }
 
 async function fetchDNSZones() {
@@ -1800,7 +3097,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
     const type = srv.properties?.type === 'CUBE' ? 'cube' : 'server';
     // Server-level security groups (attached directly to the VM)
     const srvSecGroups = srv.entities?.securitygroups?.items || [];
-    const srvSecGroupIds = srvSecGroups.map(sg => sg.properties?.name || sg.id);
+    const srvSecGroupIds = srvSecGroups.map(sg => sg.id);
     const srvNode = addNode(`srv-${srvId}`, type, name, {
       cores: srv.properties?.cores,
       ram: srv.properties?.ram,
@@ -1825,7 +3122,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
       const flowLogsEnabled = (nic.entities?.flowlogs?.items?.length || 0) > 0;
       const secGroupItems = nic.entities?.securitygroups?.items || [];
       const securityGroupCount = secGroupItems.length;
-      const securityGroupIds = secGroupItems.map(sg => sg.properties?.name || sg.id);
+      const securityGroupIds = secGroupItems.map(sg => sg.id);
       const multiQueue = nic.properties?.nicMultiQueue === true;
       console.log(`[VDC-Viz]   NIC "${nicName}" -> LAN ${nicLanId}, IPs: ${ips.join(',')}, flowLogs: ${flowLogsEnabled}, secGroups: ${securityGroupCount}, multiQ: ${multiQueue}`);
       const lanNodeId = lanLookup(lanMap, nicLanId);
@@ -1923,16 +3220,25 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
       if (conn.datacenterId === dcId) {
         const cId = cluster.id;
         const name = cluster.properties?.displayName || `PG ${cId}`;
-        addNode(`pg-${cId}`, 'postgres', name, {
-          version: cluster.properties?.postgresVersion,
-          instances: cluster.properties?.instances,
-          connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
-          dnsName: cluster.properties?.dnsName,
-          ram: cluster.properties?.ram, cores: cluster.properties?.cores,
-          storageSize: cluster.properties?.storageSize,
-        });
+        const nodeId = `pg-${cId}`;
+        const existingNode = nodes.find(n => n.id === nodeId);
+        if (!existingNode) {
+          addNode(nodeId, 'postgres', name, {
+            version: cluster.properties?.postgresVersion,
+            instances: cluster.properties?.instances,
+            connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
+            dnsName: cluster.properties?.dnsName,
+            ram: cluster.properties?.ram, cores: cluster.properties?.cores,
+            storageSize: cluster.properties?.storageSize,
+            connectionIps: [],
+          });
+        }
+        if (conn.cidr) {
+          const n = nodes.find(n => n.id === nodeId);
+          if (n && !n.data.connectionIps.includes(conn.cidr)) n.data.connectionIps.push(conn.cidr);
+        }
         const lanNodeId = lanLookup(lanMap, conn.lanId);
-        if (lanNodeId) addLink(`pg-${cId}`, lanNodeId, conn.cidr || '', { linkType: 'managed' });
+        if (lanNodeId) addLink(nodeId, lanNodeId, conn.cidr || '', { linkType: 'managed' });
       }
     });
   });
@@ -1947,14 +3253,23 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
       if (conn.datacenterId === dcId) {
         const cId = cluster.id;
         const name = cluster.properties?.displayName || `Mongo ${cId}`;
-        addNode(`mongo-${cId}`, 'mongodb', name, {
-          version: cluster.properties?.mongoDBVersion,
-          instances: cluster.properties?.instances,
-          connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
-          templateId: cluster.properties?.templateId, type: cluster.properties?.type,
-        });
+        const nodeId = `mongo-${cId}`;
+        const existingNode = nodes.find(n => n.id === nodeId);
+        if (!existingNode) {
+          addNode(nodeId, 'mongodb', name, {
+            version: cluster.properties?.mongoDBVersion,
+            instances: cluster.properties?.instances,
+            connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
+            templateId: cluster.properties?.templateId, type: cluster.properties?.type,
+            connectionIps: [],
+          });
+        }
+        if (conn.cidr) {
+          const n = nodes.find(n => n.id === nodeId);
+          if (n && !n.data.connectionIps.includes(conn.cidr)) n.data.connectionIps.push(conn.cidr);
+        }
         const lanNodeId = lanLookup(lanMap, conn.lanId);
-        if (lanNodeId) addLink(`mongo-${cId}`, lanNodeId, conn.cidr || '', { linkType: 'managed' });
+        if (lanNodeId) addLink(nodeId, lanNodeId, conn.cidr || '', { linkType: 'managed' });
       }
     });
   });
@@ -1969,13 +3284,22 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
       if (conn.datacenterId === dcId) {
         const cId = cluster.id;
         const name = cluster.properties?.displayName || `MySQL ${cId}`;
-        addNode(`mysql-${cId}`, 'mysql', name, {
-          version: cluster.properties?.mysqlVersion,
-          instances: cluster.properties?.instances,
-          connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
-        });
+        const nodeId = `mysql-${cId}`;
+        const existingNode = nodes.find(n => n.id === nodeId);
+        if (!existingNode) {
+          addNode(nodeId, 'mysql', name, {
+            version: cluster.properties?.mysqlVersion,
+            instances: cluster.properties?.instances,
+            connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
+            connectionIps: [],
+          });
+        }
+        if (conn.cidr) {
+          const n = nodes.find(n => n.id === nodeId);
+          if (n && !n.data.connectionIps.includes(conn.cidr)) n.data.connectionIps.push(conn.cidr);
+        }
         const lanNodeId = lanLookup(lanMap, conn.lanId);
-        if (lanNodeId) addLink(`mysql-${cId}`, lanNodeId, conn.cidr || '', { linkType: 'managed' });
+        if (lanNodeId) addLink(nodeId, lanNodeId, conn.cidr || '', { linkType: 'managed' });
       }
     });
   });
@@ -1990,16 +3314,25 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
       if (conn.datacenterId === dcId) {
         const cId = cluster.id;
         const name = cluster.properties?.displayName || cluster.properties?.name || `MariaDB ${cId}`;
-        addNode(`mariadb-${cId}`, 'mariadb', name, {
-          version: cluster.properties?.mariadbVersion,
-          instances: cluster.properties?.instances,
-          connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
-          dnsName: cluster.properties?.dnsName,
-          ram: cluster.properties?.ram, cores: cluster.properties?.cores,
-          storageSize: cluster.properties?.storageSize,
-        });
+        const nodeId = `mariadb-${cId}`;
+        const existingNode = nodes.find(n => n.id === nodeId);
+        if (!existingNode) {
+          addNode(nodeId, 'mariadb', name, {
+            version: cluster.properties?.mariadbVersion,
+            instances: cluster.properties?.instances,
+            connections: conns, state: cluster.metadata?.state || cluster.properties?.status,
+            dnsName: cluster.properties?.dnsName,
+            ram: cluster.properties?.ram, cores: cluster.properties?.cores,
+            storageSize: cluster.properties?.storageSize,
+            connectionIps: [],
+          });
+        }
+        if (conn.cidr) {
+          const n = nodes.find(n => n.id === nodeId);
+          if (n && !n.data.connectionIps.includes(conn.cidr)) n.data.connectionIps.push(conn.cidr);
+        }
         const lanNodeId = lanLookup(lanMap, conn.lanId);
-        if (lanNodeId) addLink(`mariadb-${cId}`, lanNodeId, conn.cidr || '', { linkType: 'managed' });
+        if (lanNodeId) addLink(nodeId, lanNodeId, conn.cidr || '', { linkType: 'managed' });
         else console.warn(`[VDC-Viz]   MariaDB "${name}": LAN ${conn.lanId} not found in lanMap`);
       }
     });
@@ -2020,6 +3353,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         ramSize: pool.properties?.ramSize,
         storageSize: pool.properties?.storageSize,
         state: pool.metadata?.state, lans: poolLans,
+        connectionIps: [],
       });
       matchingLans.forEach(l => {
         const lanNodeId = lanLookup(lanMap, l.id);
@@ -2038,15 +3372,24 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
       if (conn.datacenterId === dcId) {
         const cId = cluster.id;
         const name = cluster.properties?.name || cluster.name || `NFS ${cId}`;
-        addNode(`nfs-${cId}`, 'nfs', name, {
-          size: cluster.properties?.size,
-          connections: clusterConns,
-          state: cluster.metadata?.state || cluster.metadata?.status || cluster.properties?.status || cluster.state,
-        });
+        const nodeId = `nfs-${cId}`;
+        const existingNode = nodes.find(n => n.id === nodeId);
+        if (!existingNode) {
+          addNode(nodeId, 'nfs', name, {
+            size: cluster.properties?.size,
+            connections: clusterConns,
+            state: cluster.metadata?.state || cluster.metadata?.status || cluster.properties?.status || cluster.state,
+            connectionIps: [],
+          });
+        }
         const nfsLanId = conn.lan || conn.lanId;
         const nfsIp = conn.ipAddress || conn.ip || '';
+        if (nfsIp) {
+          const n = nodes.find(n => n.id === nodeId);
+          if (n && !n.data.connectionIps.includes(nfsIp)) n.data.connectionIps.push(nfsIp);
+        }
         const lanNodeId = lanLookup(lanMap, nfsLanId);
-        if (lanNodeId) addLink(`nfs-${cId}`, lanNodeId, nfsIp, { linkType: 'managed' });
+        if (lanNodeId) addLink(nodeId, lanNodeId, nfsIp, { linkType: 'managed' });
       }
     });
   });
@@ -2123,19 +3466,30 @@ function initSvg() {
 
 // ---- Map Background (Leaflet) ----
 let bgMap = null;
+let bgTileLayer = null;
 let mapVisible = true;
+
+function getMapTileUrl() {
+  const style = currentTheme === 'light' ? 'light_all' : 'dark_all';
+  return 'https://{s}.basemaps.cartocdn.com/' + style + '/{z}/{x}/{y}{r}.png';
+}
 
 function initMapBackground() {
   const container = document.getElementById('mapBackground');
-  if (bgMap) { bgMap.remove(); bgMap = null; }
+  if (bgMap) { bgMap.remove(); bgMap = null; bgTileLayer = null; }
   bgMap = L.map(container, {
     zoomControl: false, attributionControl: false,
     dragging: false, scrollWheelZoom: false, doubleClickZoom: false,
     boxZoom: false, keyboard: false, touchZoom: false,
   });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  bgTileLayer = L.tileLayer(getMapTileUrl(), {
     subdomains: 'abcd', maxZoom: 19,
   }).addTo(bgMap);
+}
+
+function updateMapTheme() {
+  if (!bgMap || !bgTileLayer) return;
+  bgTileLayer.setUrl(getMapTileUrl());
 }
 
 function updateMapBackground(location) {
@@ -2599,7 +3953,7 @@ function renderGraph(data) {
   // Sublabels (line 2) — IPs for servers & managed resources, IPv6 for LANs
   node.append('text')
     .attr('class', 'node-sublabel node-ip-label')
-    .attr('dy', d => (NODE_TYPES[d.type]?.radius || 28) + 39)
+    .attr('dy', d => (NODE_TYPES[d.type]?.radius || 28) + 42)
     .text(d => {
       if (d.type === 'lan') return d.data.ipv6Cidr || '';
       // Servers: collect all NIC IPs (first IP per NIC)
@@ -2623,6 +3977,10 @@ function renderGraph(data) {
       if (d.type === 'kafka') {
         const addrs = d.data.brokerAddresses || [];
         return addrs.length > 0 ? truncate(addrs[0], 28) : '';
+      }
+      // Managed services (DBaaS, NFS, K8s): connection IPs
+      if (d.data.connectionIps && d.data.connectionIps.length > 0) {
+        return truncate(d.data.connectionIps.join(', '), 28);
       }
       return '';
     });
@@ -2992,15 +4350,15 @@ function searchNodes(query) {
     const q = query.toLowerCase();
     const matches = graphData.nodes.filter(n => (n.name || '').toLowerCase().includes(q) || (n.id || '').toLowerCase().includes(q));
     if (matches.length === 0) {
-      results.innerHTML = '<div class="search-result-count">No matches found</div>';
+      results.innerHTML = `<div class="search-result-count">${t('search.noMatches')}</div>`;
       return;
     }
-    let html = `<div class="search-result-count">${matches.length} match${matches.length !== 1 ? 'es' : ''}</div>`;
+    let html = `<div class="search-result-count">${t('search.matchCount', {count: matches.length})}</div>`;
     matches.slice(0, 15).forEach(n => {
       const cfg = NODE_TYPES[n.type] || {};
       html += `<div class="search-result-item" onclick="focusNode('${escapeHtml(n.id)}')"><span class="search-result-dot" style="background:${cfg.color}"></span><span>${escapeHtml(n.name)}</span></div>`;
     });
-    if (matches.length > 15) html += `<div class="search-result-count">...and ${matches.length - 15} more</div>`;
+    if (matches.length > 15) html += `<div class="search-result-count">${t('search.andMore', {count: matches.length - 15})}</div>`;
     results.innerHTML = html;
   }, 250);
 }
@@ -3049,7 +4407,7 @@ function showDetail(d) {
 
   // NIC details for servers
   if ((d.type === 'server' || d.type === 'cube') && d.data.nics && d.data.nics.length > 0) {
-    html += '<div class="detail-section-title">Network Interfaces (NICs)</div>';
+    html += `<div class="detail-section-title">${t('detail.nics')}</div>`;
     d.data.nics.forEach((nic, i) => {
       const badges = [];
       if (nic.firewall) badges.push('<span style="color:#10b981;">&#x25cf; Firewall</span>');
@@ -3064,15 +4422,15 @@ function showDetail(d) {
           ${nic.ipv6?.length ? `<div style="color:var(--text-muted);font-size:10px;">IPv6: ${escapeHtml(nic.ipv6.join(', '))}</div>` : ''}
           <div style="color:var(--text-muted);font-size:10px;">DHCP: ${nic.dhcp ? 'Yes' : 'No'} &middot; Firewall: ${nic.firewall ? 'Active' : 'Off'}</div>
           ${badges.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;font-size:10px;">${badges.join('')}</div>` : ''}
-          ${nic.securityGroupIds?.length ? `<div style="color:var(--text-muted);font-size:10px;margin-top:2px;">SG: ${nic.securityGroupIds.join(', ')}</div>` : ''}
+          ${nic.securityGroupIds?.length ? `<div style="color:var(--text-muted);font-size:10px;margin-top:2px;">SG: ${nic.securityGroupIds.map(id => { const sg = graphData?._securityGroups?.get(id); return escapeHtml(sg ? sg.name : id); }).join(', ')}</div>` : ''}
         </div>`;
     });
   }
 
   // Network Metrics section (async load for servers)
   if (d.type === 'server' || d.type === 'cube') {
-    html += '<div class="detail-section-title">Network Metrics</div>';
-    html += '<div id="metricsContainer"><div class="metrics-loading">Loading...</div></div>';
+    html += `<div class="detail-section-title">${t('detail.networkMetrics')}</div>`;
+    html += `<div id="metricsContainer"><div class="metrics-loading">${t('detail.loading')}</div></div>`;
     // Trigger async metrics load after panel renders
     setTimeout(() => loadAndShowMetrics(d.id.replace(/^srv-/, '')), 50);
   }
@@ -3088,19 +4446,43 @@ function showDetail(d) {
       });
     }
     if (sgIds.size > 0) {
-      html += '<div class="detail-section-title">Security Group Rules</div>';
+      html += `<div class="detail-section-title">${t('detail.securityRules')}</div>`;
       sgIds.forEach(sgId => {
         const sg = graphData._securityGroups.get(sgId);
         if (!sg) return;
-        html += `<div style="font-size:11px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">${escapeHtml(sg.name)}</div>`;
+        html += `<div style="font-size:11px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">${escapeHtml(sg.name)}${sg.description ? ` <span style="font-weight:400;color:var(--text-muted);font-size:10px;">\u2014 ${escapeHtml(sg.description)}</span>` : ''}</div>`;
         if (sg.rules.length === 0) {
-          html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">No rules defined</div>';
+          html += `<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">${t('detail.noRules')}</div>`;
         } else {
+          html += `<table style="width:100%;font-size:10px;border-collapse:collapse;margin-bottom:8px;">`;
+          html += `<tr style="color:var(--text-muted);text-align:left;border-bottom:1px solid var(--border);">
+            <th style="padding:3px 4px;font-weight:600;">${t('detail.ruleDir')}</th>
+            <th style="padding:3px 4px;font-weight:600;">${t('detail.ruleProto')}</th>
+            <th style="padding:3px 4px;font-weight:600;">${t('detail.rulePorts')}</th>
+            <th style="padding:3px 4px;font-weight:600;">${t('detail.ruleSource')}</th>
+            <th style="padding:3px 4px;font-weight:600;">${t('detail.ruleTarget')}</th>
+          </tr>`;
           sg.rules.forEach(r => {
-            const dir = r.direction === 'INGRESS' ? '\u2B07\uFE0F' : '\u2B06\uFE0F';
-            const port = r.portStart ? (r.portStart === r.portEnd ? `:${r.portStart}` : `:${r.portStart}-${r.portEnd}`) : '';
-            html += `<div style="font-size:10px;color:var(--text-muted);padding:2px 0;">${dir} ${escapeHtml(r.protocol)}${escapeHtml(port)} ${r.sourceIp ? 'from ' + escapeHtml(r.sourceIp) : ''} ${r.targetIp ? 'to ' + escapeHtml(r.targetIp) : ''}</div>`;
+            const dirLabel = r.direction === 'INGRESS' ? `<span style="color:#10b981;">\u2B07 IN</span>` : `<span style="color:#f59e0b;">\u2B06 OUT</span>`;
+            let port = '\u2014';
+            if (r.protocol === 'ICMP') {
+              port = r.icmpType != null ? `Type ${r.icmpType}` + (r.icmpCode != null ? `/${r.icmpCode}` : '') : t('detail.ruleAll');
+            } else if (r.portStart) {
+              port = r.portStart === r.portEnd ? `${r.portStart}` : `${r.portStart}\u2013${r.portEnd}`;
+            } else {
+              port = t('detail.ruleAll');
+            }
+            const src = r.sourceIp ? escapeHtml(r.sourceIp) : (r.sourceMac ? `MAC: ${escapeHtml(r.sourceMac)}` : t('detail.ruleAny'));
+            const tgt = r.targetIp ? escapeHtml(r.targetIp) : t('detail.ruleAny');
+            html += `<tr style="border-bottom:1px solid var(--bg-tertiary);">
+              <td style="padding:3px 4px;">${dirLabel}</td>
+              <td style="padding:3px 4px;color:var(--text-secondary);font-weight:600;">${escapeHtml(r.protocol)}</td>
+              <td style="padding:3px 4px;color:var(--text-secondary);">${port}</td>
+              <td style="padding:3px 4px;color:var(--text-muted);">${src}</td>
+              <td style="padding:3px 4px;color:var(--text-muted);">${tgt}</td>
+            </tr>`;
           });
+          html += `</table>`;
         }
       });
     }
@@ -3108,7 +4490,7 @@ function showDetail(d) {
 
   const connected = getConnectedNodes(d);
   if (connected.length > 0) {
-    html += '<div class="detail-section-title">Connected Resources</div>';
+    html += `<div class="detail-section-title">${t('detail.connectedResources')}</div>`;
     connected.forEach(cn => {
       const ccfg = NODE_TYPES[cn.type] || {};
       html += `
@@ -3148,6 +4530,23 @@ function resetView() {
   clearHighlight();
   closeDetail();
   clearSearch();
+
+  // Reset IP view
+  if (ipViewActive) toggleIPView();
+  // Reset Compute view
+  if (computeViewActive) toggleComputeView();
+  // Uncheck all highlight checkboxes and clear glow rings
+  ['hlFirewall','hlFlowLogs','hlSecGroups','hlIPv6','hlFailover','hlPCC'].forEach(id => {
+    const cb = document.getElementById(id);
+    if (cb) cb.checked = false;
+  });
+  applyHighlights();
+  // Close highlights overlay if open
+  const hlOverlay = document.getElementById('highlightsOverlay');
+  if (hlOverlay) hlOverlay.classList.remove('open');
+  const hlBtn = document.getElementById('hlOverlayBtn');
+  if (hlBtn) hlBtn.classList.remove('active');
+
   zoomFit();
 }
 
@@ -3156,76 +4555,81 @@ function buildDetailProps(d) {
   const data = d.data || {};
 
   if (d.type === 'lan') {
-    p.push(['LAN ID', data.lanId]);
-    p.push(['Public', data.isPublic ? 'Yes' : 'No']);
-    if (data.cidr) p.push(['IPv4 CIDR', data.cidr]);
-    if (data.ipv6Cidr) p.push(['IPv6 CIDR', data.ipv6Cidr]);
-    if (data.pcc) p.push(['Cross Connect', data.pcc]);
-    if (data.ipFailover?.length) p.push(['IP Failover', data.ipFailover.map(f => `${f.ip} (NIC: ${f.nicUuid?.substring(0,8)}...)`).join(', ')]);
-    if (data.state) p.push(['State', data.state]);
+    p.push([t('detail.lanId'), data.lanId]);
+    p.push([t('detail.public'), data.isPublic ? 'Yes' : 'No']);
+    if (data.cidr) p.push([t('detail.ipv4Cidr'), data.cidr]);
+    if (data.ipv6Cidr) p.push([t('detail.ipv6Cidr'), data.ipv6Cidr]);
+    if (data.pcc) p.push([t('detail.crossConnect'), data.pcc]);
+    if (data.ipFailover?.length) p.push([t('detail.ipFailover'), data.ipFailover.map(f => `${f.ip} (NIC: ${f.nicUuid?.substring(0,8)}...)`).join(', ')]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'server' || d.type === 'cube') {
-    p.push(['Type', data.type || 'ENTERPRISE']);
-    p.push(['Cores', data.cores]);
-    p.push(['RAM', formatRAM(data.ram)]);
-    if (data.cpuFamily) p.push(['CPU', data.cpuFamily]);
-    if (data.state) p.push(['State', data.state]);
-    if (data.vmState) p.push(['VM State', data.vmState]);
+    p.push([t('detail.type'), data.type || 'ENTERPRISE']);
+    p.push([t('detail.cores'), data.cores]);
+    p.push([t('detail.ram'), formatRAM(data.ram)]);
+    if (data.cpuFamily) p.push([t('detail.cpu'), data.cpuFamily]);
+    if (data.state) p.push([t('detail.state'), data.state]);
+    if (data.vmState) p.push([t('detail.vmState'), data.vmState]);
   } else if (d.type === 'postgres') {
-    if (data.version) p.push(['Version', data.version]);
-    if (data.instances) p.push(['Instances', data.instances]);
-    if (data.cores) p.push(['Cores', data.cores]);
-    if (data.ram) p.push(['RAM', formatRAM(data.ram)]);
-    if (data.storageSize) p.push(['Storage', `${data.storageSize} MB`]);
-    if (data.dnsName) p.push(['DNS', data.dnsName]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.version) p.push([t('detail.version'), data.version]);
+    if (data.instances) p.push([t('detail.instances'), data.instances]);
+    if (data.cores) p.push([t('detail.cores'), data.cores]);
+    if (data.ram) p.push([t('detail.ram'), formatRAM(data.ram)]);
+    if (data.storageSize) p.push([t('detail.storage'), `${data.storageSize} MB`]);
+    if (data.dnsName) p.push([t('detail.dns'), data.dnsName]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'mongodb') {
-    if (data.version) p.push(['Version', data.version]);
-    if (data.instances) p.push(['Instances', data.instances]);
-    if (data.type) p.push(['Type', data.type]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.version) p.push([t('detail.version'), data.version]);
+    if (data.instances) p.push([t('detail.instances'), data.instances]);
+    if (data.type) p.push([t('detail.type'), data.type]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'mysql') {
-    if (data.version) p.push(['Version', data.version]);
-    if (data.instances) p.push(['Instances', data.instances]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.version) p.push([t('detail.version'), data.version]);
+    if (data.instances) p.push([t('detail.instances'), data.instances]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'nat') {
-    if (data.publicIps) p.push(['Public IPs', data.publicIps.join(', ')]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.publicIps) p.push([t('detail.publicIps'), data.publicIps.join(', ')]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'mariadb') {
-    if (data.version) p.push(['Version', data.version]);
-    if (data.instances) p.push(['Instances', data.instances]);
-    if (data.cores) p.push(['Cores', data.cores]);
-    if (data.ram) p.push(['RAM', formatRAM(data.ram)]);
-    if (data.storageSize) p.push(['Storage', `${data.storageSize} MB`]);
-    if (data.dnsName) p.push(['DNS', data.dnsName]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.version) p.push([t('detail.version'), data.version]);
+    if (data.instances) p.push([t('detail.instances'), data.instances]);
+    if (data.cores) p.push([t('detail.cores'), data.cores]);
+    if (data.ram) p.push([t('detail.ram'), formatRAM(data.ram)]);
+    if (data.storageSize) p.push([t('detail.storage'), `${data.storageSize} MB`]);
+    if (data.dnsName) p.push([t('detail.dns'), data.dnsName]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'alb' || d.type === 'nlb') {
-    if (data.listenerLan) p.push(['Listener LAN', data.listenerLan]);
-    if (data.targetLan) p.push(['Target LAN', data.targetLan]);
-    if (data.ips) p.push(['Public IPs', data.ips.join(', ')]);
-    if (data.lbPrivateIps) p.push(['Private IPs', data.lbPrivateIps.join(', ')]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.listenerLan) p.push([t('detail.listenerLan'), data.listenerLan]);
+    if (data.targetLan) p.push([t('detail.targetLan'), data.targetLan]);
+    if (data.ips) p.push([t('detail.publicIps'), data.ips.join(', ')]);
+    if (data.lbPrivateIps) p.push([t('detail.privateIps'), data.lbPrivateIps.join(', ')]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'pcc') {
-    if (data.pccId) p.push(['PCC ID', data.pccId]);
+    if (data.pccId) p.push([t('detail.pccId'), data.pccId]);
   } else if (d.type === 'k8s_np') {
-    if (data.clusterName) p.push(['Cluster', data.clusterName]);
-    if (data.k8sVersion) p.push(['K8s Version', data.k8sVersion]);
-    if (data.nodeCount) p.push(['Nodes', data.nodeCount]);
-    if (data.coresCount) p.push(['Cores/Node', data.coresCount]);
-    if (data.ramSize) p.push(['RAM/Node', formatRAM(data.ramSize)]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.clusterName) p.push([t('detail.cluster'), data.clusterName]);
+    if (data.k8sVersion) p.push([t('detail.k8sVersion'), data.k8sVersion]);
+    if (data.nodeCount) p.push([t('detail.nodes'), data.nodeCount]);
+    if (data.coresCount) p.push([t('detail.coresPerNode'), data.coresCount]);
+    if (data.ramSize) p.push([t('detail.ramPerNode'), formatRAM(data.ramSize)]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'nfs') {
-    if (data.size) p.push(['Size', data.size]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.size) p.push([t('detail.size'), data.size]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'vpn_wg' || d.type === 'vpn_ipsec') {
-    if (data.gatewayIP) p.push(['Gateway IP', data.gatewayIP]);
-    if (data.interfaceIPv4) p.push(['Interface IPv4', data.interfaceIPv4]);
-    if (data.interfaceIPv6) p.push(['Interface IPv6', data.interfaceIPv6]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.gatewayIP) p.push([t('detail.gatewayIp'), data.gatewayIP]);
+    if (data.interfaceIPv4) p.push([t('detail.ifaceIpv4'), data.interfaceIPv4]);
+    if (data.interfaceIPv6) p.push([t('detail.ifaceIpv6'), data.interfaceIPv6]);
+    if (data.state) p.push([t('detail.state'), data.state]);
   } else if (d.type === 'kafka') {
-    if (data.version) p.push(['Version', data.version]);
-    if (data.size) p.push(['Size', data.size]);
-    if (data.brokerAddresses) p.push(['Private IPs', Array.isArray(data.brokerAddresses) ? data.brokerAddresses.join(', ') : data.brokerAddresses]);
-    if (data.state) p.push(['State', data.state]);
+    if (data.version) p.push([t('detail.version'), data.version]);
+    if (data.size) p.push([t('detail.size'), data.size]);
+    if (data.brokerAddresses) p.push([t('detail.privateIps'), Array.isArray(data.brokerAddresses) ? data.brokerAddresses.join(', ') : data.brokerAddresses]);
+    if (data.state) p.push([t('detail.state'), data.state]);
+  }
+
+  // Generic: show connection IPs for managed services
+  if (data.connectionIps && data.connectionIps.length > 0) {
+    p.push([t('detail.privateIps'), data.connectionIps.join(', ')]);
   }
 
   // DNS & CDN enrichment: show domain names pointing to this node's public IPs
@@ -3248,7 +4652,7 @@ function buildDetailProps(d) {
           if (!dnsNames.includes(label)) dnsNames.push(label);
         });
       });
-      if (dnsNames.length > 0) p.push(['DNS Names', dnsNames.join(', ')]);
+      if (dnsNames.length > 0) p.push([t('detail.dnsNames'), dnsNames.join(', ')]);
 
       // Reverse DNS hostnames
       const rNames = [];
@@ -3256,7 +4660,7 @@ function buildDetailProps(d) {
         const hostname = reverseIpMap?.get(ip);
         if (hostname && !rNames.includes(hostname)) rNames.push(hostname);
       });
-      if (rNames.length > 0) p.push(['Reverse DNS', rNames.join(', ')]);
+      if (rNames.length > 0) p.push([t('detail.reverseDns'), rNames.join(', ')]);
     }
   }
 
@@ -3519,7 +4923,7 @@ function showUserInfo(user) {
   const items = [];
   
   if (user.email) {
-    items.push(`<div class="account-info-item"><div class="account-info-label">Email</div><div class="account-info-value">${escapeHtml(user.email)}</div></div>`);
+    items.push(`<div class="account-info-item"><div class="account-info-label">${t('account.email')}</div><div class="account-info-value">${escapeHtml(user.email)}</div></div>`);
   }
 
   if (user.contracts && user.contracts.length > 0) {
@@ -3539,7 +4943,7 @@ function showUserInfo(user) {
       const num = String(user.contracts[0].properties.contractNumber).replace(/[<>"&]/g, '');
       contractHtml = `<div class="account-info-value">${num}</div>`;
     }
-    items.push(`<div class="account-info-item"><div class="account-info-label">Contract</div>${contractHtml}</div>`);
+    items.push(`<div class="account-info-item"><div class="account-info-label">${t('account.contract')}</div>${contractHtml}</div>`);
   }
   
   document.getElementById('accountInfo').innerHTML = items.join('');
@@ -3562,11 +4966,27 @@ function toggleIPView() {
   if (ipViewActive) {
     // Deactivate Compute View if active
     if (computeViewActive) toggleComputeView();
-    // Ensure IP labels and link labels are visible
-    d3.selectAll('.node-ip-label, .link-label, .link-label-bg').style('display', '');
+    // Ensure node IP labels are visible (link labels hidden via CSS to avoid duplication)
+    d3.selectAll('.node-ip-label').style('display', '');
+    // Move IP labels closer to nodes (since name/spec labels are hidden)
+    d3.selectAll('.node-ip-label:not(.ip-detail-label)').each(function() {
+      const el = d3.select(this);
+      const d = d3.select(this.parentNode).datum();
+      if (!d) return;
+      const radius = NODE_TYPES[d.type]?.radius || 28;
+      const origDy = radius + 42;
+      if (!el.attr('data-orig-dy')) el.attr('data-orig-dy', origDy);
+      el.attr('dy', radius + 14);
+    });
     // All links stay visible — only text labels are dimmed via CSS
     enrichIPLabels();
   } else {
+    // Restore original IP label positions
+    d3.selectAll('.node-ip-label:not(.ip-detail-label)').each(function() {
+      const el = d3.select(this);
+      const origDy = el.attr('data-orig-dy');
+      if (origDy) el.attr('dy', origDy);
+    });
     // Restore original IP labels (strip DNS enrichment)
     resetIPLabels();
   }
@@ -3752,8 +5172,8 @@ function enrichIPLabels() {
     // Position: snug below node name (radius+16) with comfortable spacing
     const nodeData = parent.datum();
     const radius = NODE_TYPES[nodeData?.type]?.radius || 28;
-    const baseY = radius + 30;   // IP address line
-    const lineGap = 13;          // gap between DNS lines
+    const baseY = radius + 14;   // IP address line — snug just below node circle
+    const lineGap = 14;          // gap between DNS lines
 
     const newText = parent.append('text')
       .attr('class', 'ip-detail-label node-ip-label')
@@ -3798,11 +5218,11 @@ function enrichIPLabels() {
     el.text(null);
     el.append('tspan')
       .attr('class', 'ip-line-addr')
-      .attr('x', 0).attr('dy', '0')
+      .attr('dy', '0')
       .text(original);
     el.append('tspan')
       .attr('class', 'ip-line-dns')
-      .attr('x', 0).attr('dy', '1.15em')
+      .attr('dy', '1.15em')
       .text(truncate(dns[0].name, 28));
   });
 }
@@ -3832,6 +5252,8 @@ function getNodeIPText(d) {
   if (d.type === 'lan') return !!(d.data.cidr || d.data.ipv6Cidr);
   if (d.type === 'kafka') return (d.data.brokerAddresses || []).length > 0;
   if (d.type === 'internet') return true; // always relevant in IP view
+  // Managed services with connection IPs (DBaaS, NFS, K8s)
+  if (d.data.connectionIps && d.data.connectionIps.length > 0) return true;
   return false;
 }
 
@@ -3885,10 +5307,10 @@ function exportPNG() {
     a.download = `vdc-${currentDC?.properties?.name || 'export'}.png`;
     a.href = canvas.toDataURL('image/png');
     a.click();
-    toast('PNG exported', 'success');
+    toast(t('toast.pngExported'), 'success');
     closeExportMenu();
   };
-  img.onerror = () => toast('PNG export failed — try a smaller zoom level', 'error');
+  img.onerror = () => toast(t('toast.pngFailed'), 'error');
   // Unicode-safe Base64 encode (replaces deprecated unescape)
   const utf8Bytes = new TextEncoder().encode(svgStr);
   const binStr = Array.from(utf8Bytes, b => String.fromCharCode(b)).join('');
@@ -3920,12 +5342,12 @@ function exportSVG() {
   a.href = URL.createObjectURL(blob);
   a.click();
   URL.revokeObjectURL(a.href);
-  toast('SVG exported', 'success');
+  toast(t('toast.svgExported'), 'success');
   closeExportMenu();
 }
 
 function exportJSON() {
-  if (!graphData || !graphData.nodes) { toast('No data to export', 'warning'); return; }
+  if (!graphData || !graphData.nodes) { toast(t('toast.noData'), 'warning'); return; }
   const exportData = {
     meta: {
       exported: new Date().toISOString(),
@@ -3955,7 +5377,7 @@ function exportJSON() {
   a.href = URL.createObjectURL(blob);
   a.click();
   URL.revokeObjectURL(a.href);
-  toast('JSON topology exported', 'success');
+  toast(t('toast.jsonExported'), 'success');
   closeExportMenu();
 }
 
@@ -4032,6 +5454,7 @@ function buildTableRow(n) {
   if (data.interfaceIPv4) ips.push(data.interfaceIPv4);
   if (data.interfaceIPv6) ips.push(data.interfaceIPv6);
   if (data.brokerAddresses) ips.push(...(Array.isArray(data.brokerAddresses) ? data.brokerAddresses : []));
+  if (data.connectionIps) ips.push(...data.connectionIps);
 
   return {
     id: n.id,
@@ -4047,7 +5470,7 @@ function buildTableRow(n) {
 
 function openTableView() {
   if (!graphData || !graphData.nodes || !graphData.nodes.length) {
-    toast('No data to display', 'warning');
+    toast(t('toast.noDisplay'), 'warning');
     return;
   }
   tableRows = graphData.nodes
@@ -4139,11 +5562,11 @@ function renderTableView() {
   if (!thead || !tbody) return;
 
   const cols = [
-    { key: 'name', label: 'Name', sortable: true },
-    { key: 'typeLabel', label: 'Type', sortable: true },
-    { key: 'state', label: 'State', sortable: true },
-    { key: 'details', label: 'Details', sortable: false },
-    { key: 'ips', label: 'IPs', sortable: false },
+    { key: 'name', label: t('table.name'), sortable: true },
+    { key: 'typeLabel', label: t('table.type'), sortable: true },
+    { key: 'state', label: t('table.state'), sortable: true },
+    { key: 'details', label: t('table.details'), sortable: false },
+    { key: 'ips', label: t('table.ips'), sortable: false },
   ];
 
   // Render header
@@ -4164,7 +5587,7 @@ function renderTableView() {
   const rows = getFilteredSortedRows();
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="table-empty">No resources match the current filters</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${t('table.noMatch')}</td></tr>`;
   } else {
     let bodyHtml = '';
     rows.forEach(r => {
@@ -4182,7 +5605,7 @@ function renderTableView() {
 
   // Footer
   if (footer) {
-    footer.innerHTML = `Showing ${rows.length} of ${tableRows.length} resources`;
+    footer.innerHTML = t('table.showing', {count: rows.length, total: tableRows.length});
   }
 }
 
@@ -4208,7 +5631,7 @@ function tableRowClick(nodeId) {
 
 function exportTableCSV() {
   const rows = getFilteredSortedRows();
-  if (rows.length === 0) { toast('No rows to export', 'warning'); return; }
+  if (rows.length === 0) { toast(t('toast.noRows'), 'warning'); return; }
 
   const csvEscape = (val) => {
     const s = String(val || '');
@@ -4236,7 +5659,7 @@ function exportTableCSV() {
   a.href = URL.createObjectURL(blob);
   a.click();
   URL.revokeObjectURL(a.href);
-  toast(`CSV exported (${rows.length} rows)`, 'success');
+  toast(t('toast.csvExported', {count: rows.length}), 'success');
 }
 
 // ============================== EXPORT DROPDOWN ==============================
@@ -4269,7 +5692,7 @@ function _closeExportOutside(e) {
 // ── CSV Export (all resources, unfiltered) ──
 function exportCSV() {
   if (!graphData || !graphData.nodes || !graphData.nodes.length) {
-    toast('No data to export', 'warning'); closeExportMenu(); return;
+    toast(t('toast.noData'), 'warning'); closeExportMenu(); return;
   }
   const rows = graphData.nodes.filter(n => n.type !== 'internet').map(buildTableRow);
 
@@ -4291,17 +5714,17 @@ function exportCSV() {
   a.href = URL.createObjectURL(blob);
   a.click();
   URL.revokeObjectURL(a.href);
-  toast(`CSV exported (${rows.length} rows)`, 'success');
+  toast(t('toast.csvExported', {count: rows.length}), 'success');
   closeExportMenu();
 }
 
 // ── XLSX Export (multi-sheet workbook) ──
 function exportXLSX() {
   if (!graphData || !graphData.nodes || !graphData.nodes.length) {
-    toast('No data to export', 'warning'); closeExportMenu(); return;
+    toast(t('toast.noData'), 'warning'); closeExportMenu(); return;
   }
   if (typeof XLSX === 'undefined') {
-    toast('XLSX library not loaded', 'error'); closeExportMenu(); return;
+    toast(t('toast.xlsxNotLoaded'), 'error'); closeExportMenu(); return;
   }
 
   const rows = graphData.nodes.filter(n => n.type !== 'internet').map(buildTableRow);
@@ -4349,17 +5772,17 @@ function exportXLSX() {
   XLSX.utils.book_append_sheet(wb, sumSheet, 'Summary');
 
   XLSX.writeFile(wb, `vdc-${dcName}.xlsx`);
-  toast('XLSX workbook exported', 'success');
+  toast(t('toast.xlsxExported'), 'success');
   closeExportMenu();
 }
 
 // ── PDF Export (diagram + resource table report) ──
 function exportPDF() {
   if (!graphData || !graphData.nodes || !graphData.nodes.length) {
-    toast('No data to export', 'warning'); closeExportMenu(); return;
+    toast(t('toast.noData'), 'warning'); closeExportMenu(); return;
   }
   if (typeof jspdf === 'undefined') {
-    toast('PDF library not loaded', 'error'); closeExportMenu(); return;
+    toast(t('toast.pdfNotLoaded'), 'error'); closeExportMenu(); return;
   }
 
   const dcName = currentDC?.properties?.name || 'export';
@@ -4450,12 +5873,12 @@ function exportPDF() {
     });
 
     doc.save(`vdc-${dcName}-report.pdf`);
-    toast('PDF report exported', 'success');
+    toast(t('toast.pdfExported'), 'success');
     closeExportMenu();
   };
 
   img.onerror = () => {
-    toast('PDF export failed — try a smaller zoom level', 'error');
+    toast(t('toast.pdfFailed'), 'error');
     closeExportMenu();
   };
 
@@ -4683,18 +6106,25 @@ async function loadSecurityOverlay(dcId) {
     const sgMap = new Map();
     data.items.forEach(sg => {
       const rules = sg.entities?.rules?.items || [];
+      console.log(`[VDC-Viz] SecGroup "${sg.properties?.name}" (${sg.id}): ${rules.length} rule(s)`, rules.length > 0 ? rules[0] : '(empty)');
       sgMap.set(sg.id, {
         name: sg.properties?.name || sg.id,
         description: sg.properties?.description || '',
-        rules: rules.map(r => ({
-          name: r.properties?.name || '',
-          protocol: r.properties?.protocol || 'ANY',
-          direction: r.properties?.type || 'INGRESS',
-          sourceIp: r.properties?.sourceIp || '',
-          targetIp: r.properties?.targetIp || '',
-          portStart: r.properties?.portRangeStart,
-          portEnd: r.properties?.portRangeEnd,
-        })),
+        rules: rules.map(r => {
+          const p = r.properties || {};
+          return {
+            name: p.name || '',
+            protocol: p.protocol || 'ANY',
+            direction: p.type || 'INGRESS',
+            sourceIp: p.sourceIp || p.sourceCidr || '',
+            targetIp: p.targetIp || p.targetCidr || '',
+            sourceMac: p.sourceMac || '',
+            icmpType: p.icmpType,
+            icmpCode: p.icmpCode,
+            portStart: p.portRangeStart,
+            portEnd: p.portRangeEnd,
+          };
+        }),
       });
     });
 
@@ -4850,7 +6280,7 @@ async function loadAndShowMetrics(serverId) {
 // ============================== MAIN FLOWS ==============================
 async function connect(isSwitching = false) {
   apiToken = document.getElementById('tokenInput').value.trim();
-  if (!apiToken) { toast('Please enter an API token', 'error'); return; }
+  if (!apiToken) { toast(t('toast.enterToken'), 'error'); return; }
 
   const btn = document.getElementById('connectBtn');
   btn.disabled = true;
@@ -4871,7 +6301,7 @@ async function connect(isSwitching = false) {
     // 2. Fetch Datacenters (will now use X-Contract header if currentContract is set)
     datacenters = await fetchDatacenters();
     if (datacenters.length === 0) {
-      toast('No data centers found', 'warning');
+      toast(t('toast.noDataCenters'), 'warning');
       return;
     }
 
@@ -4891,6 +6321,9 @@ async function connect(isSwitching = false) {
     });
     sel.disabled = false;
     document.getElementById('refreshBtn').disabled = false;
+    document.getElementById('pinVdcBtn').disabled = false;
+    loadFavorites();
+    reorderVDCOptions();
 
     // Populate location dropdown (grouped by region — e.g. de/fra covers de/fra/1 + de/fra/2)
     const locMap = new Map();
@@ -4910,7 +6343,7 @@ async function connect(isSwitching = false) {
     locSel.disabled = false;
     document.getElementById('refreshLocBtn').disabled = false;
 
-    toast(`Found ${datacenters.length} data center(s)`, 'success');
+    toast(t('toast.foundDcs', {count: datacenters.length}), 'success');
 
     // Initialize map and show global overview (remove pre-login dimming)
     document.getElementById('mapBackground').classList.remove('pre-login');
@@ -4957,13 +6390,102 @@ async function connect(isSwitching = false) {
     // Fetch IP blocks and DNS/CDN data in background (non-blocking)
     loadIPBlocks();
     loadDNSData();
-  } catch (e) {
-    toast(`Connection failed: ${e.message}`, 'error');
-    console.error(e);
-  } finally {
+
+    // Switch Connect button to Disconnect
     btn.disabled = false;
-    btn.textContent = 'Connect';
+    btn.textContent = t('sidebar.disconnect');
+    btn.onclick = disconnect;
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-disconnect');
+  } catch (e) {
+    toast(t('toast.connectionFailed', {error: e.message}), 'error');
+    console.error(e);
+    btn.disabled = false;
+    btn.textContent = t('sidebar.connect');
   }
+}
+
+function disconnect() {
+  // Clear token and API state
+  apiToken = '';
+  currentUser = null;
+  userContracts = [];
+  currentContract = null;
+  datacenters = [];
+  graphData = null;
+  reverseIpMap = null;
+  forwardDnsMap = null;
+  dnsZones = null;
+  ipBlocks = null;
+
+  // Reset token input and connect button
+  document.getElementById('tokenInput').value = '';
+  const btn = document.getElementById('connectBtn');
+  btn.textContent = t('sidebar.connect');
+  btn.onclick = connect;
+  btn.classList.remove('btn-disconnect');
+  btn.classList.add('btn-primary');
+
+  // Hide account section
+  const acctSection = document.getElementById('accountSection');
+  if (acctSection) acctSection.style.display = 'none';
+
+  // Reset VDC dropdown
+  const sel = document.getElementById('dcSelect');
+  sel.innerHTML = `<option value="" data-i18n="sidebar.connectFirst">${t('sidebar.connectFirst')}</option>`;
+  sel.disabled = true;
+  document.getElementById('refreshBtn').disabled = true;
+  document.getElementById('pinVdcBtn').disabled = true;
+
+  // Reset location dropdown
+  const locSel = document.getElementById('locSelect');
+  locSel.innerHTML = `<option value="" data-i18n="sidebar.connectFirst">${t('sidebar.connectFirst')}</option>`;
+  locSel.disabled = true;
+  document.getElementById('refreshLocBtn').disabled = true;
+
+  // Clear graph
+  d3.select('#graphSvg').selectAll('*').remove();
+
+  // Reset views
+  if (ipViewActive) toggleIPView();
+  if (computeViewActive) toggleComputeView();
+
+  // Hide legend, IP blocks, DNS sections
+  document.getElementById('legendSection').style.display = 'none';
+  const ipBlockSec = document.getElementById('ipBlockSection');
+  if (ipBlockSec) ipBlockSec.style.display = 'none';
+  const dnsSec = document.getElementById('dnsSection');
+  if (dnsSec) dnsSec.style.display = 'none';
+
+  // Reset map to pre-login state
+  document.getElementById('mapBackground').classList.add('pre-login');
+  setViewMode('map');
+
+  // Hide toolbar and search (they only make sense with a loaded graph)
+  document.getElementById('toolbar').style.display = 'none';
+  document.getElementById('searchSection').style.display = 'none';
+  document.getElementById('graphSvg').classList.add('hidden-for-map');
+
+  // Show onboarding card again AFTER setViewMode('map') which hides it via showMapOverview()
+  const emptyState = document.getElementById('emptyState');
+  if (emptyState) {
+    emptyState.style.display = '';
+    const h2 = emptyState.querySelector('h2');
+    if (h2) h2.textContent = t('onboarding.title');
+    const p = emptyState.querySelector('p');
+    if (p) p.textContent = t('onboarding.subtitle');
+  }
+
+  // Clear detail panel, search, DNS panel
+  closeDetail();
+  clearSearch();
+  const dnsPanel = document.getElementById('dnsPanel');
+  if (dnsPanel) dnsPanel.style.display = 'none';
+
+  // Clear map cluster bubbles
+  if (typeof clearMapMarkers === 'function') clearMapMarkers();
+
+  toast(t('toast.disconnected'), 'info');
 }
 
 async function loadVDC() {
@@ -4978,12 +6500,12 @@ async function loadVDC() {
   if (currentAbortController) currentAbortController.abort();
   currentAbortController = new AbortController();
 
-  showLoading('Fetching data center details...');
+  showLoading(t('loading.fetchingDetails'));
   currentDC = datacenters.find(dc => dc.id === dcId);
   const dcLocation = currentDC?.properties?.location || '';
 
   try {
-    setLoadingText('Fetching servers, LANs, and managed services...');
+    setLoadingText(t('loading.fetchingServers'));
     const [dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sData, nfsClusters, vpnGateways, kafkaClusters] = await Promise.all([
       fetchDCDetails(dcId),
       fetchNatGateways(dcId),
@@ -5000,7 +6522,7 @@ async function loadVDC() {
     ]);
 
     // Ensure all servers have NIC data - fallback to per-server fetch if depth didn't include them
-    setLoadingText('Resolving server NICs...');
+    setLoadingText(t('loading.resolvingNics'));
     const servers = dcData?.entities?.servers?.items || [];
     console.log(`[VDC-Viz] Found ${servers.length} server(s) in DC response`);
     let nicFallbackCount = 0;
@@ -5021,7 +6543,7 @@ async function loadVDC() {
     }));
     if (nicFallbackCount > 0) console.log(`[VDC-Viz] Used NIC fallback fetch for ${nicFallbackCount} server(s)`);
 
-    setLoadingText('Fetching Kubernetes node pools...');
+    setLoadingText(t('loading.fetchingK8s'));
     const k8sNodePools = [];
     const k8sClusters = k8sData?.items || [];
     await Promise.all(k8sClusters.map(async (cluster) => {
@@ -5031,7 +6553,7 @@ async function loadVDC() {
       });
     }));
 
-    setLoadingText('Building visualization...');
+    setLoadingText(t('loading.buildingViz'));
     const data = buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sNodePools, nfsClusters || {}, vpnGateways, kafkaClusters);
 
     // Tag all nodes/links with _vdcIdx = 0 so collapse toggle works in single-VDC mode
@@ -5044,7 +6566,7 @@ async function loadVDC() {
 
     renderGraph(data);
     setTimeout(() => zoomFit(), 1500);
-    toast(`Loaded ${data.nodes.length} resources`, 'success');
+    toast(t('toast.loadedResources', {count: data.nodes.length}), 'success');
 
     // Update map background to show VDC region
     updateMapBackground(dcLocation);
@@ -5054,7 +6576,7 @@ async function loadVDC() {
     if (ipBlockData) renderIPBlockPanel(dcLocation);
     if (dnsZones) { renderDNSPanel(); if (ipViewActive) enrichIPLabels(); }
   } catch (e) {
-    toast(`Failed to load VDC: ${e.message}`, 'error');
+    toast(t('toast.loadFailed', {error: e.message}), 'error');
     console.error(e);
   } finally {
     hideLoading();
@@ -5136,13 +6658,13 @@ async function loadLocation() {
     const dcRegion = locationRegion(dc.properties?.location || '');
     return dcRegion === loc || dc.properties?.location === loc;
   });
-  if (dcsInLoc.length === 0) { toast('No VDCs at this location', 'warning'); return; }
+  if (dcsInLoc.length === 0) { toast(t('toast.noVdcsLocation'), 'warning'); return; }
 
-  showLoading(`Loading ${dcsInLoc.length} VDC(s) at ${locationLabel(loc).trim()}...`);
+  showLoading(t('loading.loadingVdcs', {count: dcsInLoc.length, location: locationLabel(loc).trim()}));
 
   try {
     // Fetch global/shared services ONCE (these are the same regardless of VDC)
-    setLoadingText('Fetching shared managed services...');
+    setLoadingText(t('loading.fetchingShared'));
     const dcLocation = dcsInLoc[0]?.properties?.location || '';
     const [pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sData, nfsClusters, vpnGateways, kafkaClusters] = await Promise.all([
       fetchPostgresClusters(),
@@ -5157,7 +6679,7 @@ async function loadLocation() {
 
     // Fetch per-VDC data in parallel (only DC-specific APIs)
     const allVdcData = await Promise.all(dcsInLoc.map(async (dc, idx) => {
-      setLoadingText(`Fetching VDC ${idx + 1}/${dcsInLoc.length}: ${dc.properties?.name || dc.id}...`);
+      setLoadingText(t('loading.fetchingVdc', {index: idx + 1, total: dcsInLoc.length, name: dc.properties?.name || dc.id}));
       const dcId = dc.id;
 
       const [dcData, natGWs, albs, nlbs] = await Promise.all([
@@ -5197,7 +6719,7 @@ async function loadLocation() {
     }));
 
     // Merge all VDC graphs into one, prefixing node/link IDs to avoid collisions
-    setLoadingText('Merging VDC graphs...');
+    setLoadingText(t('loading.mergingGraphs'));
     const mergedNodes = [];
     const mergedLinks = [];
     const vdcBoundaries = []; // track which nodes belong to which VDC
@@ -5270,7 +6792,7 @@ async function loadLocation() {
     const mergedData = { nodes: cleanedNodes, links: mergedLinks, _vdcBoundaries: vdcBoundaries };
     renderGraph(mergedData);
     setTimeout(() => zoomFit(), 1500);
-    toast(`Loaded ${dcsInLoc.length} VDC(s) with ${cleanedNodes.length} total resources`, 'success');
+    toast(t('toast.loadedLocation', {dcCount: dcsInLoc.length, nodeCount: cleanedNodes.length}), 'success');
 
     // Update map background to show location region
     updateMapBackground(loc);
@@ -5280,7 +6802,7 @@ async function loadLocation() {
     if (dnsZones) { renderDNSPanel(); if (ipViewActive) enrichIPLabels(); }
 
   } catch (e) {
-    toast(`Failed to load location: ${e.message}`, 'error');
+    toast(t('toast.locationFailed', {error: e.message}), 'error');
     console.error(e);
   } finally {
     hideLoading();
@@ -5351,15 +6873,27 @@ document.getElementById('tokenInput').addEventListener('keydown', (e) => {
   setTimeout(() => bgMap.invalidateSize(), 150);
 })();
 
+// ============================== THEME INIT ==============================
+currentTheme = detectTheme();
+applyTheme(currentTheme);
+
+// ============================== LOCALE INIT ==============================
+currentLocale = detectLocale();
+translatePage();
+updateLocaleButtons();
+
 // ============================== GLOBAL KEYBOARD SHORTCUTS ==============================
 document.addEventListener('keydown', (e) => {
   const tag = document.activeElement?.tagName?.toLowerCase();
   const isInput = tag === 'input' || tag === 'textarea' || tag === 'select';
 
   if (e.key === 'Escape') {
+    if (document.getElementById('localeMenu')?.classList.contains('open')) { closeLocaleMenu(); return; }
     if (document.getElementById('exportDropdown')?.classList.contains('open')) { closeExportMenu(); return; }
     const tableOv = document.getElementById('tableOverlay');
     if (tableOv && tableOv.style.display !== 'none') { closeTableView(); return; }
+    const secOv = document.getElementById('securityOverlay');
+    if (secOv && secOv.style.display !== 'none') { closeSecurityOverlay(); return; }
     document.getElementById('shortcutsOverlay').style.display = 'none';
     closeDetail();
     clearSearch();
@@ -5377,7 +6911,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === '?' || e.key === '/') { document.getElementById('shortcutsOverlay').style.display = ''; }
   else if (e.key === '+' || e.key === '=') zoomIn();
   else if (e.key === '-') zoomOut();
-  else if (e.key === 'f' || e.key === 'F') zoomFit();
+  else if (e.key === 'f' || e.key === 'F') resetView();
   else if (e.key === 'l' || e.key === 'L') toggleLabels();
   else if (e.key === 'i' || e.key === 'I') toggleIPView();
   else if (e.key === 'c' || e.key === 'C') toggleComputeView();
@@ -5385,6 +6919,7 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'm' || e.key === 'M') toggleMapBackground();
   else if (e.key === 'g' || e.key === 'G') setViewMode('map');
   else if (e.key === 't' || e.key === 'T') openTableView();
+  else if (e.key === 's' || e.key === 'S') openSecurityOverlay();
   else if (e.key === 'r' || e.key === 'R') resetView();
 });
 </script>

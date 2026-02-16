@@ -61,6 +61,14 @@
 
 📋 **Resource Table View** — Press `T` to open a full-screen searchable, sortable table of all resources. Type filter pills let you isolate specific resource types, column headers sort by name/type/state, and a text search filters across all columns. Click any row to zoom to that node on the graph. Export the filtered view as CSV directly from the table.
 
+🛡️ **Security Posture** — Press `S` for a one-glance security summary of your VDC: Firewall Active, Flow Logs, Security Groups, Private LANs, and IPv6 coverage — each with a color-coded progress bar. Private LANs without a NAT Gateway trigger an upsell suggestion. Click any metric to highlight matching nodes on the graph.
+
+🌗 **Dark & Light Theme** — Toggle between dark and light mode with automatic system-preference detection. The Leaflet map tiles swap between Carto `dark_all` and `light_all` automatically. Your preference is persisted in `localStorage`.
+
+🌐 **Internationalization (i18n)** — Full UI translated into English, German, Spanish, and French (164 keys). Switch languages from the flag dropdown in the sidebar header. Locale is persisted in `localStorage`.
+
+⭐ **VDC Favorites** — Pin frequently used VDCs with the star button next to the dropdown. Pinned VDCs sort to the top with a separator. Favorites persist in `localStorage` across sessions.
+
 📤 **Export** — A unified export dropdown consolidates all formats in one place: PNG and SVG for diagrams, JSON/CSV/XLSX for data, and PDF for shareable reports. The XLSX workbook includes three sheets (Resources, Connections, Summary). The PDF report renders the topology diagram on page one with a styled resource inventory table on subsequent pages.
 
 ## Quick Start
@@ -250,15 +258,15 @@ python3 serve.py [options]
 | `Escape` | Close panels and overlays |
 | `Ctrl/Cmd+F` | Focus search bar |
 | `+` / `-` | Zoom in / out |
-| `F` | Fit graph to view |
+| `F` / `R` | Reset & fit to view |
 | `L` | Toggle labels |
 | `I` | Toggle IP view |
 | `C` | Toggle compute view |
 | `H` | Toggle highlights overlay |
+| `S` | Security posture overlay |
 | `M` | Toggle map background |
 | `T` | Resource table view |
 | `G` | Global map view |
-| `R` | Reset view |
 
 ## Security
 

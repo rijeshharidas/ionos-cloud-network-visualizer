@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-02-16
+
+### Added (1.6.0)
+
+- Internationalization (i18n) with 4 locales: English, German, Spanish, French (164 translation keys)
+- Language switcher dropdown in sidebar header with flag icons and active indicator
+- Dark / Light theme toggle with system preference detection and localStorage persistence
+- Light theme CSS variables and Leaflet map tile swapping (Carto `dark_all` ↔ `light_all`)
+- VDC Favorites: pin/unpin VDCs with star button, persisted in localStorage, pinned VDCs sorted to top of dropdown with separator
+- Security Posture overlay (`S` key): 5 metrics (Firewall, Flow Logs, Security Groups, Private LANs, IPv6) with color-coded progress bars and click-to-highlight
+- NAT Gateway upsell suggestion in Security Posture — warns when private LANs lack a NAT Gateway
+- Disconnect button: Connect button transforms to Disconnect after login, cleanly resets all state and restores the onboarding welcome screen
+- Connection IPs for managed services (PostgreSQL, MongoDB, MySQL, MariaDB, NFS) displayed on nodes in IP view and detail panel
+- Security rules table in VM detail panel with columns: Direction (color-coded), Protocol, Ports, Source, Target
+- Light theme overrides for map tiles, cluster bubbles, toast shadows, and IP view labels
+
+### Changed (1.6.0)
+
+- Sidebar header redesigned: compact layout with IONOS Cloud title, subtitle, and theme/locale controls grouped in one row
+- Highlights toolbar icon changed from shield to eye icon (differentiated from Security Posture shield)
+- Fit-to-view and Reset-view toolbar buttons merged into single "Reset & fit view" button (`F` / `R` keys)
+- Reset view now fully resets IP view, Compute view, highlights, and all overlays
+- Security group IDs stored as UUIDs instead of names (fixes lookup against `_securityGroups` map)
+- Security group API depth increased from 2 to 3 for full rule property access
+- Security group rules display upgraded from sparse one-liners to detailed table with protocol, ports, source/target, ICMP support
+- IP view labels repositioned closer to nodes when active (since name/spec labels are hidden)
+- IP view labels styled with stroke outline for contrast against map background
+- Keyboard shortcut `S` opens Security Posture; `F` now calls resetView instead of standalone zoomFit
+
+### Fixed (1.6.0)
+
+- Light mode not changing the map tiles (Leaflet used hardcoded dark tiles)
+- Security rules section always empty in VM detail panel (name vs UUID mismatch in security group lookup)
+- Security rules showing only "⬇ ANY" with no useful details (API depth too shallow)
+- Duplicate IPs appearing at edge of map in IP view (SVG tspan `x=0` snapping to absolute origin)
+- Link labels overlapping node IP sublabels in IP view (now hidden via CSS since they duplicate node labels)
+- Reset & Fit not clearing IP view, Compute view, or highlight checkboxes
+- Onboarding welcome screen not reappearing after disconnect (showMapOverview was hiding it)
+- Managed service nodes (DBaaS, NFS) missing private IPs in IP view and resource table
+
 ## [1.5.0] - 2026-02-12
 
 ### Added (1.5.0)
