@@ -61,7 +61,7 @@
 
 📋 **Resource Table View** — Press `T` to open a full-screen searchable, sortable table of all resources. Type filter pills let you isolate specific resource types, column headers sort by name/type/state, and a text search filters across all columns. Click any row to zoom to that node on the graph. Export the filtered view as CSV directly from the table.
 
-🛡️ **Security Posture** — Press `S` for a one-glance security summary of your VDC: Firewall Active, Flow Logs, Security Groups, Private LANs, and IPv6 coverage — each with a color-coded progress bar. Private LANs without a NAT Gateway trigger an upsell suggestion. Click any metric to highlight matching nodes on the graph.
+🛡️ **Security Posture** — Press `S` for a one-glance security summary of your VDC: Firewall Active, Flow Logs, Security Groups, Private LANs, and IPv6 coverage — each with a color-coded progress bar. Click any metric to highlight matching nodes on the graph.
 
 🌗 **Dark & Light Theme** — Toggle between dark and light mode with automatic system-preference detection. The Leaflet map tiles swap between Carto `dark_all` and `light_all` automatically. Your preference is persisted in `localStorage`.
 
