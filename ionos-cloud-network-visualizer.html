@@ -4434,7 +4434,9 @@ function showDetail(d) {
     html += `<div class="detail-section-title">${t('detail.networkMetrics')}</div>`;
     html += `<div id="metricsContainer"><div class="metrics-loading">${t('detail.loading')}</div></div>`;
     // Trigger async metrics load after panel renders
-    setTimeout(() => loadAndShowMetrics(d.id.replace(/^srv-/, '')), 50);
+    // Use _origId if available (location mode prefixes IDs with vdc0-, vdc1-, etc.)
+    const rawId = d._origId || d.id;
+    setTimeout(() => loadAndShowMetrics(rawId.replace(/^srv-/, '')), 50);
   }
 
   // Security Group Rules section (if loaded)
@@ -6798,6 +6800,38 @@ async function loadLocation() {
 
     // Update map background to show location region
     updateMapBackground(loc);
+
+    // Load security groups for each VDC in background (non-blocking)
+    // Merge all SG maps into one so detail panel works in location mode
+    Promise.all(dcsInLoc.map(dc => fetchSecurityGroups(dc.id).catch(() => null))).then(results => {
+      const mergedSgMap = new Map();
+      results.forEach(data => {
+        if (!data?.items) return;
+        data.items.forEach(sg => {
+          const rules = sg.entities?.rules?.items || [];
+          mergedSgMap.set(sg.id, {
+            name: sg.properties?.name || sg.id,
+            description: sg.properties?.description || '',
+            rules: rules.map(r => {
+              const p = r.properties || {};
+              return {
+                name: p.name || '',
+                protocol: p.protocol || 'ANY',
+                direction: p.type || 'INGRESS',
+                sourceIp: p.sourceIp || p.sourceCidr || '',
+                targetIp: p.targetIp || p.targetCidr || '',
+                sourceMac: p.sourceMac || '',
+                icmpType: p.icmpType,
+                icmpCode: p.icmpCode,
+                portStart: p.portRangeStart,
+                portEnd: p.portRangeEnd,
+              };
+            }),
+          });
+        });
+      });
+      if (graphData) graphData._securityGroups = mergedSgMap;
+    });
 
     // Refresh IP block and DNS panels filtered to this location
     if (ipBlockData) renderIPBlockPanel(loc);
