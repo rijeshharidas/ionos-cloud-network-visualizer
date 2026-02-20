@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IONOS Cloud Network Visualizer</title>
-<link rel="icon" type="image/svg+xml" href="ionos-vector-logo-seeklogo/ionos-seeklogo.svg">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23003D8F'/%3E%3Ccircle cx='10' cy='12' r='2.5' fill='%2311C7E6'/%3E%3Ccircle cx='22' cy='12' r='2.5' fill='%2311C7E6'/%3E%3Ccircle cx='16' cy='22' r='2.5' fill='%2311C7E6'/%3E%3Ccircle cx='16' cy='7' r='1.5' fill='%2311C7E6' opacity='.6'/%3E%3Cline x1='10' y1='12' x2='22' y2='12' stroke='%2311C7E6' stroke-width='1.2' opacity='.7'/%3E%3Cline x1='10' y1='12' x2='16' y2='22' stroke='%2311C7E6' stroke-width='1.2' opacity='.7'/%3E%3Cline x1='22' y1='12' x2='16' y2='22' stroke='%2311C7E6' stroke-width='1.2' opacity='.7'/%3E%3Cline x1='10' y1='12' x2='16' y2='7' stroke='%2311C7E6' stroke-width='1' opacity='.4'/%3E%3Cline x1='22' y1='12' x2='16' y2='7' stroke='%2311C7E6' stroke-width='1' opacity='.4'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -97,7 +97,13 @@
 
   .sidebar-header .brand-logo {
     flex-shrink: 0;
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
+
+  .sidebar-header .brand-logo svg { display: block; }
 
   .sidebar-header .brand-title {
     flex: 1;
@@ -118,11 +124,12 @@
   }
 
   .sidebar-header .brand-subtitle {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
     font-weight: 500;
-    letter-spacing: 0.2px;
-    margin-top: 1px;
+    letter-spacing: 1.2px;
+    margin-top: 0;
+    text-transform: uppercase;
   }
 
   .sidebar-header .header-controls {
@@ -296,6 +303,50 @@
   .map-vdc-marker .map-cluster-flag { font-size: 18px; }
   .map-vdc-marker .map-cluster-name { font-size: 9px; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+  /* Billing traffic panel on Global Map */
+  .map-billing-panel {
+    position: absolute; top: 12px; right: 12px; z-index: 1200;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    font-size: 11px; min-width: 200px; max-width: 280px;
+    max-height: 50vh; overflow-y: auto;
+    backdrop-filter: blur(12px);
+    transition: opacity 0.3s ease;
+  }
+  .map-billing-panel.hidden { display: none; }
+  .map-billing-panel h4 {
+    font-size: 11px; font-weight: 700; color: var(--text-primary);
+    margin: 0 0 8px 0; display: flex; align-items: center; gap: 6px;
+  }
+  .map-billing-panel h4 svg { opacity: 0.6; }
+  .mbp-table { width: 100%; border-collapse: collapse; }
+  .mbp-table th {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); font-weight: 600;
+    padding: 2px 0 4px 0; border-bottom: 1px solid var(--border);
+    text-align: right;
+  }
+  .mbp-table th:first-child { text-align: left; }
+  .mbp-table td {
+    padding: 4px 0; font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    text-align: right; color: var(--text-secondary);
+  }
+  .mbp-table td:first-child {
+    text-align: left; font-family: inherit; font-weight: 500;
+    color: var(--text-primary); max-width: 120px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mbp-table tr:hover td { color: var(--text-primary); }
+  .mbp-table tr.mbp-total td {
+    border-top: 1px solid var(--border); font-weight: 700;
+    color: var(--text-primary); padding-top: 6px;
+  }
+  .mbp-in { color: #4fc3f7; }
+  .mbp-out { color: #ff8a65; }
+  .mbp-table tr.mbp-total .mbp-in { color: #4fc3f7; }
+  .mbp-table tr.mbp-total .mbp-out { color: #ff8a65; }
+
   /* Available DC location markers — compact flag + city name, color-coded border */
   .map-available-loc {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -371,8 +422,8 @@
   /* ---- Onboarding ---- */
   .onboarding { max-width: 440px; text-align: center; }
   .onboarding-header { margin-bottom: 24px; }
-  .onboarding-header svg { margin: 0 auto 16px; display: block; width: 48px; height: 48px; }
-  .onboarding-header h2 { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .onboarding-header svg { margin: 0 auto 8px; display: block; color: var(--text-primary); }
+  .onboarding-header .onboarding-appname { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.2px; }
   .onboarding-header p { font-size: 13px; color: var(--text-muted); margin: 0 auto; max-width: none; text-align: center; }
   .onboarding-steps { display: flex; flex-direction: column; gap: 10px; text-align: left; }
   .onboarding-step { display: flex; gap: 12px; align-items: flex-start; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; transition: border-color 0.2s; }
@@ -996,10 +1047,11 @@
   /* ---- Traffic Heatmap ---- */
   /* Heatmap legend (floating panel on map) */
   .heatmap-legend {
-    position: absolute; bottom: 60px; right: 16px; z-index: 15;
+    position: absolute; top: 12px; right: 12px; z-index: 15;
     background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 16px; font-size: 11px; min-width: 180px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    padding: 10px 14px; font-size: 11px; min-width: 200px; max-width: 260px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(12px);
   }
   .heatmap-legend.hidden { display: none; }
   .heatmap-legend h4 { font-size: 12px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
@@ -1014,6 +1066,7 @@
   .heatmap-gradient { height: 10px; border-radius: 5px; margin: 6px 0 4px; }
   .heatmap-gradient.volume { background: linear-gradient(to right, #1e3a5f, #11C7E6, #10b981, #FFAA00, #ef4444); }
   .heatmap-gradient.security { background: linear-gradient(to right, #10b981, #FFAA00, #ef4444); }
+  .heatmap-gradient.billing { background: linear-gradient(to right, #1e3a5f, #4fc3f7, #10b981, #ff8a65, #ef4444); }
   .heatmap-gradient-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); }
   .heatmap-legend .hl-stats { margin-top: 8px; font-size: 10px; color: var(--text-muted); line-height: 1.6; }
   .heatmap-legend .hl-stats span { color: var(--text-secondary); font-weight: 600; }
@@ -1068,20 +1121,17 @@
   <div class="sidebar-header">
     <div class="brand-row">
       <div class="brand-logo">
-        <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs><linearGradient id="ionosBg" x1="0" y1="0" x2="64" y2="64"><stop offset="0%" stop-color="#0047AB"/><stop offset="100%" stop-color="#003080"/></linearGradient></defs>
-          <rect width="64" height="64" rx="14" fill="url(#ionosBg)"/>
-          <g transform="translate(5,20) scale(0.65)">
-            <path d="M1.985 23.984c-.526.003-1.04-.18-1.414-.585C.195 23.024 0 22.51 0 21.983V1.953C.01 1.432.225.936.599.572.973.208 1.475.006 1.998.01c.437-.006.864.134 1.212.399.348.265.596.639.704 1.061l.033.14v.087c.019.107.027.215.026.324v19.975c.002.261-.048.52-.148.761a2.02 2.02 0 01-1.84 1.227z" fill="white"/>
-            <path d="M17.671 23.994c-1.605-.001-3.143-.637-4.278-1.768-1.135-1.131-1.773-2.664-1.774-4.264V6.032C11.619 4.432 12.257 2.898 13.392 1.767 14.527.635 16.066 0 17.671 0s3.144.635 4.279 1.767C23.085 2.898 23.722 4.432 23.722 6.032v11.93c-.001 1.6-.639 3.133-1.773 4.264-1.135 1.131-2.674 1.767-4.278 1.768zm0-20.351c-.636 0-1.245.252-1.695.7-.449.448-.703 1.055-.704 1.689v11.93c-.004.315.056.627.175.919.119.291.296.556.519.778.223.223.489.399.781.517.292.119.605.179.921.175.636-.001 1.245-.253 1.695-.701.449-.448.703-1.055.703-1.688V6.032c-.009-.631-.264-1.234-.711-1.68-.448-.447-1.053-.701-1.684-.71z" fill="white"/>
-            <path d="M35.02 12.306v9.884a1.83 1.83 0 01-.535 1.286 1.84 1.84 0 01-2.581 0 1.83 1.83 0 01-.535-1.286V4.749l3.651 7.557zm9.859 6.947V1.819a1.84 1.84 0 00-3.654 0v9.875l3.654 7.559zM34.848 1.032v-.035a1.84 1.84 0 00-1.653-.971c-.124 0-.247.013-.367.039-.41.08-.78.301-1.044.625-.263.323-.404.729-.399 1.146v.418L41.41 22.996a1.84 1.84 0 003.469-.805v-.412S35.118 1.586 34.848 1.032z" fill="white"/>
-            <path d="M58.524 23.994c-1.605-.002-3.143-.638-4.277-1.769-1.135-1.13-1.773-2.664-1.774-4.263V6.032c0-.792.156-1.577.461-2.308a6.06 6.06 0 013.53-3.265A6.09 6.09 0 0158.524 0c.795 0 1.582.156 2.316.459a6.06 6.06 0 013.531 3.265c.304.731.46 1.516.46 2.308v11.93c-.001 1.6-.638 3.133-1.773 4.263-1.135 1.131-2.674 1.768-4.278 1.769zm0-20.351c-.636.001-1.245.253-1.694.701-.45.448-.703 1.055-.704 1.688v11.93c-.004.315.056.627.175.919.119.291.296.556.519.778.223.223.489.399.781.517.292.119.605.179.921.175.636-.001 1.245-.253 1.694-.701.45-.448.703-1.055.704-1.688V6.032c-.009-.631-.264-1.234-.711-1.68-.448-.447-1.053-.701-1.685-.71z" fill="white"/>
-            <path d="M76.332 23.997c-.408.001-.815-.04-1.215-.123-.86-.177-1.674-.532-2.388-1.042a5.69 5.69 0 01-1.76-1.917l-.023-.042a1.83 1.83 0 01-.15-1.36 1.84 1.84 0 01.822-1.094c.28-.168.6-.256.926-.256.325 0 .644.087.925.25.28.164.512.399.671.682l.062.103.195.262.26.263c.338.291.747.489 1.186.573.355.068.72.062 1.073-.018a2.72 2.72 0 001.834-2.012c.03-.362-.018-.726-.14-1.067a2.18 2.18 0 00-.571-.914S72.223 9.849 72.093 9.677l-.296-.437c-.7-1.09-1.017-2.382-.9-3.671.066-.893.331-1.761.778-2.538l.26-.453c.473-.674 1.091-1.234 1.809-1.638l.296-.21c1.381-.757 3.006-.944 4.524-.536 1.519.424 2.81 1.424 3.596 2.787a1.82 1.82 0 01.235.67 1.84 1.84 0 01-.281 1.38 1.84 1.84 0 01-2.541.543c-.279-.163-.509-.397-.666-.678a2.73 2.73 0 00-.679-.737 2.74 2.74 0 00-.922-.393 2.76 2.76 0 00-2.049.437 2.72 2.72 0 00-.909 2.163c-.028.337.015.676.127.995.112.319.29.611.523.857l5.629 5.786c.849.878 1.42 1.986 1.642 3.185.221 1.199.084 2.437-.396 3.559a5.74 5.74 0 01-2.302 2.749 5.76 5.76 0 01-3.442 1.025h.01z" fill="white"/>
+        <!-- Official IONOS Cloud logo -->
+        <svg width="130" height="24" viewBox="0 0 132.26 24" xmlns="http://www.w3.org/2000/svg" aria-label="IONOS Cloud">
+          <g fill="currentColor">
+            <path d="M76.08,24c-0.41,0-0.82-0.04-1.21-0.12c-1.73-0.35-3.24-1.43-4.15-2.96l-0.02-0.04c-0.45-0.9-0.15-1.95,0.69-2.46c0.28-0.17,0.6-0.26,0.92-0.26c0.66,0,1.26,0.36,1.59,0.93c0.02,0.03,0.04,0.07,0.06,0.1l0.19,0.26l0.26,0.26c0.32,0.28,0.74,0.49,1.18,0.57c0.71,0.14,1.48-0.04,2.04-0.47c0.61-0.44,0.97-1.1,1.03-1.85c0.06-0.74-0.21-1.48-0.71-1.98c0,0-5.49-5.7-5.73-5.96c-0.14-0.15-0.39-0.4-0.66-0.79c-0.77-1.1-1.02-2.39-0.9-3.67c0.06-0.88,0.33-1.76,0.77-2.54c0,0,0.25-0.43,0.33-0.53c0.29-0.42,0.86-0.97,1.25-1.28c0.38-0.29,0.88-0.55,1.05-0.63c1.08-0.52,2.46-0.77,3.82-0.48c1.69,0.36,3.15,1.42,4.01,2.9c0.25,0.41,0.32,0.9,0.19,1.38c-0.13,0.48-0.43,0.87-0.87,1.12c-0.26,0.16-0.57,0.24-0.89,0.24c-0.65,0-1.27-0.36-1.58-0.93c-0.35-0.59-0.92-0.99-1.6-1.13c-0.66-0.13-1.39,0.03-1.94,0.44c-0.53,0.4-0.86,1.02-0.92,1.71c-0.05,0.69,0.18,1.35,0.65,1.85l5.61,5.78c1.22,1.26,1.86,3.01,1.74,4.78c-0.16,1.8-1.05,3.43-2.45,4.48C78.76,23.55,77.43,24,76.08,24"/>
+            <path d="M58.33,3.64c-1.32,0-2.39,1.07-2.39,2.39v11.93c0,1.34,1.05,2.39,2.39,2.39c1.32,0,2.39-1.07,2.39-2.39V6.03C60.72,4.74,59.63,3.64,58.33,3.64 M58.33,24c-3.33,0-6.03-2.71-6.03-6.03V6.03C52.3,2.71,55.01,0,58.33,0c3.33,0,6.03,2.71,6.03,6.03v11.93C64.37,21.29,61.66,24,58.33,24"/>
+            <path d="M34.73,1.03c0,0-0.01-0.03-0.02-0.03c-0.31-0.61-0.97-0.99-1.65-0.99c-0.13,0-0.25,0.01-0.37,0.04c-0.85,0.17-1.44,0.9-1.44,1.77v0.42L41.28,23c0.33,0.61,0.96,1,1.62,1c0.15,0,0.29-0.02,0.42-0.05c0.84-0.18,1.42-0.9,1.42-1.77v-0.39C44.73,21.78,35,1.59,34.73,1.03 M44.76,19.26V1.82c0-1.02-0.8-1.82-1.82-1.82c-1.02,0-1.82,0.8-1.82,1.82v9.88L44.76,19.26z M34.88,12.31v9.87c0,1.02-0.8,1.82-1.82,1.82c-1.02,0-1.82-0.8-1.82-1.82V4.75L34.88,12.31z"/>
+            <path d="M17.61,3.64c-0.64,0-1.24,0.25-1.69,0.7c-0.45,0.45-0.7,1.05-0.7,1.69v11.93c0,0.65,0.25,1.25,0.69,1.7c0.45,0.45,1.05,0.69,1.7,0.69c0.64,0,1.24-0.25,1.69-0.7c0.45-0.45,0.7-1.05,0.7-1.69V6.03c0-0.62-0.25-1.22-0.71-1.68C18.83,3.9,18.24,3.64,17.61,3.64 M17.61,24c-1.61,0-3.12-0.63-4.26-1.77c-1.14-1.14-1.77-2.65-1.77-4.26V6.03c0-1.61,0.63-3.12,1.77-4.26C14.49,0.63,16,0,17.61,0c1.61,0,3.12,0.63,4.26,1.77c1.14,1.14,1.77,2.65,1.77,4.26v11.93c0,1.61-0.63,3.12-1.77,4.26C20.74,23.37,19.22,24,17.61,24"/>
+            <path d="M1.98,23.99c-1.11,0-1.98-0.88-1.98-2V1.99l0-0.04C0.02,0.87,0.89,0,1.99,0C2.9,0,3.66,0.59,3.9,1.46C3.91,1.49,3.92,1.54,3.93,1.6l0.01,0.09C3.96,1.8,3.97,1.9,3.97,2c0,0,0,19.75,0,19.98C3.97,23.11,3.1,23.99,1.98,23.99"/>
+            <path d="M126.91,20.1c-0.36-0.51-0.54-1.19-0.54-2.04c0-0.9,0.18-1.59,0.53-2.08c0.35-0.49,0.85-0.73,1.5-0.73c0.77,0,1.35,0.29,1.75,0.88v3.85c-0.38,0.59-0.97,0.88-1.75,0.88C127.77,20.87,127.27,20.61,126.91,20.1 M130.15,22v0.67h2.11v-13l-2.11,0.95v3.49c-0.49-0.58-1.18-0.86-2.07-0.86c-1.13,0-2.05,0.43-2.75,1.3c-0.71,0.86-1.06,2.03-1.06,3.51c0,1.51,0.34,2.69,1.03,3.55s1.61,1.28,2.79,1.28C129,22.88,129.69,22.59,130.15,22 M122.56,22.67v-9.2h-2.11v5.29c0,1.4-0.62,2.11-1.85,2.11c-1.15,0-1.73-0.71-1.73-2.14v-5.26h-2.11v5.63c0,1.31,0.31,2.27,0.92,2.87c0.61,0.61,1.4,0.91,2.36,0.91c1.03,0,1.84-0.37,2.41-1.1v0.88H122.56z M107.42,20.12c-0.38-0.5-0.57-1.18-0.57-2.04c0-0.86,0.19-1.55,0.58-2.06c0.38-0.51,0.89-0.77,1.53-0.77c0.66,0,1.18,0.25,1.56,0.76c0.38,0.5,0.57,1.19,0.57,2.07c0,0.88-0.19,1.56-0.57,2.05c-0.38,0.49-0.9,0.74-1.56,0.74C108.32,20.87,107.8,20.62,107.42,20.12 M112.06,21.6c0.76-0.85,1.13-2.03,1.13-3.53c0-1.5-0.38-2.68-1.14-3.54c-0.76-0.86-1.79-1.29-3.09-1.29s-2.32,0.43-3.08,1.29c-0.76,0.86-1.13,2.04-1.13,3.54c0,1.5,0.38,2.68,1.13,3.53s1.78,1.28,3.08,1.28C110.27,22.88,111.3,22.46,112.06,21.6 M103,22.67v-13l-2.11,0.99v12.01H103z M99.31,19.93l-2-0.76c-0.65,1.08-1.45,1.62-2.41,1.62c-0.98,0-1.74-0.44-2.26-1.33c-0.52-0.89-0.78-1.92-0.78-3.1c0-0.53,0.05-1.04,0.15-1.54c0.1-0.5,0.26-0.97,0.49-1.42c0.22-0.45,0.54-0.81,0.95-1.08c0.41-0.27,0.9-0.4,1.45-0.4c0.56,0,1.03,0.12,1.39,0.36c0.37,0.24,0.72,0.62,1.05,1.13l1.94-0.88c-0.3-0.74-0.83-1.38-1.58-1.9c-0.76-0.52-1.69-0.78-2.81-0.78c-0.92,0-1.74,0.2-2.45,0.6c-0.71,0.4-1.26,0.93-1.66,1.58c-0.4,0.65-0.69,1.35-0.88,2.08c-0.19,0.73-0.29,1.48-0.29,2.25c0,0.65,0.06,1.27,0.17,1.87c0.11,0.6,0.3,1.19,0.57,1.76c0.26,0.58,0.59,1.07,0.98,1.49c0.39,0.42,0.89,0.76,1.5,1.01c0.61,0.25,1.3,0.38,2.05,0.38C96.97,22.88,98.44,21.9,99.31,19.93"/>
           </g>
         </svg>
-      </div>
-      <div class="brand-title">
-        <h1><span class="brand-cloud">IONOS Cloud</span></h1>
         <div class="brand-subtitle">Network Visualizer</div>
       </div>
       <div class="header-controls">
@@ -1180,6 +1230,7 @@
 <div class="main-area" id="mainArea">
   <div id="mapBackground"></div>
   <button class="map-back-btn" id="mapBackBtn" onclick="showMapOverview()" data-i18n="map.allRegions">&#x2190; All Regions</button>
+  <div class="map-billing-panel hidden" id="mapBillingPanel"></div>
   <button class="sidebar-expand" id="sidebarExpand" onclick="toggleSidebar()" title="Show sidebar">&#x25B6;</button>
   <div class="canvas-search" id="searchSection" style="display:none;">
     <div class="search-box">
@@ -1239,26 +1290,26 @@
   <div class="empty-state" id="emptyState">
     <div class="onboarding">
       <div class="onboarding-header">
-        <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs><linearGradient id="ionosBg2" x1="0" y1="0" x2="64" y2="64"><stop offset="0%" stop-color="#0047AB"/><stop offset="100%" stop-color="#003080"/></linearGradient></defs>
-          <rect width="64" height="64" rx="14" fill="url(#ionosBg2)"/>
-          <g transform="translate(5,20) scale(0.65)">
-            <path d="M1.985 23.984c-.526.003-1.04-.18-1.414-.585C.195 23.024 0 22.51 0 21.983V1.953C.01 1.432.225.936.599.572.973.208 1.475.006 1.998.01c.437-.006.864.134 1.212.399.348.265.596.639.704 1.061l.033.14v.087c.019.107.027.215.026.324v19.975c.002.261-.048.52-.148.761a2.02 2.02 0 01-1.84 1.227z" fill="white"/>
-            <path d="M17.671 23.994c-1.605-.001-3.143-.637-4.278-1.768-1.135-1.131-1.773-2.664-1.774-4.264V6.032C11.619 4.432 12.257 2.898 13.392 1.767 14.527.635 16.066 0 17.671 0s3.144.635 4.279 1.767C23.085 2.898 23.722 4.432 23.722 6.032v11.93c-.001 1.6-.639 3.133-1.773 4.264-1.135 1.131-2.674 1.767-4.278 1.768zm0-20.351c-.636 0-1.245.252-1.695.7-.449.448-.703 1.055-.704 1.689v11.93c-.004.315.056.627.175.919.119.291.296.556.519.778.223.223.489.399.781.517.292.119.605.179.921.175.636-.001 1.245-.253 1.695-.701.449-.448.703-1.055.703-1.688V6.032c-.009-.631-.264-1.234-.711-1.68-.448-.447-1.053-.701-1.684-.71z" fill="white"/>
-            <path d="M35.02 12.306v9.884a1.83 1.83 0 01-.535 1.286 1.84 1.84 0 01-2.581 0 1.83 1.83 0 01-.535-1.286V4.749l3.651 7.557zm9.859 6.947V1.819a1.84 1.84 0 00-3.654 0v9.875l3.654 7.559zM34.848 1.032v-.035a1.84 1.84 0 00-1.653-.971c-.124 0-.247.013-.367.039-.41.08-.78.301-1.044.625-.263.323-.404.729-.399 1.146v.418L41.41 22.996a1.84 1.84 0 003.469-.805v-.412S35.118 1.586 34.848 1.032z" fill="white"/>
-            <path d="M58.524 23.994c-1.605-.002-3.143-.638-4.277-1.769-1.135-1.13-1.773-2.664-1.774-4.263V6.032c0-.792.156-1.577.461-2.308a6.06 6.06 0 013.53-3.265A6.09 6.09 0 0158.524 0c.795 0 1.582.156 2.316.459a6.06 6.06 0 013.531 3.265c.304.731.46 1.516.46 2.308v11.93c-.001 1.6-.638 3.133-1.773 4.263-1.135 1.131-2.674 1.768-4.278 1.769zm0-20.351c-.636.001-1.245.253-1.694.701-.45.448-.703 1.055-.704 1.688v11.93c-.004.315.056.627.175.919.119.291.296.556.519.778.223.223.489.399.781.517.292.119.605.179.921.175.636-.001 1.245-.253 1.694-.701.45-.448.703-1.055.704-1.688V6.032c-.009-.631-.264-1.234-.711-1.68-.448-.447-1.053-.701-1.685-.71z" fill="white"/>
-            <path d="M76.332 23.997c-.408.001-.815-.04-1.215-.123-.86-.177-1.674-.532-2.388-1.042a5.69 5.69 0 01-1.76-1.917l-.023-.042a1.83 1.83 0 01-.15-1.36 1.84 1.84 0 01.822-1.094c.28-.168.6-.256.926-.256.325 0 .644.087.925.25.28.164.512.399.671.682l.062.103.195.262.26.263c.338.291.747.489 1.186.573.355.068.72.062 1.073-.018a2.72 2.72 0 001.834-2.012c.03-.362-.018-.726-.14-1.067a2.18 2.18 0 00-.571-.914S72.223 9.849 72.093 9.677l-.296-.437c-.7-1.09-1.017-2.382-.9-3.671.066-.893.331-1.761.778-2.538l.26-.453c.473-.674 1.091-1.234 1.809-1.638l.296-.21c1.381-.757 3.006-.944 4.524-.536 1.519.424 2.81 1.424 3.596 2.787a1.82 1.82 0 01.235.67 1.84 1.84 0 01-.281 1.38 1.84 1.84 0 01-2.541.543c-.279-.163-.509-.397-.666-.678a2.73 2.73 0 00-.679-.737 2.74 2.74 0 00-.922-.393 2.76 2.76 0 00-2.049.437 2.72 2.72 0 00-.909 2.163c-.028.337.015.676.127.995.112.319.29.611.523.857l5.629 5.786c.849.878 1.42 1.986 1.642 3.185.221 1.199.084 2.437-.396 3.559a5.74 5.74 0 01-2.302 2.749 5.76 5.76 0 01-3.442 1.025h.01z" fill="white"/>
+        <!-- Official IONOS Cloud logo (onboarding) -->
+        <svg width="180" height="32" viewBox="0 0 132.26 24" xmlns="http://www.w3.org/2000/svg" aria-label="IONOS Cloud" style="width:180px;height:auto;">
+          <g fill="currentColor">
+            <path d="M1.98,23.99c-1.11,0-1.98-0.88-1.98-2V1.99l0-0.04C0.02,0.87,0.89,0,1.99,0C2.9,0,3.66,0.59,3.9,1.46C3.91,1.49,3.92,1.54,3.93,1.6l0.01,0.09C3.96,1.8,3.97,1.9,3.97,2c0,0,0,19.75,0,19.98C3.97,23.11,3.1,23.99,1.98,23.99"/>
+            <path d="M17.61,3.64c-0.64,0-1.24,0.25-1.69,0.7c-0.45,0.45-0.7,1.05-0.7,1.69v11.93c0,0.65,0.25,1.25,0.69,1.7c0.45,0.45,1.05,0.69,1.7,0.69c0.64,0,1.24-0.25,1.69-0.7c0.45-0.45,0.7-1.05,0.7-1.69V6.03c0-0.62-0.25-1.22-0.71-1.68C18.83,3.9,18.24,3.64,17.61,3.64 M17.61,24c-1.61,0-3.12-0.63-4.26-1.77c-1.14-1.14-1.77-2.65-1.77-4.26V6.03c0-1.61,0.63-3.12,1.77-4.26C14.49,0.63,16,0,17.61,0c1.61,0,3.12,0.63,4.26,1.77c1.14,1.14,1.77,2.65,1.77,4.26v11.93c0,1.61-0.63,3.12-1.77,4.26C20.74,23.37,19.22,24,17.61,24"/>
+            <path d="M34.73,1.03c0,0-0.01-0.03-0.02-0.03c-0.31-0.61-0.97-0.99-1.65-0.99c-0.13,0-0.25,0.01-0.37,0.04c-0.85,0.17-1.44,0.9-1.44,1.77v0.42L41.28,23c0.33,0.61,0.96,1,1.62,1c0.15,0,0.29-0.02,0.42-0.05c0.84-0.18,1.42-0.9,1.42-1.77v-0.39C44.73,21.78,35,1.59,34.73,1.03 M44.76,19.26V1.82c0-1.02-0.8-1.82-1.82-1.82c-1.02,0-1.82,0.8-1.82,1.82v9.88L44.76,19.26z M34.88,12.31v9.87c0,1.02-0.8,1.82-1.82,1.82c-1.02,0-1.82-0.8-1.82-1.82V4.75L34.88,12.31z"/>
+            <path d="M58.33,3.64c-1.32,0-2.39,1.07-2.39,2.39v11.93c0,1.34,1.05,2.39,2.39,2.39c1.32,0,2.39-1.07,2.39-2.39V6.03C60.72,4.74,59.63,3.64,58.33,3.64 M58.33,24c-3.33,0-6.03-2.71-6.03-6.03V6.03C52.3,2.71,55.01,0,58.33,0c3.33,0,6.03,2.71,6.03,6.03v11.93C64.37,21.29,61.66,24,58.33,24"/>
+            <path d="M76.08,24c-0.41,0-0.82-0.04-1.21-0.12c-1.73-0.35-3.24-1.43-4.15-2.96l-0.02-0.04c-0.45-0.9-0.15-1.95,0.69-2.46c0.28-0.17,0.6-0.26,0.92-0.26c0.66,0,1.26,0.36,1.59,0.93c0.02,0.03,0.04,0.07,0.06,0.1l0.19,0.26l0.26,0.26c0.32,0.28,0.74,0.49,1.18,0.57c0.71,0.14,1.48-0.04,2.04-0.47c0.61-0.44,0.97-1.1,1.03-1.85c0.06-0.74-0.21-1.48-0.71-1.98c0,0-5.49-5.7-5.73-5.96c-0.14-0.15-0.39-0.4-0.66-0.79c-0.77-1.1-1.02-2.39-0.9-3.67c0.06-0.88,0.33-1.76,0.77-2.54c0,0,0.25-0.43,0.33-0.53c0.29-0.42,0.86-0.97,1.25-1.28c0.38-0.29,0.88-0.55,1.05-0.63c1.08-0.52,2.46-0.77,3.82-0.48c1.69,0.36,3.15,1.42,4.01,2.9c0.25,0.41,0.32,0.9,0.19,1.38c-0.13,0.48-0.43,0.87-0.87,1.12c-0.26,0.16-0.57,0.24-0.89,0.24c-0.65,0-1.27-0.36-1.58-0.93c-0.35-0.59-0.92-0.99-1.6-1.13c-0.66-0.13-1.39,0.03-1.94,0.44c-0.53,0.4-0.86,1.02-0.92,1.71c-0.05,0.69,0.18,1.35,0.65,1.85l5.61,5.78c1.22,1.26,1.86,3.01,1.74,4.78c-0.16,1.8-1.05,3.43-2.45,4.48C78.76,23.55,77.43,24,76.08,24"/>
+            <path d="M126.91,20.1c-0.36-0.51-0.54-1.19-0.54-2.04c0-0.9,0.18-1.59,0.53-2.08c0.35-0.49,0.85-0.73,1.5-0.73c0.77,0,1.35,0.29,1.75,0.88v3.85c-0.38,0.59-0.97,0.88-1.75,0.88C127.77,20.87,127.27,20.61,126.91,20.1 M130.15,22v0.67h2.11v-13l-2.11,0.95v3.49c-0.49-0.58-1.18-0.86-2.07-0.86c-1.13,0-2.05,0.43-2.75,1.3c-0.71,0.86-1.06,2.03-1.06,3.51c0,1.51,0.34,2.69,1.03,3.55s1.61,1.28,2.79,1.28C129,22.88,129.69,22.59,130.15,22 M122.56,22.67v-9.2h-2.11v5.29c0,1.4-0.62,2.11-1.85,2.11c-1.15,0-1.73-0.71-1.73-2.14v-5.26h-2.11v5.63c0,1.31,0.31,2.27,0.92,2.87c0.61,0.61,1.4,0.91,2.36,0.91c1.03,0,1.84-0.37,2.41-1.1v0.88H122.56z M107.42,20.12c-0.38-0.5-0.57-1.18-0.57-2.04c0-0.86,0.19-1.55,0.58-2.06c0.38-0.51,0.89-0.77,1.53-0.77c0.66,0,1.18,0.25,1.56,0.76c0.38,0.5,0.57,1.19,0.57,2.07c0,0.88-0.19,1.56-0.57,2.05c-0.38,0.49-0.9,0.74-1.56,0.74C108.32,20.87,107.8,20.62,107.42,20.12 M112.06,21.6c0.76-0.85,1.13-2.03,1.13-3.53c0-1.5-0.38-2.68-1.14-3.54c-0.76-0.86-1.79-1.29-3.09-1.29s-2.32,0.43-3.08,1.29c-0.76,0.86-1.13,2.04-1.13,3.54c0,1.5,0.38,2.68,1.13,3.53s1.78,1.28,3.08,1.28C110.27,22.88,111.3,22.46,112.06,21.6 M103,22.67v-13l-2.11,0.99v12.01H103z M99.31,19.93l-2-0.76c-0.65,1.08-1.45,1.62-2.41,1.62c-0.98,0-1.74-0.44-2.26-1.33c-0.52-0.89-0.78-1.92-0.78-3.1c0-0.53,0.05-1.04,0.15-1.54c0.1-0.5,0.26-0.97,0.49-1.42c0.22-0.45,0.54-0.81,0.95-1.08c0.41-0.27,0.9-0.4,1.45-0.4c0.56,0,1.03,0.12,1.39,0.36c0.37,0.24,0.72,0.62,1.05,1.13l1.94-0.88c-0.3-0.74-0.83-1.38-1.58-1.9c-0.76-0.52-1.69-0.78-2.81-0.78c-0.92,0-1.74,0.2-2.45,0.6c-0.71,0.4-1.26,0.93-1.66,1.58c-0.4,0.65-0.69,1.35-0.88,2.08c-0.19,0.73-0.29,1.48-0.29,2.25c0,0.65,0.06,1.27,0.17,1.87c0.11,0.6,0.3,1.19,0.57,1.76c0.26,0.58,0.59,1.07,0.98,1.49c0.39,0.42,0.89,0.76,1.5,1.01c0.61,0.25,1.3,0.38,2.05,0.38C96.97,22.88,98.44,21.9,99.31,19.93"/>
           </g>
         </svg>
-        <h2 data-i18n="onboarding.title">IONOS Cloud Network Visualizer</h2>
-        <p data-i18n="onboarding.subtitle">Visualize your Virtual Data Center network topology in seconds</p>
+        <div class="onboarding-appname" data-i18n="onboarding.title">Network Visualizer</div>
+        <p data-i18n="onboarding.subtitle">Visualize your cloud network topology, flow logs, and data transfer</p>
       </div>
       <div class="onboarding-steps">
         <div class="onboarding-step">
           <div class="step-number">1</div>
           <div class="step-content">
             <div class="step-title" data-i18n="onboarding.step1Title">Get API Token</div>
-            <div class="step-desc" data-i18n-html="onboarding.step1Desc">Generate a token at <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> under Management → Token Management</div>
+            <div class="step-desc" data-i18n-html="onboarding.step1Desc">Generate a token at <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> under Management → Token Manager</div>
           </div>
         </div>
         <div class="onboarding-step">
@@ -1272,7 +1323,7 @@
           <div class="step-number">3</div>
           <div class="step-content">
             <div class="step-title" data-i18n="onboarding.step3Title">Explore</div>
-            <div class="step-desc" data-i18n="onboarding.step3Desc">Select a VDC and explore your network topology interactively</div>
+            <div class="step-desc" data-i18n="onboarding.step3Desc">Navigate topology, inspect flow logs, view data transfer, and export</div>
           </div>
         </div>
       </div>
@@ -1338,6 +1389,9 @@
         </button>
       </div>
     </div>
+    <button onclick="setHeatmapMode('billing'); if(!heatmapActive) toggleHeatmap(); else applyHeatmap();" id="billingHeatmapBtn" aria-label="Data Transfer Heatmap" data-tip="Data Transfer Heatmap (B)" data-i18n-tip="shortcuts.billingHeatmap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+    </button>
     <span class="toolbar-divider"></span>
     <div class="export-dropdown-wrapper">
       <button onclick="toggleExportMenu()" id="exportMenuBtn" aria-label="Export" data-tip="Export" data-i18n-tip="toolbar.export">
@@ -1378,10 +1432,11 @@
 
 <!-- Heatmap Legend -->
 <div class="heatmap-legend hidden" id="heatmapLegend">
-  <h4>Traffic Heatmap</h4>
+  <h4 id="hmTitle">Traffic Heatmap</h4>
   <div class="hl-mode-toggle">
     <button class="hl-mode-btn active" id="hmModeVolume" onclick="setHeatmapMode('volume')">Volume</button>
     <button class="hl-mode-btn" id="hmModeSecurity" onclick="setHeatmapMode('security')">Security</button>
+    <button class="hl-mode-btn" id="hmModeBilling" onclick="setHeatmapMode('billing')">Transfer</button>
   </div>
   <div class="heatmap-gradient volume" id="hmGradient"></div>
   <div class="heatmap-gradient-labels" id="hmGradientLabels">
@@ -1415,6 +1470,7 @@
       <tr><th>S</th><td data-i18n="shortcuts.security">Security posture</td></tr>
       <tr><th>W</th><td data-i18n="shortcuts.flowlogs">Flow Log Explorer</td></tr>
       <tr><th>X</th><td data-i18n="shortcuts.heatmap">Traffic Heatmap</td></tr>
+      <tr><th>B</th><td data-i18n="shortcuts.billingHeatmap">Data Transfer Heatmap</td></tr>
       <tr><th>?</th><td data-i18n="shortcuts.help">Show this help</td></tr>
     </table>
   </div>
@@ -1551,6 +1607,7 @@ const API_BASES = {
   k8s: 'https://api.ionos.com/cloudapi/v6',
   dns: 'https://dns.de-fra.ionos.com',
   cdn: 'https://cdn.de-fra.ionos.com',
+  billing: 'https://api.ionos.com/billing',
 };
 
 // ============================== LOCATION FLAGS ==============================
@@ -1635,14 +1692,14 @@ const TRANSLATIONS = {
     'toolbar.resetView': 'Reset & fit view (R)',
     'toolbar.globalMap': 'Global map (G)',
     // Onboarding
-    'onboarding.title': 'IONOS Cloud Network Visualizer',
-    'onboarding.subtitle': 'Visualize your Virtual Data Center network topology in seconds',
+    'onboarding.title': 'Network Visualizer',
+    'onboarding.subtitle': 'Visualize your cloud network topology, flow logs, and data transfer',
     'onboarding.step1Title': 'Get API Token',
-    'onboarding.step1Desc': 'Generate a token at <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> under Management \u2192 Token Management',
+    'onboarding.step1Desc': 'Generate a token at <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> under Management \u2192 Token Manager',
     'onboarding.step2Title': 'Connect',
     'onboarding.step2Desc': 'Paste the token in the sidebar and click Connect',
     'onboarding.step3Title': 'Explore',
-    'onboarding.step3Desc': 'Select a VDC and explore your network topology interactively',
+    'onboarding.step3Desc': 'Navigate topology, inspect flow logs, view data transfer, and export',
     'onboarding.shortcutHint': 'Press <kbd>?</kbd> for keyboard shortcuts',
     // Shortcuts
     'shortcuts.title': 'Keyboard Shortcuts',
@@ -1661,6 +1718,7 @@ const TRANSLATIONS = {
     'shortcuts.help': 'Show this help',
     'shortcuts.flowlogs': 'Flow Log Explorer',
     'shortcuts.heatmap': 'Traffic Heatmap',
+    'shortcuts.billingHeatmap': 'Data Transfer Heatmap',
     // Flow Log Explorer
     'toolbar.flowlogs': 'Flow Log Explorer (W)',
     'toolbar.flowlogsMenu': 'Flow Logs',
@@ -1747,6 +1805,8 @@ const TRANSLATIONS = {
     // Detail
     'detail.connectedResources': 'Connected Resources',
     'detail.networkMetrics': 'Network Metrics',
+    'detail.billingTraffic': 'Data Transfer (30d)',
+    'detail.noBillingData': 'No data transfer data available',
     'detail.nics': 'Network Interfaces (NICs)',
     'detail.securityRules': 'Security Group Rules',
     'detail.noRules': 'No rules defined',
@@ -1852,14 +1912,14 @@ const TRANSLATIONS = {
     'toolbar.export': 'Exportieren',
     'toolbar.resetView': 'Zur\u00fccksetzen & Einpassen (R)',
     'toolbar.globalMap': 'Weltkarte (G)',
-    'onboarding.title': 'IONOS Cloud Netzwerk-Visualizer',
-    'onboarding.subtitle': 'Visualisieren Sie Ihre Rechenzentrums-Topologie in Sekunden',
+    'onboarding.title': 'Netzwerk-Visualizer',
+    'onboarding.subtitle': 'Netzwerktopologie, Flow-Logs und Datentransfer visualisieren',
     'onboarding.step1Title': 'API-Token erhalten',
-    'onboarding.step1Desc': 'Erstellen Sie einen Token auf <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> unter Verwaltung \u2192 Token-Verwaltung',
+    'onboarding.step1Desc': 'Erstellen Sie einen Token auf <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> unter Verwaltung \u2192 Token-Manager',
     'onboarding.step2Title': 'Verbinden',
     'onboarding.step2Desc': 'F\u00fcgen Sie den Token in die Seitenleiste ein und klicken Sie auf Verbinden',
     'onboarding.step3Title': 'Erkunden',
-    'onboarding.step3Desc': 'W\u00e4hlen Sie ein VDC und erkunden Sie Ihre Netzwerktopologie interaktiv',
+    'onboarding.step3Desc': 'Topologie navigieren, Flow-Logs pr\u00fcfen, Datentransfer einsehen und exportieren',
     'onboarding.shortcutHint': 'Dr\u00fccken Sie <kbd>?</kbd> f\u00fcr Tastaturk\u00fcrzel',
     'shortcuts.title': 'Tastaturk\u00fcrzel',
     'shortcuts.close': 'Panel / Overlay schlie\u00dfen',
@@ -1877,6 +1937,7 @@ const TRANSLATIONS = {
     'shortcuts.help': 'Hilfe anzeigen',
     'shortcuts.flowlogs': 'Flow-Log-Explorer',
     'shortcuts.heatmap': 'Verkehrs-Heatmap',
+    'shortcuts.billingHeatmap': 'Datentransfer-Heatmap',
     // Flow Log Explorer
     'toolbar.flowlogs': 'Flow-Log-Explorer (W)',
     'toolbar.flowlogsMenu': 'Flow-Logs',
@@ -1958,6 +2019,8 @@ const TRANSLATIONS = {
     'toast.pdfNotLoaded': 'PDF-Bibliothek nicht geladen',
     'detail.connectedResources': 'Verbundene Ressourcen',
     'detail.networkMetrics': 'Netzwerk-Metriken',
+    'detail.billingTraffic': 'Datentransfer (30T)',
+    'detail.noBillingData': 'Keine Datentransfer-Daten verf\u00fcgbar',
     'detail.nics': 'Netzwerk-Interfaces (NICs)',
     'detail.securityRules': 'Sicherheitsgruppen-Regeln',
     'detail.noRules': 'Keine Regeln definiert',
@@ -2059,14 +2122,14 @@ const TRANSLATIONS = {
     'toolbar.export': 'Exportar',
     'toolbar.resetView': 'Restablecer y ajustar (R)',
     'toolbar.globalMap': 'Mapa global (G)',
-    'onboarding.title': 'IONOS Cloud Visualizador de Red',
-    'onboarding.subtitle': 'Visualice la topolog\u00eda de su centro de datos virtual en segundos',
+    'onboarding.title': 'Visualizador de Red',
+    'onboarding.subtitle': 'Visualice topolog\u00eda de red, registros de flujo y transferencia de datos',
     'onboarding.step1Title': 'Obtener token API',
-    'onboarding.step1Desc': 'Genere un token en <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> en Gesti\u00f3n \u2192 Gesti\u00f3n de tokens',
+    'onboarding.step1Desc': 'Genere un token en <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> en Gesti\u00f3n \u2192 Token Manager',
     'onboarding.step2Title': 'Conectar',
     'onboarding.step2Desc': 'Pegue el token en la barra lateral y haga clic en Conectar',
     'onboarding.step3Title': 'Explorar',
-    'onboarding.step3Desc': 'Seleccione un VDC y explore su topolog\u00eda de red de forma interactiva',
+    'onboarding.step3Desc': 'Navegue la topolog\u00eda, inspeccione flujos, vea transferencias y exporte',
     'onboarding.shortcutHint': 'Pulse <kbd>?</kbd> para ver atajos de teclado',
     'shortcuts.title': 'Atajos de teclado',
     'shortcuts.close': 'Cerrar panel / superposici\u00f3n',
@@ -2084,6 +2147,7 @@ const TRANSLATIONS = {
     'shortcuts.help': 'Mostrar esta ayuda',
     'shortcuts.flowlogs': 'Explorador de Flow Logs',
     'shortcuts.heatmap': 'Mapa de calor de tráfico',
+    'shortcuts.billingHeatmap': 'Mapa de calor de transferencia',
     // Flow Log Explorer
     'toolbar.flowlogs': 'Explorador de Flow Logs (W)',
     'toolbar.flowlogsMenu': 'Flow Logs',
@@ -2165,6 +2229,8 @@ const TRANSLATIONS = {
     'toast.pdfNotLoaded': 'Biblioteca PDF no cargada',
     'detail.connectedResources': 'Recursos conectados',
     'detail.networkMetrics': 'M\u00e9tricas de red',
+    'detail.billingTraffic': 'Transferencia de datos (30d)',
+    'detail.noBillingData': 'No hay datos de transferencia disponibles',
     'detail.nics': 'Interfaces de red (NICs)',
     'detail.securityRules': 'Reglas de grupo de seguridad',
     'detail.noRules': 'Sin reglas definidas',
@@ -2266,14 +2332,14 @@ const TRANSLATIONS = {
     'toolbar.export': 'Exporter',
     'toolbar.resetView': 'R\u00e9initialiser et ajuster (R)',
     'toolbar.globalMap': 'Carte mondiale (G)',
-    'onboarding.title': 'IONOS Cloud Visualiseur R\u00e9seau',
-    'onboarding.subtitle': 'Visualisez la topologie de votre centre de donn\u00e9es virtuel en quelques secondes',
+    'onboarding.title': 'Visualiseur R\u00e9seau',
+    'onboarding.subtitle': 'Visualisez topologie r\u00e9seau, journaux de flux et transfert de donn\u00e9es',
     'onboarding.step1Title': 'Obtenir un jeton API',
-    'onboarding.step1Desc': 'G\u00e9n\u00e9rez un jeton sur <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> sous Gestion \u2192 Gestion des jetons',
+    'onboarding.step1Desc': 'G\u00e9n\u00e9rez un jeton sur <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> sous Gestion \u2192 Token Manager',
     'onboarding.step2Title': 'Connecter',
     'onboarding.step2Desc': 'Collez le jeton dans la barre lat\u00e9rale et cliquez sur Connecter',
     'onboarding.step3Title': 'Explorer',
-    'onboarding.step3Desc': 'S\u00e9lectionnez un VDC et explorez votre topologie r\u00e9seau de mani\u00e8re interactive',
+    'onboarding.step3Desc': 'Parcourez la topologie, inspectez les flux, consultez les transferts et exportez',
     'onboarding.shortcutHint': 'Appuyez sur <kbd>?</kbd> pour les raccourcis clavier',
     'shortcuts.title': 'Raccourcis clavier',
     'shortcuts.close': 'Fermer panneau / superposition',
@@ -2291,6 +2357,7 @@ const TRANSLATIONS = {
     'shortcuts.help': 'Afficher cette aide',
     'shortcuts.flowlogs': 'Explorateur de Flow Logs',
     'shortcuts.heatmap': 'Carte thermique du trafic',
+    'shortcuts.billingHeatmap': 'Carte thermique de transfert',
     // Flow Log Explorer
     'toolbar.flowlogs': 'Explorateur de Flow Logs (W)',
     'toolbar.flowlogsMenu': 'Flow Logs',
@@ -2372,6 +2439,8 @@ const TRANSLATIONS = {
     'toast.pdfNotLoaded': 'Biblioth\u00e8que PDF non charg\u00e9e',
     'detail.connectedResources': 'Ressources connect\u00e9es',
     'detail.networkMetrics': 'M\u00e9triques r\u00e9seau',
+    'detail.billingTraffic': 'Transfert de donn\u00e9es (30j)',
+    'detail.noBillingData': 'Aucune donn\u00e9e de transfert disponible',
     'detail.nics': 'Interfaces r\u00e9seau (NICs)',
     'detail.securityRules': 'R\u00e8gles de groupe de s\u00e9curit\u00e9',
     'detail.noRules': 'Aucune r\u00e8gle d\u00e9finie',
@@ -3350,6 +3419,22 @@ async function fetchCDNDistributions() {
   return safeFetch(`${API_BASES.cdn}/distributions`);
 }
 
+// Billing traffic state
+let _billingTraffic = null;     // raw /traffic/ response
+let _billingUtilization = null; // raw /utilization/ response
+let _billingByServer = new Map(); // serverId → { totalIn, totalOut, daily: [{date, inGB, outGB}] }
+let _billingByVdc = new Map();    // vdcUUID → { name, totalIn, totalOut }
+
+async function fetchBillingTraffic() {
+  if (!currentContract) return null;
+  return safeFetch(`${API_BASES.billing}/${currentContract}/traffic/?output=all`);
+}
+
+async function fetchBillingUtilization() {
+  if (!currentContract) return null;
+  return safeFetch(`${API_BASES.billing}/${currentContract}/utilization?type=traffic`);
+}
+
 // ============================== GRAPH BUILDER ==============================
 // Robust LAN map: stores both string and number keys for type-safe lookup
 function lanLookup(lanMap, lanId) {
@@ -3953,6 +4038,7 @@ function showMapOverview() {
   document.getElementById('mapBackBtn').classList.remove('visible');
   closeDetail();
   closeHighlightsOverlay();
+  if (heatmapActive) clearHeatmap();
 
   // Switch to overview mode
   el.classList.remove('visible');
@@ -3962,7 +4048,10 @@ function showMapOverview() {
   // Hide topology SVG, toolbar, and VDC-specific sidebar sections
   document.getElementById('graphSvg').classList.add('hidden-for-map');
   document.getElementById('toolbar').style.display = 'none';
-  document.getElementById('emptyState').style.display = 'none';
+  // Only hide onboarding card when connected (pre-login should keep it visible)
+  if (!el.classList.contains('pre-login')) {
+    document.getElementById('emptyState').style.display = 'none';
+  }
   document.getElementById('legendSection').style.display = 'none';
   document.getElementById('searchSection').style.display = 'none';
 
@@ -4025,6 +4114,9 @@ function showMapOverview() {
   bgMap.setMinZoom(2);
 
   setTimeout(() => bgMap.invalidateSize(), 150);
+
+  // Show billing panel with region-level summary
+  updateMapBillingPanel();
 }
 
 function drillIntoRegion(cluster) {
@@ -4072,10 +4164,17 @@ function drillIntoRegion(cluster) {
       const marker = L.marker([lat, lon], { icon }).addTo(bgMap);
       mapMarkers.push(marker);
     });
+
+    // Show billing panel with per-VDC breakdown for this region
+    updateMapBillingPanel(cluster.region);
   });
 }
 
 function hideMapOverview() {
+  // Always hide the billing panel regardless of bgMap state
+  const bp = document.getElementById('mapBillingPanel');
+  if (bp) bp.classList.add('hidden');
+
   if (!bgMap) return;
   const el = document.getElementById('mapBackground');
 
@@ -4801,6 +4900,10 @@ function toggleSidebar() {
   expandBtn.classList.toggle('visible', isCollapsed);
   // Shift search bar right when expand button is visible
   if (search) search.style.left = isCollapsed ? '58px' : '16px';
+  // Let map recalculate size after sidebar transition
+  if (typeof bgMap !== 'undefined' && bgMap) {
+    setTimeout(() => bgMap.invalidateSize(), 350);
+  }
 }
 
 // ============================== DETAIL PANEL ==============================
@@ -4856,6 +4959,11 @@ function showDetail(d) {
     // Use _origId if available (location mode prefixes IDs with vdc0-, vdc1-, etc.)
     const rawId = d._origId || d.id;
     setTimeout(() => loadAndShowMetrics(rawId.replace(/^srv-/, '')), 50);
+
+    // Data Transfer section (async, uses pre-fetched billing data)
+    html += `<div class="detail-section-title">${t('detail.billingTraffic')}</div>`;
+    html += `<div id="billingContainer"><div class="metrics-loading">${t('detail.loading')}</div></div>`;
+    setTimeout(() => loadAndShowBillingChart(rawId.replace(/^srv-/, '')), 100);
   }
 
   // Security Group Rules section (if loaded)
@@ -6585,6 +6693,161 @@ async function loadSecurityOverlay(dcId) {
   } catch (e) { console.warn('Security groups fetch failed', e); }
 }
 
+// ── Data Transfer Data ──
+async function loadBillingData() {
+  try {
+    const [trafficResp, utilizationResp] = await Promise.all([
+      fetchBillingTraffic(),
+      fetchBillingUtilization(),
+    ]);
+
+    // Process per-VDC traffic from /traffic/ endpoint
+    _billingTraffic = trafficResp;
+    _billingByVdc = new Map();
+    // Response: { metadata: { unit: "Bytes" }, trafficObj: { vdc: [ { vdcUUID, vdcName, dates: [ { Date, In, Out } ] } ] } }
+    if (trafficResp?.trafficObj?.vdc) {
+      const vdcList = trafficResp.trafficObj.vdc;
+      vdcList.forEach(vdc => {
+        const vdcId = vdc.vdcUUID;
+        if (!vdcId) return;
+        let totalIn = 0, totalOut = 0;
+        if (vdc.dates) {
+          vdc.dates.forEach(d => {
+            totalIn += (d.In || 0);
+            totalOut += (d.Out || 0);
+          });
+        }
+        _billingByVdc.set(vdcId, {
+          name: vdc.vdcName || '',
+          totalIn,
+          totalOut,
+        });
+      });
+      console.log(`[VDC-Viz] Billing traffic: ${_billingByVdc.size} VDC(s)`);
+    }
+
+    // Process per-server utilization from /utilization/ endpoint
+    // Response: { datacenters: [ { id, name, meters: [ { serverId, meterId, quantity: { quantity, unit }, from, ... } ] } ] }
+    _billingUtilization = utilizationResp;
+    _billingByServer = new Map();
+    const dcList = utilizationResp?.datacenters || [];
+    console.log(`[VDC-Viz] Billing utilization: ${dcList.length} datacenter(s) in response`);
+    if (dcList.length > 0) {
+      dcList.forEach(dc => {
+        const meters = dc.meters || [];
+        meters.forEach(meter => {
+          const serverId = meter.serverId;
+          if (!serverId) return;
+          const meterId = meter.meterId || '';
+          const isInbound = meterId === 'TI1000';
+          const isOutbound = meterId === 'TO1000';
+          if (!isInbound && !isOutbound) return;
+
+          if (!_billingByServer.has(serverId)) {
+            _billingByServer.set(serverId, { totalIn: 0, totalOut: 0, daily: new Map() });
+          }
+          const entry = _billingByServer.get(serverId);
+          // quantity is an object: { quantity: 0.123, unit: "1G" }
+          const qty = (meter.quantity && typeof meter.quantity === 'object')
+            ? (meter.quantity.quantity || 0) : (meter.quantity || 0);
+          if (isInbound) entry.totalIn += qty;
+          if (isOutbound) entry.totalOut += qty;
+
+          // Aggregate daily data — date is in meter.from (ISO string)
+          const fromStr = meter.from || '';
+          const date = fromStr.substring(0, 10); // "2026-02-01T00:00:00.000Z" → "2026-02-01"
+          if (date) {
+            if (!entry.daily.has(date)) entry.daily.set(date, { date, inGB: 0, outGB: 0 });
+            const day = entry.daily.get(date);
+            if (isInbound) day.inGB += qty;
+            if (isOutbound) day.outGB += qty;
+          }
+        });
+      });
+
+      // Convert daily Maps to sorted arrays
+      _billingByServer.forEach(entry => {
+        entry.daily = [...entry.daily.values()].sort((a, b) => a.date.localeCompare(b.date));
+      });
+
+      console.log(`[VDC-Viz] Billing utilization: ${_billingByServer.size} server(s)`);
+    }
+
+    // Update billing panel on map if visible
+    updateMapBillingPanel();
+    // Invalidate heatmap cache if billing data changed
+    invalidateHeatmapCache();
+  } catch (e) {
+    console.warn('[VDC-Viz] Billing data fetch failed:', e.message);
+  }
+}
+
+function fmtTrafficBytes(bytes) {
+  const gb = bytes / (1024 * 1024 * 1024);
+  if (gb >= 1024) return (gb / 1024).toFixed(1) + ' TB';
+  if (gb >= 1) return gb.toFixed(1) + ' GB';
+  return (gb * 1024).toFixed(0) + ' MB';
+}
+
+function updateMapBillingPanel(drillRegion) {
+  const panel = document.getElementById('mapBillingPanel');
+  if (!panel) return;
+  if (!_billingByVdc || _billingByVdc.size === 0) {
+    panel.classList.add('hidden');
+    return;
+  }
+  const el = document.getElementById('mapBackground');
+  if (!el || !el.classList.contains('overview-mode')) {
+    panel.classList.add('hidden');
+    return;
+  }
+
+  const clusters = buildRegionClusters();
+  const region = drillRegion || null;
+  let html = '';
+
+  if (!region) {
+    // ── Overview: show per-region summary ──
+    html += `<h4>Data Transfer</h4>`;
+    html += `<table class="mbp-table"><thead><tr><th>Region</th><th>\u2193 In</th><th>\u2191 Out</th></tr></thead><tbody>`;
+    let grandIn = 0, grandOut = 0;
+    clusters.forEach(c => {
+      let rIn = 0, rOut = 0;
+      c.vdcs.forEach(v => {
+        const bd = _billingByVdc.get(v.id);
+        if (bd) { rIn += bd.totalIn; rOut += bd.totalOut; }
+      });
+      if (rIn === 0 && rOut === 0) return;
+      grandIn += rIn; grandOut += rOut;
+      html += `<tr><td>${c.flag} ${c.city}</td><td class="mbp-in">${fmtTrafficBytes(rIn)}</td><td class="mbp-out">${fmtTrafficBytes(rOut)}</td></tr>`;
+    });
+    if (grandIn > 0 || grandOut > 0) {
+      html += `<tr class="mbp-total"><td>Total</td><td class="mbp-in">${fmtTrafficBytes(grandIn)}</td><td class="mbp-out">${fmtTrafficBytes(grandOut)}</td></tr>`;
+    }
+    html += `</tbody></table>`;
+  } else {
+    // ── Drilled-in: show per-VDC for this region ──
+    const cluster = clusters.find(c => c.region === region);
+    if (!cluster) { panel.classList.add('hidden'); return; }
+    html += `<h4>${cluster.flag} ${cluster.city} Traffic</h4>`;
+    html += `<table class="mbp-table"><thead><tr><th>VDC</th><th>\u2193 In</th><th>\u2191 Out</th></tr></thead><tbody>`;
+    let regIn = 0, regOut = 0;
+    cluster.vdcs.forEach(v => {
+      const bd = _billingByVdc.get(v.id);
+      if (!bd) return;
+      regIn += bd.totalIn; regOut += bd.totalOut;
+      html += `<tr><td title="${escapeHtml(v.name)}">${escapeHtml(v.name)}</td><td class="mbp-in">${fmtTrafficBytes(bd.totalIn)}</td><td class="mbp-out">${fmtTrafficBytes(bd.totalOut)}</td></tr>`;
+    });
+    if (regIn > 0 || regOut > 0) {
+      html += `<tr class="mbp-total"><td>Total</td><td class="mbp-in">${fmtTrafficBytes(regIn)}</td><td class="mbp-out">${fmtTrafficBytes(regOut)}</td></tr>`;
+    }
+    html += `</tbody></table>`;
+  }
+
+  panel.innerHTML = html;
+  panel.classList.remove('hidden');
+}
+
 // ── Network Metrics (IONOS Monitoring/Telemetry) ──
 // Telemetry API is Prometheus-compatible; uses same auth as Cloud API.
 // Metric names: instance_network_in_bytes, instance_network_out_bytes,
@@ -6729,6 +6992,76 @@ async function loadAndShowMetrics(serverId) {
   }
 }
 
+function loadAndShowBillingChart(serverId) {
+  const container = document.getElementById('billingContainer');
+  if (!container) return;
+
+  const serverData = _billingByServer.get(serverId);
+  if (!serverData || !serverData.daily || serverData.daily.length === 0) {
+    container.innerHTML = `<div class="metrics-no-data">${t('detail.noBillingData')}</div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+
+  const daily = serverData.daily;
+  const W = container.clientWidth || 320, H = 90;
+  const margin = { top: 6, right: 6, bottom: 22, left: 42 };
+  const w = W - margin.left - margin.right, h = H - margin.top - margin.bottom;
+
+  container.classList.add('metrics-chart');
+
+  const maxVal = Math.max(1, d3.max(daily, d => Math.max(d.inGB, d.outGB)));
+  const xScale = d3.scaleBand().domain(daily.map(d => d.date)).range([0, w]).padding(0.2);
+  const yScale = d3.scaleLinear().domain([0, maxVal * 1.1]).range([h, 0]);
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', W).attr('height', H)
+    .append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  // X axis — show a few date labels
+  const tickFilter = daily.length > 10
+    ? daily.filter((_, i) => i % Math.ceil(daily.length / 6) === 0).map(d => d.date)
+    : daily.map(d => d.date);
+  svg.append('g').attr('class', 'axis x-axis').attr('transform', `translate(0,${h})`)
+    .call(d3.axisBottom(xScale).tickValues(tickFilter).tickFormat(d => {
+      const parts = d.split('-');
+      return parts.length >= 3 ? `${parts[1]}/${parts[2]}` : d;
+    }));
+
+  // Y axis
+  svg.append('g').attr('class', 'axis y-axis grid')
+    .call(d3.axisLeft(yScale).ticks(3).tickFormat(d => d.toFixed(1) + ' GB'))
+    .call(g => g.selectAll('.tick line').clone().attr('x2', w).attr('class', 'grid-line'));
+
+  const barW = xScale.bandwidth() / 2;
+
+  // Inbound bars (green)
+  svg.selectAll('.bar-in').data(daily).enter().append('rect')
+    .attr('class', 'bar-in')
+    .attr('x', d => xScale(d.date))
+    .attr('y', d => yScale(d.inGB))
+    .attr('width', barW)
+    .attr('height', d => h - yScale(d.inGB))
+    .attr('fill', '#10b981').attr('opacity', 0.8);
+
+  // Outbound bars (amber)
+  svg.selectAll('.bar-out').data(daily).enter().append('rect')
+    .attr('class', 'bar-out')
+    .attr('x', d => xScale(d.date) + barW)
+    .attr('y', d => yScale(d.outGB))
+    .attr('width', barW)
+    .attr('height', d => h - yScale(d.outGB))
+    .attr('fill', '#f59e0b').attr('opacity', 0.8);
+
+  // Legend
+  const legend = d3.select(container).append('div').attr('class', 'metrics-legend');
+  legend.append('span').style('color', '#10b981')
+    .html(`\u25CF \u2193 In: ${serverData.totalIn.toFixed(2)} GB`);
+  legend.append('span').style('color', '#f59e0b')
+    .html(`\u25CF \u2191 Out: ${serverData.totalOut.toFixed(2)} GB`);
+}
+
 // ============================== MAIN FLOWS ==============================
 async function connect(isSwitching = false) {
   apiToken = document.getElementById('tokenInput').value.trim();
@@ -6800,6 +7133,10 @@ async function connect(isSwitching = false) {
     // Initialize map and show global overview (remove pre-login dimming)
     document.getElementById('mapBackground').classList.remove('pre-login');
     initMapBackground();
+
+    // Start billing data fetch early (needs contract number + token, both available now)
+    loadBillingData();
+
     setViewMode('map');
 
     // Background: fetch dynamic locations from API to enrich city labels
@@ -6839,7 +7176,8 @@ async function connect(isSwitching = false) {
       console.log('[VDC-Viz] No user info available');
     }
 
-    // Fetch IP blocks and DNS/CDN data in background (non-blocking)
+    // Fetch IP blocks and DNS/CDN in background (non-blocking)
+    // Note: loadBillingData() already started earlier for faster panel display
     loadIPBlocks();
     loadDNSData();
 
@@ -6869,6 +7207,10 @@ function disconnect() {
   forwardDnsMap = null;
   dnsZones = null;
   ipBlocks = null;
+  _billingTraffic = null;
+  _billingUtilization = null;
+  _billingByServer = new Map();
+  _billingByVdc = new Map();
 
   // Reset token input and connect button
   document.getElementById('tokenInput').value = '';
@@ -6922,9 +7264,9 @@ function disconnect() {
   const emptyState = document.getElementById('emptyState');
   if (emptyState) {
     emptyState.style.display = '';
-    const h2 = emptyState.querySelector('h2');
-    if (h2) h2.textContent = t('onboarding.title');
-    const p = emptyState.querySelector('p');
+    const appName = emptyState.querySelector('.onboarding-appname');
+    if (appName) appName.textContent = t('onboarding.title');
+    const p = emptyState.querySelector('.onboarding-header p');
     if (p) p.textContent = t('onboarding.subtitle');
   }
 
@@ -7049,6 +7391,9 @@ function setViewMode(mode) {
     showMapOverview();
   } else {
     hideMapOverview();
+    // Ensure billing panel is hidden when leaving map view
+    const bp = document.getElementById('mapBillingPanel');
+    if (bp) bp.classList.add('hidden');
   }
 }
 
@@ -7398,6 +7743,11 @@ function setHeatmapMode(mode) {
   heatmapMode = mode;
   document.getElementById('hmModeVolume').classList.toggle('active', mode === 'volume');
   document.getElementById('hmModeSecurity').classList.toggle('active', mode === 'security');
+  document.getElementById('hmModeBilling').classList.toggle('active', mode === 'billing');
+
+  // Update legend title
+  const hmTitle = document.getElementById('hmTitle');
+  if (hmTitle) hmTitle.textContent = mode === 'billing' ? 'Data Transfer Heatmap' : 'Traffic Heatmap';
 
   // Update gradient
   const grad = document.getElementById('hmGradient');
@@ -7405,6 +7755,8 @@ function setHeatmapMode(mode) {
   const labels = document.getElementById('hmGradientLabels');
   if (mode === 'volume') {
     labels.innerHTML = '<span>0 B</span><span>Med</span><span>High</span>';
+  } else if (mode === 'billing') {
+    labels.innerHTML = '<span>0 GB</span><span>Med</span><span>High</span>';
   } else {
     labels.innerHTML = '<span>0% rejected</span><span>50%</span><span>100%</span>';
   }
@@ -7501,9 +7853,16 @@ function heatColor(value, mode) {
 }
 
 function applyHeatmap() {
-  if (!flAllRecords || !flAllRecords.length) {
-    toast('Load flow log files first (press W)', 'warning');
-    return;
+  if (heatmapMode === 'billing') {
+    if (!_billingByServer || _billingByServer.size === 0) {
+      toast('No data transfer data available — connect first', 'warning');
+      return;
+    }
+  } else {
+    if (!flAllRecords || !flAllRecords.length) {
+      toast('Load flow log files first (press W)', 'warning');
+      return;
+    }
   }
   if (!graphData || !graphData.nodes || !graphData.nodes.length) {
     toast('Load a VDC first', 'warning');
@@ -7512,6 +7871,12 @@ function applyHeatmap() {
 
   heatmapActive = true;
   document.getElementById('heatmapLegend').classList.remove('hidden');
+
+  // Billing mode uses billing API data instead of flow logs
+  if (heatmapMode === 'billing') {
+    applyBillingHeatmap();
+    return;
+  }
 
   const { nodeStats, linkStats } = aggregateFlowData();
 
@@ -7620,6 +7985,76 @@ function applyHeatmap() {
   } else {
     labels.innerHTML = '<span>0% rejected</span><span>50%</span><span>100%</span>';
   }
+}
+
+function applyBillingHeatmap() {
+  // Create halo group if not exists
+  if (!heatmapHaloGroup && svgGroup) {
+    heatmapHaloGroup = svgGroup.insert('g', '.nodes').attr('class', 'heatmap-halos');
+  }
+  if (heatmapHaloGroup) heatmapHaloGroup.selectAll('*').remove();
+
+  // Map graph node IDs to billing server IDs and compute intensities
+  let maxTotal = 0;
+  const serverTraffic = new Map(); // graphNodeId → totalGB
+  graphData.nodes.forEach(n => {
+    if (n.type !== 'server' && n.type !== 'cube') return;
+    const rawId = (n._origId || n.id).replace(/^srv-/, '');
+    const billing = _billingByServer.get(rawId);
+    if (!billing) return;
+    const total = billing.totalIn + billing.totalOut;
+    serverTraffic.set(n.id, total);
+    maxTotal = Math.max(maxTotal, total);
+  });
+  if (maxTotal === 0) maxTotal = 1;
+
+  // Apply node halos
+  let nodesWithData = 0;
+  let totalInAll = 0, totalOutAll = 0;
+  if (svgGroup) {
+    graphData.nodes.forEach(n => {
+      const total = serverTraffic.get(n.id);
+      if (!total || total === 0) return;
+      nodesWithData++;
+
+      const rawId = (n._origId || n.id).replace(/^srv-/, '');
+      const billing = _billingByServer.get(rawId);
+      if (billing) { totalInAll += billing.totalIn; totalOutAll += billing.totalOut; }
+
+      const intensity = Math.sqrt(total / maxTotal);
+      if (intensity < 0.02) return;
+      const r = (NODE_TYPES[n.type]?.radius || 28) + 8 + intensity * 20;
+      const color = heatColor(intensity, 'volume'); // use volume gradient for billing
+
+      if (heatmapHaloGroup) {
+        heatmapHaloGroup.append('circle')
+          .attr('class', 'hm-node-halo')
+          .attr('data-node-id', n.id)
+          .attr('cx', n.x).attr('cy', n.y)
+          .attr('r', r)
+          .attr('fill', color)
+          .attr('opacity', 0.4 + intensity * 0.4)
+          .attr('filter', 'url(#hmBlur)');
+      }
+    });
+
+    // Dim links with no associated billing data
+    svgGroup.selectAll('.link').each(function() {
+      d3.select(this).attr('opacity', 0.15);
+    });
+  }
+
+  // Update legend stats
+  const statsEl = document.getElementById('hmStats');
+  statsEl.innerHTML = `
+    Servers with data: <span>${nodesWithData}</span> / ${graphData.nodes.filter(n => n.type === 'server' || n.type === 'cube').length}<br>
+    Total inbound: <span style="color:var(--success)">${totalInAll.toFixed(2)} GB</span><br>
+    Total outbound: <span style="color:var(--warning)">${totalOutAll.toFixed(2)} GB</span>
+  `;
+
+  // Update gradient labels
+  const labels = document.getElementById('hmGradientLabels');
+  labels.innerHTML = `<span>0 GB</span><span>${(maxTotal / 2).toFixed(1)} GB</span><span>${maxTotal.toFixed(1)} GB</span>`;
 }
 
 function updateHeatmapHalos() {
@@ -8455,6 +8890,7 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 's' || e.key === 'S') openSecurityOverlay();
   else if (e.key === 'w' || e.key === 'W') openFlowLogExplorer();
   else if (e.key === 'x' || e.key === 'X') toggleHeatmap();
+  else if (e.key === 'b' || e.key === 'B') { setHeatmapMode('billing'); if (!heatmapActive) toggleHeatmap(); else applyHeatmap(); }
   else if (e.key === 'r' || e.key === 'R') resetView();
 });
 </script>

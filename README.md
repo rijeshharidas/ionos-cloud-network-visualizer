@@ -13,7 +13,7 @@
 
 <p align="center">
   A browser-based interactive network topology visualizer for IONOS Cloud infrastructure.<br>
-  See your entire cloud at a glance — from a global map of regions down to individual servers, LANs, and managed services.
+  See your entire cloud at a glance — from a global map of regions down to individual servers, LANs, managed services, flow logs, and data transfer.
 </p>
 
 ---
@@ -55,9 +55,11 @@
 
 📜 **Flow Log Explorer** — Drag-and-drop IONOS flow log files (`.log` or `.log.gz`) into the explorer panel to analyze traffic records. Filter by source/destination IP, port range, protocol, action (ACCEPT/REJECT), and NIC interface. Click any row to trace the source→destination path on the topology graph using BFS path-finding with highlighted intermediate nodes. Hover rows for live preview. Export filtered results as CSV. Press `W` to open.
 
-🔥 **Traffic Heatmap** — Visualize traffic patterns as color-coded halos around nodes. Toggle between Volume mode (bytes transferred) and Security mode (rejected packet ratio). Nodes glow from cool blue to hot red based on traffic intensity, with a gradient legend and aggregate statistics. Requires flow logs to be loaded. Press `X` to activate.
+🔥 **Traffic Heatmap** — Visualize traffic patterns as color-coded halos around nodes. Toggle between Volume mode (bytes transferred), Security mode (rejected packet ratio), and Transfer mode (billing data). Nodes glow from cool blue to hot red based on traffic intensity, with a gradient legend and aggregate statistics. Press `X` to activate with flow logs, or `B` for Data Transfer heatmap.
 
 📊 **Live Metrics** — Select a server to see 1-hour network throughput and packet count time-series charts directly in the detail panel.
+
+📈 **Data Transfer** — Per-VDC and per-server network data transfer from the IONOS Billing API. The Global Map shows a floating panel with region-wise In/Out totals (overview) or per-VDC breakdown (drill-down). Server detail panels include a 30-day daily transfer chart (D3.js grouped bar chart). A dedicated Data Transfer Heatmap mode (`B` key) visualizes per-server transfer volumes on the topology.
 
 🔍 **Canvas Search** — Type-ahead search across all resources with instant highlighting on the canvas. Focus with `Ctrl+F`.
 
@@ -178,7 +180,7 @@ You should see `Python 3.x.x`. Any version from 3.6 onward works.
 |-------------|---------|
 | **Python 3.6+** | Standard library only — no pip dependencies needed (not required if using Docker) |
 | **Modern browser** | Chrome, Firefox, Safari, or Edge |
-| **IONOS Cloud API Token** | Generate at [dcd.ionos.com](https://dcd.ionos.com) under **Management > Token Management** |
+| **IONOS Cloud API Token** | Generate at [dcd.ionos.com](https://dcd.ionos.com) under **Management > Token Manager** |
 | **Docker** *(optional)* | Required only if running via `docker build` / `docker run` instead of Python directly |
 
 ## View Modes
@@ -240,6 +242,8 @@ Your API token never leaves your machine.
 | Kafka | `kafka.{location}.ionos.com` | Regional |
 | Cloud DNS | `dns.de-fra.ionos.com` | Centralized |
 | CDN | `cdn.de-fra.ionos.com` | Centralized |
+| Data Transfer (Traffic) | `/billing/{contract}/traffic` | Per Contract |
+| Data Transfer (Utilization) | `/billing/{contract}/utilization` | Per Contract |
 | Locations | `/cloudapi/v6/locations` | Centralized |
 | User Management | `/cloudapi/v6/um` | Centralized |
 
@@ -272,6 +276,7 @@ python3 serve.py [options]
 | `T` | Resource table view |
 | `W` | Flow Log Explorer |
 | `X` | Traffic Heatmap |
+| `B` | Data Transfer Heatmap |
 | `G` | Global map view |
 
 ## Security

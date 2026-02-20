@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-02-20
+
+### Added (1.8.0)
+
+- Data Transfer integration via IONOS Billing API v3 (`/billing/{contract}/traffic` and `/billing/{contract}/utilization`)
+- Global Map Data Transfer panel: floating table (top-right) showing per-region In/Out totals on overview, per-VDC breakdown on drill-down
+- Server detail Data Transfer chart: 30-day daily inbound/outbound grouped bar chart (D3.js) in the detail panel
+- Data Transfer Heatmap mode (`B` key): per-server transfer volume visualization as SVG halos on the topology graph
+- Standalone Data Transfer Heatmap toolbar button (separated from Flow Logs dropdown)
+- Heatmap legend mode toggle: Volume / Security / Transfer with dedicated gradient for Transfer mode
+- Billing data auto-scales display units (MB / GB / TB) based on magnitude
+- i18n translations for Data Transfer features in all 4 locales (EN, DE, ES, FR)
+
+### Changed (1.8.0)
+
+- Heatmap legend repositioned from bottom-right to top-right for consistency with Data Transfer panel
+- Heatmap legend styling updated: backdrop blur, matching border radius and shadow as other panels
+- Billing data fetch moved earlier in connect flow (starts before user info fetch) for faster panel display
+- Heatmap clears automatically when navigating from VDC topology to Global Map view
+- Renamed all "Billing Traffic" / "Billing Heatmap" labels to "Data Transfer" / "Data Transfer Heatmap" across all locales
+- Favicon updated to IONOS-style network topology icon (inline SVG, no external file dependency)
+- Sidebar header replaced with official IONOS Cloud logo (vector paths from brand assets, theme-aware via `currentColor`)
+- README banner SVG (`docs/ionos-cloud-banner.svg`) updated with official IONOS Cloud logo vector paths
+- Onboarding card redesigned: official IONOS Cloud logo replaces duplicate title, subtitle updated to mention flow logs and data transfer
+- Onboarding step 3 text updated to reflect full feature set (topology, flow logs, data transfer, export)
+- Onboarding step 1 corrected: "Token Management" → "Token Manager" across all locales
+- Map reflows correctly on sidebar collapse/expand (`invalidateSize` called after transition)
+
+### Fixed (1.8.0)
+
+- Billing API `/traffic/` response parsing: fixed `trafficObj.vdc` array iteration (was incorrectly using `Object.entries`)
+- Billing API `/utilization/` response parsing: fixed `datacenters[].meters[]` structure, `quantity.quantity` object extraction, and `meter.from` date field
+- Heatmap legend not hiding when switching from VDC topology to Global Map view
+- Data Transfer panel not hiding when navigating away from map view (triple-layer enforcement: `hideMapOverview`, `setViewMode`, and `updateMapBillingPanel` guard)
+- Disconnect cleanup: billing state variables properly reset
+- Onboarding card disappearing when navigating to Global Map pre-login (`showMapOverview` now preserves it in pre-login state)
+- Onboarding logo invisible in light mode (hardcoded `fill="white"` → theme-aware `fill="currentColor"`)
+
 ## [1.7.0] - 2026-02-20
 
 ### Added (1.7.0)
