@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-02-20
+
+### Added (1.7.0)
+
+- Flow Log Explorer (`W` key): drag-and-drop upload of IONOS flow log files (.log, .log.gz) with client-side gzip decompression via Pako.js
+- Flow log table with sortable columns, pagination, and per-page size selector (25/50/100/200)
+- Flow log filters: source/destination IP, port range, protocol dropdown, action (ACCEPT/REJECT), and NIC interface selector
+- Flow log file pills: visual indicators showing loaded files with record counts and click-to-remove
+- Flow log statistics bar: total records, accept/reject counts with color-coded indicators
+- Flow log CSV export of filtered records
+- Flow log path highlighting: click a flow record to trace source→destination path on the graph using BFS path-finding with up to 4 intermediate hops
+- Flow log hover highlighting: hover a table row to temporarily highlight the matching path on the graph
+- Persistent flow highlights with "click map to clear" toast and movable highlight dialog showing matched resources
+- Traffic Heatmap (`X` key): visual overlay showing per-node traffic volume or security risk as color-coded SVG halos with Gaussian blur filters
+- Heatmap mode toggle: switch between Volume (bytes transferred) and Security (rejected packet ratio) views
+- Heatmap gradient legend with min/max labels and aggregate statistics
+- Flow Logs toolbar dropdown: unified menu replacing individual toolbar buttons, with Explorer and Heatmap options showing keyboard shortcuts
+- Resizable Flow Log Explorer dialog with drag handle, min-width/min-height constraints, and `resize: both` CSS
+
+### Changed (1.7.0)
+
+- Toolbar: Flow Log Explorer and Traffic Heatmap consolidated into a single dropdown menu (matches export dropdown pattern)
+- VDC sidebar dropdown font size normalized to 12px to match other sidebar elements
+- Escape key handling extended: closes flow log dropdown, heatmap overlay, and flow log explorer in priority order
+- Map click handler extended: clicking the map background now also clears active heatmap overlays
+
+### Improved (1.7.0)
+
+- Tick callback performance: pre-cached VDC node references and replaced 4× `d3.min/max` calls with single-pass bounds calculation
+- Heatmap halo position updates: uses pre-built `_nodeMap` for O(1) lookups instead of `Array.find()` in hot path
+- Flow log parsing: `Array.push(...records)` instead of `Array.concat()` to avoid full-array copy on each file load
+- Flow log table rendering: array-based HTML assembly with `.join()` instead of string concatenation
+- Flow log statistics: single-pass accept/reject counting instead of two separate `.filter()` scans
+- Heatmap data aggregation: memoized `aggregateFlowData()` with automatic cache invalidation on data changes
+- Flow path resolution: persistent IP→nodeId, NIC→nodeId, and BFS adjacency lookup maps built once in `renderGraph()`, reducing `resolveFlowPath()` from O(n) node scan per call to O(1) map lookups
+- Event listener deduplication: `_flDropBound` guard prevents accumulating duplicate drag/drop handlers on repeated dialog opens
+- Error handling: `parseFlowLogFile` wraps `file.arrayBuffer()` in try/catch with descriptive error propagation
+
 ## [1.6.0] - 2026-02-16
 
 ### Added (1.6.0)

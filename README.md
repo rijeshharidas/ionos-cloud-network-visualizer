@@ -53,6 +53,10 @@
 
 🛡️ **Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, and Cross Connect. Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
 
+📜 **Flow Log Explorer** — Drag-and-drop IONOS flow log files (`.log` or `.log.gz`) into the explorer panel to analyze traffic records. Filter by source/destination IP, port range, protocol, action (ACCEPT/REJECT), and NIC interface. Click any row to trace the source→destination path on the topology graph using BFS path-finding with highlighted intermediate nodes. Hover rows for live preview. Export filtered results as CSV. Press `W` to open.
+
+🔥 **Traffic Heatmap** — Visualize traffic patterns as color-coded halos around nodes. Toggle between Volume mode (bytes transferred) and Security mode (rejected packet ratio). Nodes glow from cool blue to hot red based on traffic intensity, with a gradient legend and aggregate statistics. Requires flow logs to be loaded. Press `X` to activate.
+
 📊 **Live Metrics** — Select a server to see 1-hour network throughput and packet count time-series charts directly in the detail panel.
 
 🔍 **Canvas Search** — Type-ahead search across all resources with instant highlighting on the canvas. Focus with `Ctrl+F`.
@@ -266,6 +270,8 @@ python3 serve.py [options]
 | `S` | Security posture overlay |
 | `M` | Toggle map background |
 | `T` | Resource table view |
+| `W` | Flow Log Explorer |
+| `X` | Traffic Heatmap |
 | `G` | Global map view |
 
 ## Security

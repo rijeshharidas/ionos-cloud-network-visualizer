@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
@@ -157,6 +158,14 @@
     font-size: 13px;
     outline: none;
     transition: border-color 0.2s;
+  }
+  .sidebar-section select {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  .sidebar-section select option {
+    font-size: 12px;
+    padding: 4px 8px;
   }
 
   input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
@@ -647,12 +656,12 @@
   }
   .export-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto; }
   .export-dropdown button {
-    display: block; width: 100%; padding: 7px 14px; background: none; border: none;
+    position: static; display: block; width: 100%; padding: 7px 14px; background: none; border: none;
     color: var(--text-secondary); font-size: 12px; font-family: inherit;
-    text-align: left; cursor: pointer; transition: all 0.12s;
+    text-align: left; cursor: pointer; transition: all 0.12s; border-radius: 0;
   }
   .export-dropdown button:hover { background: var(--bg-tertiary); color: var(--text-primary); }
-  .export-dropdown button::after { display: none; }
+  .export-dropdown button::after { display: none; content: none; opacity: 0; }
   .export-sep { height: 1px; background: var(--border); margin: 4px 0; }
   .export-section-label { padding: 6px 14px 3px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); pointer-events: none; }
 
@@ -855,6 +864,7 @@
   .toast.error { background: var(--danger); }
   .toast.success { background: var(--success); }
   .toast.info { background: var(--accent); }
+  .toast.toast-persistent { animation: toast-in 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.4); max-width: 600px; }
   @keyframes toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes toast-out { from { opacity: 1; } to { opacity: 0; } }
 
@@ -870,6 +880,184 @@
   .tooltip .tt-type { color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
   .tooltip .tt-detail { color: var(--text-secondary); margin-top: 4px; }
   .tooltip .tt-nic { color: var(--text-muted); font-size: 10px; margin-top: 2px; }
+
+  /* ---- Flow Log Explorer ---- */
+  .flowlog-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    pointer-events: none;
+  }
+  .flowlog-dialog {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 14px;
+    width: 95vw; max-width: 1200px; max-height: 90vh; min-width: 480px; min-height: 320px;
+    display: flex; flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5); overflow: hidden;
+    pointer-events: auto; resize: both;
+  }
+  .flowlog-dialog::-webkit-resizable { background: transparent; }
+  .fl-resize-handle {
+    position: absolute; bottom: 0; right: 0; width: 18px; height: 18px; cursor: nwse-resize; z-index: 5;
+    opacity: 0.35; transition: opacity 0.15s;
+  }
+  .fl-resize-handle:hover { opacity: 0.7; }
+  .fl-resize-handle svg { position: absolute; bottom: 4px; right: 4px; }
+  .flowlog-dialog.fl-dragged { transform: none; }
+  .flowlog-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(17,199,230,0.06) 0%, transparent 100%);
+    cursor: grab; user-select: none;
+  }
+  .flowlog-header:active { cursor: grabbing; }
+  .flowlog-header .fl-drag-hint {
+    font-size: 10px; color: var(--text-muted); opacity: 0.5; margin-left: 8px; font-weight: 400;
+  }
+  .flowlog-header h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .flowlog-header h2 .fl-count { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  .flowlog-controls { display: flex; align-items: center; gap: 8px; }
+  .flowlog-controls input[type="text"] { width: 200px !important; padding: 6px 10px; font-size: 12px; }
+  .flowlog-controls select { padding: 6px 10px; font-size: 12px; min-width: 100px; width: auto !important; }
+  .flowlog-controls .fl-btn {
+    padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); background: var(--bg-tertiary);
+    color: var(--text-secondary); transition: all 0.15s; font-family: inherit;
+  }
+  .flowlog-controls .fl-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .flowlog-controls .fl-btn.fl-btn-accent { background: rgba(17,199,230,0.15); color: var(--accent); border-color: rgba(17,199,230,0.3); }
+  .flowlog-controls .fl-btn.fl-btn-accent:hover { background: rgba(17,199,230,0.25); }
+
+  .flowlog-filters {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 10px 24px; border-bottom: 1px solid var(--border); font-size: 12px;
+  }
+  .flowlog-filters label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+  .flowlog-filters select, .flowlog-filters input { padding: 4px 8px; font-size: 12px; width: auto !important; min-width: 0; flex-shrink: 0; }
+  .flowlog-filters select { min-width: 80px; max-width: 180px; }
+  .flowlog-filters input[type="text"] { width: 120px !important; }
+  .fl-filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .fl-file-pills { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 24px; border-bottom: 1px solid var(--border); }
+  .fl-file-pill {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border);
+  }
+  .fl-file-pill .fl-pill-nic { color: var(--accent); font-weight: 600; font-family: monospace; font-size: 10px; }
+  .fl-file-pill .fl-pill-time { color: var(--text-muted); }
+  .fl-file-pill .fl-pill-count { color: var(--text-muted); font-weight: 600; }
+  .fl-file-pill .fl-pill-remove { cursor: pointer; color: var(--text-muted); font-size: 13px; margin-left: 2px; }
+  .fl-file-pill .fl-pill-remove:hover { color: var(--danger); }
+
+  .flowlog-body { flex: 1; overflow: auto; min-height: 0; }
+
+  /* Drop zone */
+  .fl-dropzone {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 40px; text-align: center; gap: 12px; min-height: 300px;
+  }
+  .fl-dropzone-icon { font-size: 48px; opacity: 0.4; }
+  .fl-dropzone-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .fl-dropzone-subtitle { font-size: 12px; color: var(--text-muted); max-width: 400px; line-height: 1.5; }
+  .fl-dropzone-btn {
+    margin-top: 8px; padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer; background: var(--accent); color: white; border: none; font-family: inherit;
+  }
+  .fl-dropzone-btn:hover { background: var(--accent-hover); }
+  .fl-dropzone.drag-over { background: var(--accent-glow); border: 2px dashed var(--accent); border-radius: 12px; margin: 12px; }
+
+  /* Flow log table */
+  .fl-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .fl-table thead { position: sticky; top: 0; z-index: 2; }
+  .fl-table th {
+    padding: 8px 10px; text-align: left; font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted);
+    background: var(--bg-tertiary); border-bottom: 1px solid var(--border);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  .fl-table th:hover { color: var(--text-primary); }
+  .fl-table th .sort-arrow { margin-left: 4px; font-size: 9px; }
+  .fl-table td {
+    padding: 6px 10px; border-bottom: 1px solid var(--bg-tertiary);
+    color: var(--text-secondary); white-space: nowrap; font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; font-size: 11px;
+  }
+  .fl-table tr:hover td { background: var(--bg-hover); }
+  .fl-table tr.fl-row-reject td { color: #f87171; }
+  .fl-table tr.fl-row-accept td { }
+  .fl-table .fl-action-accept { color: var(--success); font-weight: 600; }
+  .fl-table .fl-action-reject { color: var(--danger); font-weight: 600; }
+  .fl-table .fl-proto { color: var(--accent); }
+  .fl-table tr { cursor: pointer; }
+  .fl-table tr.fl-row-highlighted td { background: rgba(17,199,230,0.1); }
+  .fl-table .fl-empty { text-align: center; padding: 40px; color: var(--text-muted); font-family: inherit; font-style: italic; }
+
+  /* Flow log highlight states on graph */
+  .node.hl-dimmed { opacity: 0.15 !important; transition: opacity 0.3s; }
+  .node.hl-matched { opacity: 1 !important; filter: drop-shadow(0 0 8px rgba(17,199,230,0.6)); transition: opacity 0.3s, filter 0.3s; }
+  .node.hl-path { opacity: 0.85 !important; filter: drop-shadow(0 0 4px rgba(17,199,230,0.3)); transition: opacity 0.3s, filter 0.3s; }
+
+  /* ---- Traffic Heatmap ---- */
+  /* Heatmap legend (floating panel on map) */
+  .heatmap-legend {
+    position: absolute; bottom: 60px; right: 16px; z-index: 15;
+    background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; font-size: 11px; min-width: 180px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .heatmap-legend.hidden { display: none; }
+  .heatmap-legend h4 { font-size: 12px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
+  .heatmap-legend .hl-mode-toggle { display: flex; gap: 4px; margin-bottom: 10px; }
+  .heatmap-legend .hl-mode-btn {
+    flex: 1; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); background: var(--bg-tertiary);
+    color: var(--text-secondary); font-family: inherit; text-align: center; transition: all 0.15s;
+  }
+  .heatmap-legend .hl-mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .heatmap-legend .hl-mode-btn:hover:not(.active) { background: var(--bg-hover); }
+  .heatmap-gradient { height: 10px; border-radius: 5px; margin: 6px 0 4px; }
+  .heatmap-gradient.volume { background: linear-gradient(to right, #1e3a5f, #11C7E6, #10b981, #FFAA00, #ef4444); }
+  .heatmap-gradient.security { background: linear-gradient(to right, #10b981, #FFAA00, #ef4444); }
+  .heatmap-gradient-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); }
+  .heatmap-legend .hl-stats { margin-top: 8px; font-size: 10px; color: var(--text-muted); line-height: 1.6; }
+  .heatmap-legend .hl-stats span { color: var(--text-secondary); font-weight: 600; }
+
+  /* Flow Logs dropdown in toolbar */
+  .flowlog-dropdown-wrapper { position: relative; display: inline-flex; }
+  .flowlog-dropdown {
+    position: absolute; bottom: calc(100% + 8px); right: 0;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 8px; min-width: 190px; padding: 4px 0;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.35);
+    opacity: 0; visibility: hidden; transform: translateY(4px);
+    transition: all 0.15s ease; pointer-events: none; z-index: 100;
+  }
+  .flowlog-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto; }
+  .flowlog-dropdown button {
+    position: static; display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 14px;
+    background: none; border: none; border-radius: 0;
+    color: var(--text-secondary); font-size: 12px; font-family: inherit;
+    text-align: left; cursor: pointer; transition: all 0.12s;
+  }
+  .flowlog-dropdown button:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .flowlog-dropdown button::after { display: none; content: none; opacity: 0; }
+  .flowlog-dropdown button svg { opacity: 0.6; flex-shrink: 0; width: 14px; height: 14px; }
+  .flowlog-dropdown button:hover svg { opacity: 1; }
+  .flowlog-dropdown .fl-dd-shortcut { margin-left: auto; font-size: 10px; color: var(--text-muted); font-weight: 600; background: var(--bg-tertiary); padding: 1px 5px; border-radius: 3px; }
+  .hm-node-halo { pointer-events: none; }
+
+  .flowlog-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);
+  }
+  .flowlog-footer .fl-stats { display: flex; gap: 16px; }
+  .flowlog-footer .fl-stat-label { color: var(--text-muted); }
+  .flowlog-footer .fl-stat-value { font-weight: 600; color: var(--text-secondary); margin-left: 4px; }
+  .fl-stat-accept { color: var(--success) !important; }
+  .fl-stat-reject { color: var(--danger) !important; }
+  .fl-page-controls { display: flex; align-items: center; gap: 6px; }
+  .fl-page-controls button {
+    padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;
+    background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border); font-family: inherit;
+  }
+  .fl-page-controls button:hover { background: var(--bg-hover); }
+  .fl-page-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -1135,6 +1323,21 @@
     <button onclick="openTableView()" id="tableViewBtn" aria-label="Table view" data-tip="Table view (T)" data-i18n-tip="toolbar.tableView">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
     </button>
+    <div class="flowlog-dropdown-wrapper">
+      <button onclick="toggleFlowLogMenu()" id="flowlogMenuBtn" aria-label="Flow Logs" data-tip="Flow Logs" data-i18n-tip="toolbar.flowlogsMenu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </button>
+      <div class="flowlog-dropdown" id="flowlogDropdown">
+        <button onclick="closeFlowLogMenu(); openFlowLogExplorer();">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Flow Log Explorer <span class="fl-dd-shortcut">W</span>
+        </button>
+        <button onclick="closeFlowLogMenu(); toggleHeatmap();" id="heatmapMenuBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.3"/></svg>
+          Traffic Heatmap <span class="fl-dd-shortcut">X</span>
+        </button>
+      </div>
+    </div>
     <span class="toolbar-divider"></span>
     <div class="export-dropdown-wrapper">
       <button onclick="toggleExportMenu()" id="exportMenuBtn" aria-label="Export" data-tip="Export" data-i18n-tip="toolbar.export">
@@ -1173,6 +1376,20 @@
 <!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
 
+<!-- Heatmap Legend -->
+<div class="heatmap-legend hidden" id="heatmapLegend">
+  <h4>Traffic Heatmap</h4>
+  <div class="hl-mode-toggle">
+    <button class="hl-mode-btn active" id="hmModeVolume" onclick="setHeatmapMode('volume')">Volume</button>
+    <button class="hl-mode-btn" id="hmModeSecurity" onclick="setHeatmapMode('security')">Security</button>
+  </div>
+  <div class="heatmap-gradient volume" id="hmGradient"></div>
+  <div class="heatmap-gradient-labels" id="hmGradientLabels">
+    <span>Low</span><span>High</span>
+  </div>
+  <div class="hl-stats" id="hmStats"></div>
+</div>
+
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -1196,6 +1413,8 @@
       <tr><th>T</th><td data-i18n="shortcuts.tableView">Resource table view</td></tr>
       <tr><th>F / R</th><td data-i18n="shortcuts.resetView">Reset & fit to view</td></tr>
       <tr><th>S</th><td data-i18n="shortcuts.security">Security posture</td></tr>
+      <tr><th>W</th><td data-i18n="shortcuts.flowlogs">Flow Log Explorer</td></tr>
+      <tr><th>X</th><td data-i18n="shortcuts.heatmap">Traffic Heatmap</td></tr>
       <tr><th>?</th><td data-i18n="shortcuts.help">Show this help</td></tr>
     </table>
   </div>
@@ -1220,6 +1439,88 @@
       </table>
     </div>
     <div class="table-footer" id="tableFooter"></div>
+  </div>
+</div>
+
+<!-- Flow Log Explorer Overlay -->
+<div class="flowlog-overlay" id="flowlogOverlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Flow Log Explorer">
+  <div class="flowlog-dialog" id="flowlogDialog">
+    <div class="flowlog-header">
+      <h2>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Flow Log Explorer
+        <span class="fl-count" id="flRecordCount"></span>
+        <span class="fl-drag-hint">&#x2725; drag to move</span>
+      </h2>
+      <div class="flowlog-controls">
+        <input type="text" id="flSearch" placeholder="Search IPs, ports..." oninput="filterFlowLogs()">
+        <button class="fl-btn fl-btn-accent" onclick="document.getElementById('flFileInput').click()">+ Add Files</button>
+        <button class="fl-btn" onclick="exportFlowLogCSV()" id="flExportBtn" style="display:none;">&#8681; CSV</button>
+        <button class="fl-btn" onclick="clearFlowLogs()" id="flClearBtn" style="display:none;">Clear</button>
+        <button class="detail-close" onclick="closeFlowLogExplorer()">&times;</button>
+      </div>
+    </div>
+    <div class="flowlog-filters" id="flFilters" style="display:none;">
+      <label>Action:</label>
+      <select id="flFilterAction" onchange="filterFlowLogs()">
+        <option value="">All</option>
+        <option value="ACCEPT">ACCEPT</option>
+        <option value="REJECT">REJECT</option>
+      </select>
+      <span class="fl-filter-sep"></span>
+      <label>Protocol:</label>
+      <select id="flFilterProto" onchange="filterFlowLogs()">
+        <option value="">All</option>
+        <option value="6">TCP (6)</option>
+        <option value="17">UDP (17)</option>
+        <option value="1">ICMP (1)</option>
+      </select>
+      <span class="fl-filter-sep"></span>
+      <label>Src IP:</label>
+      <input type="text" id="flFilterSrc" placeholder="e.g. 10.0.0" oninput="filterFlowLogs()">
+      <span class="fl-filter-sep"></span>
+      <label>Dst IP:</label>
+      <input type="text" id="flFilterDst" placeholder="e.g. 192.168" oninput="filterFlowLogs()">
+      <span class="fl-filter-sep"></span>
+      <label>Port:</label>
+      <input type="text" id="flFilterPort" placeholder="e.g. 443" oninput="filterFlowLogs()" style="width:70px;">
+      <span class="fl-filter-sep"></span>
+      <label>NIC:</label>
+      <select id="flFilterNic" onchange="filterFlowLogs()">
+        <option value="">All NICs</option>
+      </select>
+    </div>
+    <div class="fl-file-pills" id="flFilePills" style="display:none;"></div>
+    <div class="flowlog-body" id="flBody">
+      <div class="fl-dropzone" id="flDropzone">
+        <div class="fl-dropzone-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="fl-dropzone-title">Drop .log.gz files here</div>
+        <div class="fl-dropzone-subtitle">
+          Upload IONOS Flow Log files to explore traffic records. Files are parsed locally in your browser — nothing is uploaded to any server.
+          <br><br>
+          File format: <code style="color:var(--accent); font-size:11px;">{nic-uuid}-{epoch}.log.gz</code>
+        </div>
+        <button class="fl-dropzone-btn" onclick="document.getElementById('flFileInput').click()">Browse Files</button>
+      </div>
+    </div>
+    <input type="file" id="flFileInput" multiple accept=".gz,.log,.log.gz" style="display:none;" onchange="handleFlowLogFiles(this.files)">
+    <div class="flowlog-footer" id="flFooter" style="display:none;">
+      <div class="fl-stats">
+        <span><span class="fl-stat-label">Records:</span><span class="fl-stat-value" id="flStatTotal">0</span></span>
+        <span><span class="fl-stat-label">Accepted:</span><span class="fl-stat-value fl-stat-accept" id="flStatAccept">0</span></span>
+        <span><span class="fl-stat-label">Rejected:</span><span class="fl-stat-value fl-stat-reject" id="flStatReject">0</span></span>
+        <span><span class="fl-stat-label">Files:</span><span class="fl-stat-value" id="flStatFiles">0</span></span>
+        <span><span class="fl-stat-label">Shown:</span><span class="fl-stat-value" id="flStatShown">0</span></span>
+      </div>
+      <div class="fl-page-controls">
+        <button onclick="flPagePrev()" id="flPrevBtn" disabled>&laquo; Prev</button>
+        <span id="flPageInfo">Page 1</span>
+        <button onclick="flPageNext()" id="flNextBtn">Next &raquo;</button>
+      </div>
+    </div>
+    <div class="fl-resize-handle"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M9 1L1 9M9 4L4 9M9 7L7 9" stroke="currentColor" stroke-width="1" opacity="0.5"/></svg></div>
   </div>
 </div>
 
@@ -1358,6 +1659,12 @@ const TRANSLATIONS = {
     'shortcuts.tableView': 'Resource table view',
     'shortcuts.resetView': 'Reset & fit to view',
     'shortcuts.help': 'Show this help',
+    'shortcuts.flowlogs': 'Flow Log Explorer',
+    'shortcuts.heatmap': 'Traffic Heatmap',
+    // Flow Log Explorer
+    'toolbar.flowlogs': 'Flow Log Explorer (W)',
+    'toolbar.flowlogsMenu': 'Flow Logs',
+    'toolbar.heatmap': 'Traffic Heatmap (X)',
     // Security
     'toolbar.security': 'Security posture (S)',
     'security.title': 'Security Posture',
@@ -1568,6 +1875,12 @@ const TRANSLATIONS = {
     'shortcuts.tableView': 'Ressourcentabelle',
     'shortcuts.resetView': 'Zur\u00fccksetzen & Einpassen',
     'shortcuts.help': 'Hilfe anzeigen',
+    'shortcuts.flowlogs': 'Flow-Log-Explorer',
+    'shortcuts.heatmap': 'Verkehrs-Heatmap',
+    // Flow Log Explorer
+    'toolbar.flowlogs': 'Flow-Log-Explorer (W)',
+    'toolbar.flowlogsMenu': 'Flow-Logs',
+    'toolbar.heatmap': 'Verkehrs-Heatmap (X)',
     // Security
     'toolbar.security': 'Sicherheitsstatus (S)',
     'security.title': 'Sicherheitsstatus',
@@ -1769,6 +2082,12 @@ const TRANSLATIONS = {
     'shortcuts.tableView': 'Tabla de recursos',
     'shortcuts.resetView': 'Restablecer y ajustar vista',
     'shortcuts.help': 'Mostrar esta ayuda',
+    'shortcuts.flowlogs': 'Explorador de Flow Logs',
+    'shortcuts.heatmap': 'Mapa de calor de tráfico',
+    // Flow Log Explorer
+    'toolbar.flowlogs': 'Explorador de Flow Logs (W)',
+    'toolbar.flowlogsMenu': 'Flow Logs',
+    'toolbar.heatmap': 'Mapa de calor de tráfico (X)',
     // Security
     'toolbar.security': 'Postura de seguridad (S)',
     'security.title': 'Postura de Seguridad',
@@ -1970,6 +2289,12 @@ const TRANSLATIONS = {
     'shortcuts.tableView': 'Tableau des ressources',
     'shortcuts.resetView': 'R\u00e9initialiser et ajuster la vue',
     'shortcuts.help': 'Afficher cette aide',
+    'shortcuts.flowlogs': 'Explorateur de Flow Logs',
+    'shortcuts.heatmap': 'Carte thermique du trafic',
+    // Flow Log Explorer
+    'toolbar.flowlogs': 'Explorateur de Flow Logs (W)',
+    'toolbar.flowlogsMenu': 'Flow Logs',
+    'toolbar.heatmap': 'Carte thermique du trafic (X)',
     // Security
     'toolbar.security': 'Posture de sécurité (S)',
     'security.title': 'Posture de Sécurité',
@@ -2784,11 +3109,12 @@ const ICON_DRAW = {
 // ============================== SIMULATION CONFIG ==============================
 const SIM_CONFIG = {
   linkDistance:      { lan: 170, default: 130 },
-  charge:           { pcc: -900, lan: -800, default: -350 },
-  collisionPadding: { lan: 50, default: 25 },
+  charge:           { pcc: -900, lan: -600, default: -350 },
+  collisionPadding: { lan: 35, default: 25 },
   xStrength:        { pcc: 0.02, lan: 0.15, lanChild: 0.12, unattached: 0.04 },
   yPosition:        { pcc: 0.08, internet: 0.08, nat: 0.24, lan: 0.38, lb: 0.53, default: 0.68 },
   yStrength:        0.15,
+  lanAlignStrength: 0.08,
   labelPosition:    { sourceWeight: 0.7, targetWeight: 0.3, yOffset: -5 },
 };
 
@@ -3460,6 +3786,12 @@ function initSvg() {
   const svg = d3.select('#graphSvg');
   svg.selectAll('*').remove();
   svgGroup = svg.append('g').attr('class', 'graph-container');
+
+  // SVG filter for heatmap halo blur
+  const defs = svg.append('defs');
+  const blur = defs.append('filter').attr('id', 'hmBlur').attr('x', '-50%').attr('y', '-50%').attr('width', '200%').attr('height', '200%');
+  blur.append('feGaussianBlur').attr('in', 'SourceGraphic').attr('stdDeviation', '8');
+
   zoomBehavior = d3.zoom()
     .scaleExtent([0.1, 4])
     .on('zoom', (event) => { svgGroup.attr('transform', event.transform); });
@@ -3830,6 +4162,8 @@ function drawNode(g, d) {
 
 function renderGraph(data) {
   graphData = data;
+  if (heatmapActive) clearHeatmap();
+  heatmapHaloGroup = null; // reset since SVG is recreated
   const svg = d3.select('#graphSvg');
   const width = document.getElementById('mainArea').clientWidth;
   const height = document.getElementById('mainArea').clientHeight;
@@ -4024,7 +4358,9 @@ function renderGraph(data) {
         .attr('class', 'vdc-collapsed-label')
         .style('display', 'none');
 
-      vdcBoundaryEls.push({ vdc, boundaryRect, labelBg, toggleText, nameText, collapsedLabel });
+      // Pre-resolve node references once to avoid filtering on every tick
+      const _cachedNodes = data.nodes.filter(n => vdc.nodeIds.has(n.id));
+      vdcBoundaryEls.push({ vdc, boundaryRect, labelBg, toggleText, nameText, collapsedLabel, _cachedNodes });
     });
   }
 
@@ -4059,6 +4395,12 @@ function renderGraph(data) {
 
   // 3. Sort components: largest first for prominent placement
   components.sort((a, b) => b.length - a.length);
+
+  // Tag each node with its component index (used by lanAlign force)
+  const nodeById = new Map(data.nodes.map(n => [n.id, n]));
+  components.forEach((comp, ci) => {
+    comp.forEach(id => { const n = nodeById.get(id); if (n) n._compId = ci; });
+  });
 
   // 4. Assign each component a horizontal band with gap between them
   const outerMargin = width * 0.08;
@@ -4174,6 +4516,47 @@ function renderGraph(data) {
   graphData._nodeMap = nodeByIdMap;
   graphData._adj = adjacencyMap;
 
+  // Build persistent IP→nodeId and NIC→nodeId lookup maps for resolveFlowPath
+  const ipToNodes = new Map();   // IP string → Set of node IDs
+  const nicToNode = new Map();   // NIC UUID → node ID
+  data.nodes.forEach(n => {
+    if (n.data?.nics) {
+      n.data.nics.forEach(nic => {
+        if (nic.nicId) nicToNode.set(nic.nicId, n.id);
+        if (nic.ips) nic.ips.forEach(ip => {
+          if (!ipToNodes.has(ip)) ipToNodes.set(ip, new Set());
+          ipToNodes.get(ip).add(n.id);
+        });
+      });
+    }
+    if (n.type === 'ipblock' && n.data?.ips) {
+      n.data.ips.forEach(ip => {
+        if (!ipToNodes.has(ip)) ipToNodes.set(ip, new Set());
+        ipToNodes.get(ip).add(n.id);
+      });
+    }
+    if (n.type === 'nat' && n.data?.publicIps) {
+      n.data.publicIps.forEach(ip => {
+        if (!ipToNodes.has(ip)) ipToNodes.set(ip, new Set());
+        ipToNodes.get(ip).add(n.id);
+      });
+    }
+  });
+  graphData._ipToNodes = ipToNodes;
+  graphData._nicToNode = nicToNode;
+
+  // Build BFS adjacency map for flow path resolution
+  const bfsAdj = new Map();
+  data.links.forEach((l, idx) => {
+    const sId = typeof l.source === 'object' ? l.source.id : l.source;
+    const tId = typeof l.target === 'object' ? l.target.id : l.target;
+    if (!bfsAdj.has(sId)) bfsAdj.set(sId, []);
+    if (!bfsAdj.has(tId)) bfsAdj.set(tId, []);
+    bfsAdj.get(sId).push({ neighborId: tId, linkIdx: idx });
+    bfsAdj.get(tId).push({ neighborId: sId, linkIdx: idx });
+  });
+  graphData._bfsAdj = bfsAdj;
+
   // Pre-initialize positions for key node types so simulation starts from sensible layout
   data.nodes.forEach(d => {
     if (d.type === 'internet' || d.type === 'pcc') {
@@ -4230,9 +4613,35 @@ function renderGraph(data) {
       // Internet, PCC & NAT need stronger pull to stay in their tier
       if (d.type === 'internet' || d.type === 'pcc') return 0.4;
       if (d.type === 'nat') return 0.3;
+      if (d.type === 'lan') return 0.35;
       if (d.type === 'alb' || d.type === 'nlb') return 0.25;
       return SIM_CONFIG.yStrength;
     }))
+    .force('lanAlign', (function() {
+      // Custom force: gently pull LANs in the same connected component toward the same Y
+      let nodes;
+      function force(alpha) {
+        if (!nodes) return;
+        // Group LAN nodes by connected component
+        const compLans = new Map(); // compId -> [lanNode, ...]
+        nodes.forEach(n => {
+          if (n.type === 'lan' && n._compId !== undefined) {
+            if (!compLans.has(n._compId)) compLans.set(n._compId, []);
+            compLans.get(n._compId).push(n);
+          }
+        });
+        // For each component, compute average Y and nudge LANs toward it
+        compLans.forEach(lans => {
+          if (lans.length < 2) return;
+          const avgY = lans.reduce((s, n) => s + n.y, 0) / lans.length;
+          lans.forEach(n => {
+            n.vy += (avgY - n.y) * SIM_CONFIG.lanAlignStrength * alpha;
+          });
+        });
+      }
+      force.initialize = function(n) { nodes = n; };
+      return force;
+    })())
     .on('tick', () => {
       link
         .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
@@ -4245,15 +4654,25 @@ function renderGraph(data) {
 
       node.attr('transform', d => `translate(${d.x},${d.y})`);
 
+      // Update heatmap halo positions if active
+      if (heatmapActive) updateHeatmapHalos();
+
       // Update VDC boundary positions every tick so they're visible immediately
-      vdcBoundaryEls.forEach(({ vdc, boundaryRect, labelBg, toggleText, nameText, collapsedLabel }) => {
-        const vdcNodes = data.nodes.filter(n => vdc.nodeIds.has(n.id));
-        if (vdcNodes.length === 0) return;
+      vdcBoundaryEls.forEach(({ vdc, boundaryRect, labelBg, toggleText, nameText, collapsedLabel, _cachedNodes }) => {
+        // Use cached node refs (pre-resolved once) instead of filtering every tick
+        const vdcNodes = _cachedNodes;
+        if (!vdcNodes || vdcNodes.length === 0) return;
+        // Single pass to compute bounds instead of 4× d3.min/max scans
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (let i = 0; i < vdcNodes.length; i++) {
+          const n = vdcNodes[i];
+          if (n.x < minX) minX = n.x;
+          if (n.y < minY) minY = n.y;
+          if (n.x > maxX) maxX = n.x;
+          if (n.y > maxY) maxY = n.y;
+        }
         const pad = 50;
-        const minX = d3.min(vdcNodes, n => n.x) - pad;
-        const minY = d3.min(vdcNodes, n => n.y) - 70;
-        const maxX = d3.max(vdcNodes, n => n.x) + pad;
-        const maxY = d3.max(vdcNodes, n => n.y) + pad;
+        minX -= pad; minY -= 70; maxX += pad; maxY += pad;
 
         boundaryRect
           .attr('x', minX - 10).attr('y', minY - 10)
@@ -4280,7 +4699,7 @@ function renderGraph(data) {
     });
 
   // Click background to deselect
-  svg.on('click', () => { clearHighlight(); closeDetail(); });
+  svg.on('click', () => { clearHighlight(); closeDetail(); clearFlowHighlight(); if (heatmapActive) clearHeatmap(); });
 
   updateStats(data);
   updateLegend(data);
@@ -5668,6 +6087,7 @@ function exportTableCSV() {
 
 // ============================== EXPORT DROPDOWN ==============================
 function toggleExportMenu() {
+  closeFlowLogMenu();
   const dd = document.getElementById('exportDropdown');
   const btn = document.getElementById('exportMenuBtn');
   const isOpen = dd.classList.toggle('open');
@@ -5690,6 +6110,34 @@ function closeExportMenu() {
 function _closeExportOutside(e) {
   if (!document.querySelector('.export-dropdown-wrapper')?.contains(e.target)) {
     closeExportMenu();
+  }
+}
+
+// ============================== FLOW LOG DROPDOWN ==============================
+function toggleFlowLogMenu() {
+  closeExportMenu();
+  const dd = document.getElementById('flowlogDropdown');
+  const btn = document.getElementById('flowlogMenuBtn');
+  const isOpen = dd.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+  if (isOpen) {
+    setTimeout(() => document.addEventListener('click', _closeFlowLogOutside), 0);
+  } else {
+    document.removeEventListener('click', _closeFlowLogOutside);
+  }
+}
+
+function closeFlowLogMenu() {
+  const dd = document.getElementById('flowlogDropdown');
+  const btn = document.getElementById('flowlogMenuBtn');
+  if (dd) dd.classList.remove('open');
+  if (btn) btn.classList.remove('active');
+  document.removeEventListener('click', _closeFlowLogOutside);
+}
+
+function _closeFlowLogOutside(e) {
+  if (!document.querySelector('.flowlog-dropdown-wrapper')?.contains(e.target)) {
+    closeFlowLogMenu();
   }
 }
 
@@ -6853,13 +7301,28 @@ function showLoading(text) {
 function setLoadingText(text) { document.getElementById('loadingText').textContent = text; }
 function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
 
-function toast(message, type = 'info') {
+let flPersistentToast = null;
+function toast(message, type = 'info', persistent = false) {
   const container = document.getElementById('toastContainer');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
+  if (persistent) el.classList.add('toast-persistent');
   el.textContent = message;
   container.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+  if (persistent) {
+    // Remove any previous persistent toast
+    if (flPersistentToast && flPersistentToast.parentNode) flPersistentToast.remove();
+    flPersistentToast = el;
+  } else {
+    setTimeout(() => el.remove(), 3000);
+  }
+}
+
+function clearPersistentToast() {
+  if (flPersistentToast && flPersistentToast.parentNode) {
+    flPersistentToast.remove();
+    flPersistentToast = null;
+  }
 }
 
 function truncate(str, len) {
@@ -6918,6 +7381,1036 @@ currentLocale = detectLocale();
 translatePage();
 updateLocaleButtons();
 
+// ============================== TRAFFIC HEATMAP ==============================
+let heatmapActive = false;
+let heatmapMode = 'volume'; // 'volume' or 'security'
+let heatmapHaloGroup = null; // SVG group for halo elements
+
+function toggleHeatmap() {
+  if (heatmapActive) {
+    clearHeatmap();
+  } else {
+    applyHeatmap();
+  }
+}
+
+function setHeatmapMode(mode) {
+  heatmapMode = mode;
+  document.getElementById('hmModeVolume').classList.toggle('active', mode === 'volume');
+  document.getElementById('hmModeSecurity').classList.toggle('active', mode === 'security');
+
+  // Update gradient
+  const grad = document.getElementById('hmGradient');
+  grad.className = 'heatmap-gradient ' + mode;
+  const labels = document.getElementById('hmGradientLabels');
+  if (mode === 'volume') {
+    labels.innerHTML = '<span>0 B</span><span>Med</span><span>High</span>';
+  } else {
+    labels.innerHTML = '<span>0% rejected</span><span>50%</span><span>100%</span>';
+  }
+
+  if (heatmapActive) applyHeatmap();
+}
+
+// Memoization cache for aggregateFlowData — invalidated when flow logs or graph change
+let _hmAggCache = null;
+let _hmAggCacheKey = '';
+function invalidateHeatmapCache() { _hmAggCache = null; _hmAggCacheKey = ''; }
+
+function aggregateFlowData() {
+  // Memoize: only recompute when records count or graph changes
+  const cacheKey = `${flAllRecords.length}|${graphData?.nodes?.length || 0}`;
+  if (_hmAggCache && _hmAggCacheKey === cacheKey) return _hmAggCache;
+
+  // Aggregate flow log records per NIC and per IP pair
+  const nodeStats = new Map();  // nodeId -> {bytes, packets, accepted, rejected}
+  const linkStats = new Map();  // "srcNodeId|tgtNodeId" -> {bytes, packets, accepted, rejected}
+
+  if (!flAllRecords || !flAllRecords.length || !graphData || !graphData.nodes) return { nodeStats, linkStats };
+
+  // Build lookup: IP -> nodeId, NIC -> nodeId
+  const ipToNode = new Map();
+  const nicToNode = new Map();
+  graphData.nodes.forEach(n => {
+    if (n.data?.nics) {
+      n.data.nics.forEach(nic => {
+        if (nic.nicId) nicToNode.set(nic.nicId, n.id);
+        if (nic.ips) nic.ips.forEach(ip => ipToNode.set(ip, n.id));
+      });
+    }
+    if (n.type === 'ipblock' && n.data?.ips) {
+      n.data.ips.forEach(ip => ipToNode.set(ip, n.id));
+    }
+    if (n.type === 'nat' && n.data?.publicIps) {
+      n.data.publicIps.forEach(ip => ipToNode.set(ip, n.id));
+    }
+  });
+
+  // Initialize stats for all nodes
+  graphData.nodes.forEach(n => {
+    nodeStats.set(n.id, { bytes: 0, packets: 0, accepted: 0, rejected: 0 });
+  });
+
+  // Process each flow record
+  flAllRecords.forEach(r => {
+    // Find source and dest nodes
+    const srcNodeId = nicToNode.get(r.interfaceId) || ipToNode.get(r.srcaddr);
+    const dstNodeId = ipToNode.get(r.dstaddr);
+    const isAccept = r.action === 'ACCEPT';
+
+    // Update node stats
+    if (srcNodeId && nodeStats.has(srcNodeId)) {
+      const s = nodeStats.get(srcNodeId);
+      s.bytes += r.bytes; s.packets += r.packets;
+      if (isAccept) s.accepted++; else s.rejected++;
+    }
+    if (dstNodeId && nodeStats.has(dstNodeId)) {
+      const s = nodeStats.get(dstNodeId);
+      s.bytes += r.bytes; s.packets += r.packets;
+      if (isAccept) s.accepted++; else s.rejected++;
+    }
+
+    // Update link stats (find if there's a direct or indirect link)
+    if (srcNodeId && dstNodeId && srcNodeId !== dstNodeId) {
+      const key = [srcNodeId, dstNodeId].sort().join('|');
+      if (!linkStats.has(key)) linkStats.set(key, { bytes: 0, packets: 0, accepted: 0, rejected: 0 });
+      const ls = linkStats.get(key);
+      ls.bytes += r.bytes; ls.packets += r.packets;
+      if (isAccept) ls.accepted++; else ls.rejected++;
+    }
+  });
+
+  _hmAggCache = { nodeStats, linkStats };
+  _hmAggCacheKey = cacheKey;
+  return _hmAggCache;
+}
+
+function heatColor(value, mode) {
+  // value: 0-1 normalized
+  if (mode === 'security') {
+    // Green (safe) -> Yellow (warning) -> Red (danger)
+    if (value < 0.3) return `rgba(16, 185, 129, ${0.3 + value * 1.5})`;  // green
+    if (value < 0.6) return `rgba(245, 158, 11, ${0.4 + value})`;         // yellow/amber
+    return `rgba(239, 68, 68, ${0.5 + value * 0.5})`;                      // red
+  }
+  // Volume: cool blue -> cyan -> green -> amber -> red
+  if (value < 0.2) return `rgba(17, 199, 230, ${0.2 + value * 2})`;
+  if (value < 0.5) return `rgba(16, 185, 129, ${0.3 + value})`;
+  if (value < 0.8) return `rgba(255, 170, 0, ${0.4 + value * 0.5})`;
+  return `rgba(239, 68, 68, ${0.6 + value * 0.4})`;
+}
+
+function applyHeatmap() {
+  if (!flAllRecords || !flAllRecords.length) {
+    toast('Load flow log files first (press W)', 'warning');
+    return;
+  }
+  if (!graphData || !graphData.nodes || !graphData.nodes.length) {
+    toast('Load a VDC first', 'warning');
+    return;
+  }
+
+  heatmapActive = true;
+  document.getElementById('heatmapLegend').classList.remove('hidden');
+
+  const { nodeStats, linkStats } = aggregateFlowData();
+
+  // Find max values for normalization
+  let maxNodeBytes = 0, maxNodeRejectRatio = 0;
+  nodeStats.forEach(s => {
+    maxNodeBytes = Math.max(maxNodeBytes, s.bytes);
+    const total = s.accepted + s.rejected;
+    if (total > 10) maxNodeRejectRatio = Math.max(maxNodeRejectRatio, s.rejected / total);
+  });
+  if (maxNodeBytes === 0) maxNodeBytes = 1;
+  if (maxNodeRejectRatio === 0) maxNodeRejectRatio = 1;
+
+  let maxLinkBytes = 0;
+  linkStats.forEach(s => { maxLinkBytes = Math.max(maxLinkBytes, s.bytes); });
+  if (maxLinkBytes === 0) maxLinkBytes = 1;
+
+  // Create halo group if not exists
+  if (!heatmapHaloGroup && svgGroup) {
+    heatmapHaloGroup = svgGroup.insert('g', '.nodes').attr('class', 'heatmap-halos');
+  }
+
+  // Clear previous halos
+  if (heatmapHaloGroup) heatmapHaloGroup.selectAll('*').remove();
+
+  // Apply node halos
+  if (svgGroup) {
+    graphData.nodes.forEach(n => {
+      const stats = nodeStats.get(n.id);
+      if (!stats || (stats.bytes === 0 && stats.accepted === 0 && stats.rejected === 0)) return;
+
+      let intensity;
+      if (heatmapMode === 'volume') {
+        intensity = Math.sqrt(stats.bytes / maxNodeBytes); // sqrt for better distribution
+      } else {
+        const total = stats.accepted + stats.rejected;
+        intensity = total > 10 ? (stats.rejected / total) / maxNodeRejectRatio : 0;
+      }
+      if (intensity < 0.02) return;
+
+      const r = (NODE_TYPES[n.type]?.radius || 28) + 8 + intensity * 20;
+      const color = heatColor(intensity, heatmapMode);
+
+      if (heatmapHaloGroup) {
+        heatmapHaloGroup.append('circle')
+          .attr('class', 'hm-node-halo')
+          .attr('data-node-id', n.id)
+          .attr('cx', n.x).attr('cy', n.y)
+          .attr('r', r)
+          .attr('fill', color)
+          .attr('opacity', 0.4 + intensity * 0.4)
+          .attr('filter', 'url(#hmBlur)');
+      }
+    });
+
+    // Apply link coloring/thickness
+    svgGroup.selectAll('.link').each(function(d) {
+      const sId = typeof d.source === 'object' ? d.source.id : d.source;
+      const tId = typeof d.target === 'object' ? d.target.id : d.target;
+      const key = [sId, tId].sort().join('|');
+      const stats = linkStats.get(key);
+      const el = d3.select(this);
+
+      if (stats && stats.bytes > 0) {
+        let intensity;
+        if (heatmapMode === 'volume') {
+          intensity = Math.sqrt(stats.bytes / maxLinkBytes);
+        } else {
+          const total = stats.accepted + stats.rejected;
+          intensity = total > 5 ? stats.rejected / total : 0;
+        }
+        const color = heatColor(intensity, heatmapMode);
+        el.attr('stroke', color).attr('stroke-width', 2 + intensity * 5).attr('opacity', 0.5 + intensity * 0.5);
+      } else {
+        // No traffic on this link — dim it
+        el.attr('opacity', 0.15);
+      }
+    });
+  }
+
+  // Update legend stats
+  let totalBytes = 0, totalPackets = 0, totalAccepted = 0, totalRejected = 0;
+  let nodesWithTraffic = 0;
+  nodeStats.forEach(s => {
+    if (s.bytes > 0) nodesWithTraffic++;
+    totalBytes += s.bytes; totalPackets += s.packets;
+    totalAccepted += s.accepted; totalRejected += s.rejected;
+  });
+  // Deduplicate (each record counted on src+dst)
+  totalBytes = Math.round(totalBytes / 2);
+  totalPackets = Math.round(totalPackets / 2);
+
+  const statsEl = document.getElementById('hmStats');
+  const rejectPct = (totalAccepted + totalRejected) > 0 ? ((totalRejected / (totalAccepted + totalRejected)) * 100).toFixed(1) : '0';
+  statsEl.innerHTML = `
+    Nodes with traffic: <span>${nodesWithTraffic}</span> / ${graphData.nodes.length}<br>
+    Total volume: <span>${formatFlowBytes(totalBytes)}</span> (${totalPackets.toLocaleString()} pkts)<br>
+    Accepted: <span style="color:var(--success)">${totalAccepted.toLocaleString()}</span> &nbsp;
+    Rejected: <span style="color:var(--danger)">${totalRejected.toLocaleString()}</span> (${rejectPct}%)
+  `;
+
+  // Update gradient labels with actual values
+  const labels = document.getElementById('hmGradientLabels');
+  if (heatmapMode === 'volume') {
+    labels.innerHTML = `<span>0</span><span>${formatFlowBytes(maxNodeBytes / 2)}</span><span>${formatFlowBytes(maxNodeBytes)}</span>`;
+  } else {
+    labels.innerHTML = '<span>0% rejected</span><span>50%</span><span>100%</span>';
+  }
+}
+
+function updateHeatmapHalos() {
+  if (!heatmapActive || !heatmapHaloGroup || !graphData) return;
+  // Use pre-built nodeMap (O(1) lookup) instead of .find() (O(n)) per halo
+  const nodeMap = graphData._nodeMap || new Map(graphData.nodes.map(n => [n.id, n]));
+  heatmapHaloGroup.selectAll('.hm-node-halo').each(function() {
+    const el = d3.select(this);
+    const node = nodeMap.get(el.attr('data-node-id'));
+    if (node) {
+      el.attr('cx', node.x).attr('cy', node.y);
+    }
+  });
+}
+
+function clearHeatmap() {
+  heatmapActive = false;
+  document.getElementById('heatmapLegend')?.classList.add('hidden');
+
+  // Remove halos
+  if (heatmapHaloGroup) {
+    heatmapHaloGroup.selectAll('*').remove();
+  }
+
+  // Restore link styles
+  if (svgGroup) {
+    svgGroup.selectAll('.link')
+      .attr('stroke', function(d) {
+        const lt = LINK_TYPES[d.linkType];
+        if (lt) return lt.color;
+        const srcNode = typeof d.source === 'object' ? d.source : null;
+        return NODE_TYPES[srcNode?.type]?.color || '#475569';
+      })
+      .attr('stroke-width', null)
+      .attr('opacity', null);
+  }
+}
+
+// ============================== FLOW LOG EXPLORER ==============================
+const PROTO_MAP = { 1: 'ICMP', 6: 'TCP', 17: 'UDP', 47: 'GRE', 50: 'ESP', 58: 'ICMPv6' };
+let flAllRecords = [];      // all parsed flow log records
+let flFilteredRecords = []; // after filtering
+let flFiles = [];           // loaded file metadata: {name, nicId, timestamp, recordCount}
+let flSortCol = 'start';
+let flSortDir = 'desc';
+let flPage = 0;
+const FL_PAGE_SIZE = 500;
+let flFilterTimeout = null;
+
+function openFlowLogExplorer() {
+  const overlay = document.getElementById('flowlogOverlay');
+  const dialog = document.getElementById('flowlogDialog');
+  overlay.style.display = '';
+  // Reset position to center on each open
+  dialog.classList.remove('fl-dragged');
+  dialog.style.top = '50%';
+  dialog.style.left = '50%';
+  dialog.style.transform = 'translate(-50%, -50%)';
+  // Re-setup drag-drop each time
+  setupFlowLogDropzone();
+  setupFlowLogDrag();
+}
+
+function closeFlowLogExplorer() {
+  document.getElementById('flowlogOverlay').style.display = 'none';
+}
+
+// ---- Draggable dialog ----
+let flDragState = null;
+function setupFlowLogDrag() {
+  const dialog = document.getElementById('flowlogDialog');
+  const header = dialog.querySelector('.flowlog-header');
+  if (!header || header._flDragBound) return;
+  header._flDragBound = true;
+
+  header.addEventListener('mousedown', (e) => {
+    // Don't drag if clicking on buttons, inputs, selects
+    if (e.target.closest('button, input, select, .detail-close')) return;
+    e.preventDefault();
+    const rect = dialog.getBoundingClientRect();
+    flDragState = { startX: e.clientX, startY: e.clientY, origLeft: rect.left, origTop: rect.top };
+
+    // Switch from centered to absolute positioning on first drag
+    if (!dialog.classList.contains('fl-dragged')) {
+      dialog.style.left = rect.left + 'px';
+      dialog.style.top = rect.top + 'px';
+      dialog.style.transform = 'none';
+      dialog.classList.add('fl-dragged');
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!flDragState) return;
+    const dx = e.clientX - flDragState.startX;
+    const dy = e.clientY - flDragState.startY;
+    dialog.style.left = (flDragState.origLeft + dx) + 'px';
+    dialog.style.top = (flDragState.origTop + dy) + 'px';
+  });
+
+  document.addEventListener('mouseup', () => { flDragState = null; });
+}
+
+function setupFlowLogDropzone() {
+  const overlay = document.getElementById('flowlogOverlay');
+  if (!overlay || overlay._flDropBound) return;
+  overlay._flDropBound = true;
+
+  overlay.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); });
+  overlay.addEventListener('dragleave', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const dz = document.getElementById('flDropzone');
+    if (dz) dz.classList.remove('drag-over');
+  });
+  overlay.addEventListener('dragenter', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const dz = document.getElementById('flDropzone');
+    if (dz) dz.classList.add('drag-over');
+  });
+  overlay.addEventListener('drop', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const dz = document.getElementById('flDropzone');
+    if (dz) dz.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) handleFlowLogFiles(e.dataTransfer.files);
+  });
+}
+
+async function handleFlowLogFiles(fileList) {
+  const files = Array.from(fileList).filter(f => f.name.endsWith('.gz') || f.name.endsWith('.log'));
+  if (!files.length) { toast('No .log.gz files found', 'warning'); return; }
+
+  // Show loading state
+  const body = document.getElementById('flBody');
+  body.innerHTML = '<div style="padding:60px;text-align:center;color:var(--text-muted);"><div style="font-size:24px;margin-bottom:12px;">&#9203;</div>Parsing ' + files.length + ' file(s)...</div>';
+
+  // Process each file async
+  let newRecords = 0;
+  for (const file of files) {
+    try {
+      const records = await parseFlowLogFile(file);
+      if (records.length > 0) {
+        // Extract NIC UUID and timestamp from filename
+        const match = file.name.match(/^([0-9a-f-]{36})-(\d+)\.log/);
+        const nicId = match ? match[1] : file.name.replace(/\.log\.gz$|\.gz$|\.log$/, '');
+        const ts = match ? parseInt(match[2]) : null;
+
+        flFiles.push({
+          name: file.name,
+          nicId,
+          timestamp: ts,
+          recordCount: records.length,
+        });
+
+        flAllRecords.push(...records);
+        newRecords += records.length;
+      }
+    } catch (err) {
+      console.error('Failed to parse:', file.name, err);
+      toast('Failed to parse: ' + file.name, 'error');
+    }
+  }
+
+  if (newRecords === 0) {
+    toast('No flow log records found in uploaded files', 'warning');
+    renderFlowLogDropzone();
+    return;
+  }
+
+  toast(newRecords.toLocaleString() + ' records loaded from ' + files.length + ' file(s)', 'success');
+
+  // Reset file input so same file can be re-selected
+  const fileInput = document.getElementById('flFileInput');
+  if (fileInput) fileInput.value = '';
+
+  // Update NIC filter dropdown
+  updateFlowLogNicFilter();
+
+  // Apply filters and render
+  flPage = 0;
+  filterFlowLogs();
+  showFlowLogControls();
+}
+
+async function parseFlowLogFile(file) {
+  let buffer;
+  try { buffer = await file.arrayBuffer(); }
+  catch (e) { throw new Error(`Cannot read file ${file.name}: ${e.message}`); }
+  let text;
+
+  if (file.name.endsWith('.gz')) {
+    try {
+      const decompressed = pako.inflate(new Uint8Array(buffer));
+      text = new TextDecoder().decode(decompressed);
+    } catch (e) {
+      // Try as plain text
+      text = new TextDecoder().decode(buffer);
+    }
+  } else {
+    text = new TextDecoder().decode(buffer);
+  }
+
+  const lines = text.split('\n').filter(l => l.trim());
+  const records = [];
+
+  // Extract NIC UUID from filename for records
+  const match = file.name.match(/^([0-9a-f-]{36})-(\d+)\.log/);
+  const fileNicId = match ? match[1] : '';
+
+  for (const line of lines) {
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 14) continue;
+
+    // IONOS flow log format:
+    // version account-id interface-id srcaddr dstaddr srcport dstport protocol packets bytes start end action log-status
+    const [version, accountId, interfaceId, srcaddr, dstaddr, srcport, dstport, protocol, packets, bytes, start, end, action, logStatus] = parts;
+
+    // Skip header lines or malformed
+    if (version === 'version' || isNaN(parseInt(version))) continue;
+
+    records.push({
+      version: parseInt(version),
+      accountId,
+      interfaceId: interfaceId !== '-' ? interfaceId : fileNicId,
+      srcaddr,
+      dstaddr,
+      srcport: parseInt(srcport) || 0,
+      dstport: parseInt(dstport) || 0,
+      protocol: parseInt(protocol) || 0,
+      packets: parseInt(packets) || 0,
+      bytes: parseInt(bytes) || 0,
+      start: parseInt(start) || 0,
+      end: parseInt(end) || 0,
+      action: action || '',
+      logStatus: logStatus || '',
+    });
+  }
+
+  return records;
+}
+
+function showFlowLogControls() {
+  document.getElementById('flFilters').style.display = '';
+  document.getElementById('flFilePills').style.display = '';
+  document.getElementById('flFooter').style.display = '';
+  document.getElementById('flExportBtn').style.display = '';
+  document.getElementById('flClearBtn').style.display = '';
+  renderFlowLogFilePills();
+}
+
+function renderFlowLogDropzone() {
+  const body = document.getElementById('flBody');
+  body.innerHTML = `
+    <div class="fl-dropzone" id="flDropzone">
+      <div class="fl-dropzone-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <div class="fl-dropzone-title">Drop .log.gz files here</div>
+      <div class="fl-dropzone-subtitle">
+        Upload IONOS Flow Log files to explore traffic records. Files are parsed locally in your browser — nothing is uploaded to any server.
+        <br><br>
+        File format: <code style="color:var(--accent); font-size:11px;">{nic-uuid}-{epoch}.log.gz</code>
+      </div>
+      <button class="fl-dropzone-btn" onclick="document.getElementById('flFileInput').click()">Browse Files</button>
+    </div>
+  `;
+}
+
+function updateFlowLogNicFilter() {
+  const select = document.getElementById('flFilterNic');
+  if (!select) return;
+  const nics = [...new Set(flFiles.map(f => f.nicId))];
+  let html = '<option value="">All NICs (' + nics.length + ')</option>';
+  nics.forEach(nic => {
+    // Try to match NIC to a node name in the graph
+    let label = nic.substring(0, 8) + '...';
+    if (graphData && graphData.nodes) {
+      const matchNode = graphData.nodes.find(n =>
+        n.data?.nics?.some(nData => nData.nicId === nic)
+      );
+      if (matchNode) {
+        label = matchNode.name + ' (' + nic.substring(0, 8) + ')';
+      }
+    }
+    html += `<option value="${escapeHtml(nic)}">${escapeHtml(label)}</option>`;
+  });
+  select.innerHTML = html;
+}
+
+function renderFlowLogFilePills() {
+  const container = document.getElementById('flFilePills');
+  if (!container) return;
+  let html = '';
+  flFiles.forEach((f, i) => {
+    const timeStr = f.timestamp ? new Date(f.timestamp * 1000).toLocaleString() : 'unknown';
+    const nicShort = f.nicId.substring(0, 8);
+    html += `<span class="fl-file-pill">
+      <span class="fl-pill-nic" title="${escapeHtml(f.nicId)}">${escapeHtml(nicShort)}</span>
+      <span class="fl-pill-time">${escapeHtml(timeStr)}</span>
+      <span class="fl-pill-count">(${f.recordCount.toLocaleString()})</span>
+      <span class="fl-pill-remove" onclick="removeFlowLogFile(${i})" title="Remove">&times;</span>
+    </span>`;
+  });
+  container.innerHTML = html;
+}
+
+function removeFlowLogFile(index) {
+  const file = flFiles[index];
+  if (!file) return;
+  // Remove records belonging to this file's NIC+timestamp
+  flAllRecords = flAllRecords.filter(r => {
+    if (r.interfaceId === file.nicId) {
+      // If we have timestamp, filter by time range; otherwise remove all for that NIC
+      if (file.timestamp) {
+        // Records within a few minutes of the file timestamp likely belong to it
+        return Math.abs(r.start - file.timestamp) > 600;
+      }
+      return false;
+    }
+    return true;
+  });
+  flFiles.splice(index, 1);
+
+  if (flFiles.length === 0) {
+    clearFlowLogs();
+    return;
+  }
+
+  updateFlowLogNicFilter();
+  renderFlowLogFilePills();
+  flPage = 0;
+  filterFlowLogs();
+}
+
+function clearFlowLogs() {
+  flAllRecords = [];
+  flFilteredRecords = [];
+  flFiles = [];
+  invalidateHeatmapCache();
+  flPage = 0;
+  if (heatmapActive) clearHeatmap();
+
+  document.getElementById('flFilters').style.display = 'none';
+  document.getElementById('flFilePills').style.display = 'none';
+  document.getElementById('flFooter').style.display = 'none';
+  document.getElementById('flExportBtn').style.display = 'none';
+  document.getElementById('flClearBtn').style.display = 'none';
+  document.getElementById('flRecordCount').textContent = '';
+
+  // Reset filter inputs
+  ['flSearch', 'flFilterSrc', 'flFilterDst', 'flFilterPort'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['flFilterAction', 'flFilterProto', 'flFilterNic'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.selectedIndex = 0;
+  });
+
+  // Reset file input so same files can be re-selected
+  const fileInput = document.getElementById('flFileInput');
+  if (fileInput) fileInput.value = '';
+
+  renderFlowLogDropzone();
+}
+
+function filterFlowLogs() {
+  clearTimeout(flFilterTimeout);
+  flFilterTimeout = setTimeout(_applyFlowLogFilters, 150);
+}
+
+function _applyFlowLogFilters() {
+  const search = (document.getElementById('flSearch')?.value || '').toLowerCase();
+  const actionFilter = document.getElementById('flFilterAction')?.value || '';
+  const protoFilter = document.getElementById('flFilterProto')?.value || '';
+  const srcFilter = (document.getElementById('flFilterSrc')?.value || '').toLowerCase();
+  const dstFilter = (document.getElementById('flFilterDst')?.value || '').toLowerCase();
+  const portFilter = document.getElementById('flFilterPort')?.value || '';
+  const nicFilter = document.getElementById('flFilterNic')?.value || '';
+
+  flFilteredRecords = flAllRecords.filter(r => {
+    if (actionFilter && r.action !== actionFilter) return false;
+    if (protoFilter && r.protocol !== parseInt(protoFilter)) return false;
+    if (srcFilter && !r.srcaddr.toLowerCase().includes(srcFilter)) return false;
+    if (dstFilter && !r.dstaddr.toLowerCase().includes(dstFilter)) return false;
+    if (portFilter) {
+      const p = parseInt(portFilter);
+      if (r.srcport !== p && r.dstport !== p) return false;
+    }
+    if (nicFilter && r.interfaceId !== nicFilter) return false;
+    if (search) {
+      const haystack = (r.srcaddr + ' ' + r.dstaddr + ' ' + r.srcport + ' ' + r.dstport + ' ' + r.action + ' ' + (PROTO_MAP[r.protocol] || r.protocol) + ' ' + r.interfaceId).toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+
+  // Sort
+  sortFlowLogRecords();
+
+  // Update stats
+  updateFlowLogStats();
+
+  // Reset page
+  flPage = 0;
+  renderFlowLogTable();
+}
+
+function sortFlowLogRecords() {
+  const dir = flSortDir === 'asc' ? 1 : -1;
+  flFilteredRecords.sort((a, b) => {
+    let av = a[flSortCol], bv = b[flSortCol];
+    if (typeof av === 'string') {
+      av = av.toLowerCase(); bv = (bv || '').toLowerCase();
+      if (av < bv) return -1 * dir;
+      if (av > bv) return dir;
+      return 0;
+    }
+    return ((av || 0) - (bv || 0)) * dir;
+  });
+}
+
+function sortFlowLog(colKey) {
+  if (flSortCol === colKey) {
+    flSortDir = flSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    flSortCol = colKey;
+    flSortDir = colKey === 'start' ? 'desc' : 'asc';
+  }
+  sortFlowLogRecords();
+  renderFlowLogTable();
+}
+
+function updateFlowLogStats() {
+  const total = flAllRecords.length;
+  // Single pass to count accepts/rejects instead of two .filter() scans
+  let accepts = 0, rejects = 0;
+  for (let i = 0; i < flFilteredRecords.length; i++) {
+    if (flFilteredRecords[i].action === 'ACCEPT') accepts++;
+    else if (flFilteredRecords[i].action === 'REJECT') rejects++;
+  }
+
+  document.getElementById('flStatTotal').textContent = total.toLocaleString();
+  document.getElementById('flStatAccept').textContent = accepts.toLocaleString();
+  document.getElementById('flStatReject').textContent = rejects.toLocaleString();
+  document.getElementById('flStatFiles').textContent = flFiles.length;
+  document.getElementById('flStatShown').textContent = flFilteredRecords.length.toLocaleString();
+  document.getElementById('flRecordCount').textContent = '(' + flFilteredRecords.length.toLocaleString() + ' of ' + total.toLocaleString() + ')';
+}
+
+function renderFlowLogTable() {
+  const body = document.getElementById('flBody');
+  if (!body) return;
+
+  const cols = [
+    { key: 'start', label: 'Time' },
+    { key: 'srcaddr', label: 'Source IP' },
+    { key: 'srcport', label: 'Src Port' },
+    { key: 'dstaddr', label: 'Dest IP' },
+    { key: 'dstport', label: 'Dst Port' },
+    { key: 'protocol', label: 'Proto' },
+    { key: 'packets', label: 'Packets' },
+    { key: 'bytes', label: 'Bytes' },
+    { key: 'action', label: 'Action' },
+    { key: 'interfaceId', label: 'NIC' },
+  ];
+
+  // Header — use array.join() instead of string += to avoid O(n²) string allocation
+  const parts = ['<table class="fl-table"><thead><tr>'];
+  for (let c = 0; c < cols.length; c++) {
+    const col = cols[c];
+    const isSorted = flSortCol === col.key;
+    const arrow = isSorted ? (flSortDir === 'asc' ? '\u25B2' : '\u25BC') : '\u25B8';
+    parts.push(`<th onclick="sortFlowLog('${col.key}')">${col.label}<span class="sort-arrow">${arrow}</span></th>`);
+  }
+  parts.push('</tr></thead><tbody>');
+
+  // Paginated rows
+  const startIdx = flPage * FL_PAGE_SIZE;
+  const pageRows = flFilteredRecords.slice(startIdx, startIdx + FL_PAGE_SIZE);
+
+  if (pageRows.length === 0) {
+    parts.push(`<tr><td colspan="${cols.length}" class="fl-empty">${flAllRecords.length === 0 ? 'No flow log records loaded' : 'No records match the current filters'}</td></tr>`);
+  } else {
+    for (let idx = 0; idx < pageRows.length; idx++) {
+      const r = pageRows[idx];
+      const rowClass = r.action === 'REJECT' ? ' class="fl-row-reject"' : '';
+      const time = r.start ? new Date(r.start * 1000).toLocaleString() : '-';
+      const proto = PROTO_MAP[r.protocol] || r.protocol;
+      const actionClass = r.action === 'ACCEPT' ? 'fl-action-accept' : (r.action === 'REJECT' ? 'fl-action-reject' : '');
+      const nicShort = r.interfaceId ? r.interfaceId.substring(0, 8) + '...' : '-';
+      const globalIdx = startIdx + idx;
+
+      parts.push(
+        `<tr${rowClass} onclick="highlightFlowLogEntry(${globalIdx})" onmouseenter="hoverFlowLogEntry(${globalIdx})" onmouseleave="unhoverFlowLogEntry()" title="Click to pin highlight, hover to preview">`,
+        `<td>${escapeHtml(time)}</td>`,
+        `<td>${escapeHtml(r.srcaddr)}</td>`,
+        `<td>${r.srcport || '-'}</td>`,
+        `<td>${escapeHtml(r.dstaddr)}</td>`,
+        `<td>${r.dstport || '-'}</td>`,
+        `<td class="fl-proto">${escapeHtml(String(proto))}</td>`,
+        `<td>${r.packets.toLocaleString()}</td>`,
+        `<td>${formatFlowBytes(r.bytes)}</td>`,
+        `<td class="${actionClass}">${escapeHtml(r.action)}</td>`,
+        `<td title="${escapeHtml(r.interfaceId)}">${escapeHtml(nicShort)}</td>`,
+        '</tr>'
+      );
+    }
+  }
+
+  parts.push('</tbody></table>');
+  body.innerHTML = parts.join('');
+
+  // Update pagination
+  const totalPages = Math.max(1, Math.ceil(flFilteredRecords.length / FL_PAGE_SIZE));
+  document.getElementById('flPageInfo').textContent = 'Page ' + (flPage + 1) + ' of ' + totalPages;
+  document.getElementById('flPrevBtn').disabled = flPage === 0;
+  document.getElementById('flNextBtn').disabled = flPage >= totalPages - 1;
+}
+
+function formatFlowBytes(b) {
+  if (b === 0) return '0';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB';
+  return (b / 1073741824).toFixed(2) + ' GB';
+}
+
+function flPagePrev() {
+  if (flPage > 0) { flPage--; renderFlowLogTable(); }
+}
+
+function flPageNext() {
+  const totalPages = Math.ceil(flFilteredRecords.length / FL_PAGE_SIZE);
+  if (flPage < totalPages - 1) { flPage++; renderFlowLogTable(); }
+}
+
+// Resolve a flow record to matched graph nodes and the path between them
+function resolveFlowPath(record) {
+  if (!record || !graphData || !graphData.nodes || !graphData.nodes.length) return null;
+
+  const srcIp = record.srcaddr;
+  const dstIp = record.dstaddr;
+  const nicId = record.interfaceId;
+
+  const matchedNodeIds = new Set();
+  const matchReasons = new Map();
+
+  // Use pre-built lookup maps (O(1) instead of scanning all nodes)
+  const ipToNodes = graphData._ipToNodes;
+  const nicToNode = graphData._nicToNode;
+
+  if (ipToNodes && nicToNode) {
+    // NIC match
+    if (nicId && nicToNode.has(nicId)) {
+      const nId = nicToNode.get(nicId);
+      matchedNodeIds.add(nId);
+      matchReasons.set(nId, 'NIC ' + nicId.substring(0, 8));
+    }
+    // Source IP match
+    if (srcIp && ipToNodes.has(srcIp)) {
+      ipToNodes.get(srcIp).forEach(nId => {
+        matchedNodeIds.add(nId);
+        if (!matchReasons.has(nId)) matchReasons.set(nId, 'src ' + srcIp);
+      });
+    }
+    // Destination IP match
+    if (dstIp && ipToNodes.has(dstIp)) {
+      ipToNodes.get(dstIp).forEach(nId => {
+        matchedNodeIds.add(nId);
+        if (!matchReasons.has(nId)) matchReasons.set(nId, 'dst ' + dstIp);
+      });
+    }
+  } else {
+    // Fallback: scan all nodes (only if lookup maps not yet built)
+    graphData.nodes.forEach(n => {
+      if (n.data?.nics) {
+        n.data.nics.forEach(nic => {
+          if (nic.nicId === nicId) { matchedNodeIds.add(n.id); matchReasons.set(n.id, 'NIC ' + nicId.substring(0, 8)); }
+          if (nic.ips) {
+            if (nic.ips.includes(srcIp)) { matchedNodeIds.add(n.id); matchReasons.set(n.id, 'src ' + srcIp); }
+            if (nic.ips.includes(dstIp)) { matchedNodeIds.add(n.id); matchReasons.set(n.id, 'dst ' + dstIp); }
+          }
+        });
+      }
+      if (n.type === 'ipblock' && n.data?.ips) {
+        if (n.data.ips.includes(srcIp)) { matchedNodeIds.add(n.id); matchReasons.set(n.id, 'src ' + srcIp); }
+        if (n.data.ips.includes(dstIp)) { matchedNodeIds.add(n.id); matchReasons.set(n.id, 'dst ' + dstIp); }
+      }
+      if (n.type === 'nat' && n.data?.publicIps) {
+        if (n.data.publicIps.includes(srcIp) || n.data.publicIps.includes(dstIp)) {
+          matchedNodeIds.add(n.id); matchReasons.set(n.id, 'NAT IP');
+        }
+      }
+    });
+  }
+
+  if (matchedNodeIds.size === 0) return null;
+
+  // Find full path including intermediate nodes
+  const pathNodeIds = new Set(matchedNodeIds);
+  const pathLinkIds = new Set();
+
+  if (matchedNodeIds.size >= 2 && graphData.links) {
+    // Use pre-built BFS adjacency map if available
+    const adj = graphData._bfsAdj || (() => {
+      const m = new Map();
+      graphData.links.forEach((l, idx) => {
+        const sId = typeof l.source === 'object' ? l.source.id : l.source;
+        const tId = typeof l.target === 'object' ? l.target.id : l.target;
+        if (!m.has(sId)) m.set(sId, []);
+        if (!m.has(tId)) m.set(tId, []);
+        m.get(sId).push({ neighborId: tId, linkIdx: idx });
+        m.get(tId).push({ neighborId: sId, linkIdx: idx });
+      });
+      return m;
+    })();
+
+    const matchedArr = [...matchedNodeIds];
+    for (let i = 0; i < matchedArr.length; i++) {
+      for (let j = i + 1; j < matchedArr.length; j++) {
+        const path = bfsPath(adj, matchedArr[i], matchedArr[j], 4);
+        if (path) {
+          path.nodes.forEach(id => pathNodeIds.add(id));
+          path.links.forEach(idx => pathLinkIds.add(idx));
+        }
+      }
+    }
+  }
+
+  return { matchedNodeIds, matchReasons, pathNodeIds, pathLinkIds };
+}
+
+// Apply highlight to the graph for a resolved flow path
+let flHighlightActive = false;
+function applyFlowHighlight(resolved) {
+  if (!resolved || typeof svgGroup === 'undefined' || !svgGroup) return;
+  const { matchedNodeIds, pathNodeIds, pathLinkIds } = resolved;
+
+  flHighlightActive = true;
+
+  // Dim all nodes except the full path
+  svgGroup.selectAll('.node').classed('hl-dimmed', d => !pathNodeIds.has(d.id));
+  svgGroup.selectAll('.node').classed('hl-matched', d => matchedNodeIds.has(d.id));
+  svgGroup.selectAll('.node').classed('hl-path', d => pathNodeIds.has(d.id) && !matchedNodeIds.has(d.id));
+
+  // Dim all links except path links
+  svgGroup.selectAll('.link').each(function(d, i) {
+    const el = d3.select(this);
+    if (pathLinkIds.has(i)) {
+      el.style('opacity', 1).style('stroke', '#11C7E6').style('stroke-width', '3px');
+    } else {
+      el.style('opacity', 0.1);
+    }
+  });
+
+  // Glow on matched endpoint nodes
+  svgGroup.selectAll('.node.hl-matched .node-shape')
+    .attr('stroke', '#11C7E6').attr('stroke-width', 4);
+
+  // Softer glow on intermediate path nodes
+  svgGroup.selectAll('.node.hl-path .node-shape')
+    .attr('stroke', 'rgba(17,199,230,0.5)').attr('stroke-width', 3);
+}
+
+function clearFlowHighlight() {
+  if (!flHighlightActive || typeof svgGroup === 'undefined' || !svgGroup) return;
+  flHighlightActive = false;
+
+  svgGroup.selectAll('.node').classed('hl-dimmed', false).classed('hl-matched', false).classed('hl-path', false);
+  svgGroup.selectAll('.link').style('opacity', null).style('stroke', null).style('stroke-width', null);
+  svgGroup.selectAll('.node .node-shape').attr('stroke', null).attr('stroke-width', null);
+  clearPersistentToast();
+}
+
+function flowDescText(record) {
+  const proto = PROTO_MAP[record.protocol] || record.protocol;
+  return `${record.srcaddr}:${record.srcport} \u2192 ${record.dstaddr}:${record.dstport} (${proto} ${record.action})`;
+}
+
+function noMatchReason(record) {
+  const isPrivateSrc = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(record.srcaddr);
+  const isPrivateDst = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(record.dstaddr);
+  if (!isPrivateSrc && !isPrivateDst) return 'Both IPs are external \u2014 not part of this VDC topology';
+  if (!isPrivateSrc) return record.srcaddr + ' is external (internet traffic)';
+  if (!isPrivateDst) return record.dstaddr + ' is external (internet traffic)';
+  return 'IPs not found \u2014 resource may have been deleted or belongs to a different VDC';
+}
+
+// Click a row: close dialog, highlight persistently until user clicks the map
+function highlightFlowLogEntry(index) {
+  const record = flFilteredRecords[index];
+  if (!record) return;
+
+  const desc = flowDescText(record);
+  if (!graphData || !graphData.nodes || !graphData.nodes.length) {
+    toast(desc, 'info');
+    return;
+  }
+
+  const resolved = resolveFlowPath(record);
+  if (!resolved) {
+    toast(`${desc} \u2014 ${noMatchReason(record)}`, 'warning');
+    return;
+  }
+
+  // Close the dialog so graph is fully visible
+  closeFlowLogExplorer();
+
+  setTimeout(() => {
+    applyFlowHighlight(resolved);
+
+    // Build toast message
+    const names = graphData.nodes
+      .filter(n => resolved.matchedNodeIds.has(n.id))
+      .map(n => n.name + ' (' + (resolved.matchReasons.get(n.id) || '') + ')');
+    const intermediates = graphData.nodes
+      .filter(n => resolved.pathNodeIds.has(n.id) && !resolved.matchedNodeIds.has(n.id))
+      .map(n => n.name);
+    let msg = `${desc} \u2014 ${names.join(', ')}`;
+    if (intermediates.length) msg += ` via ${intermediates.join(', ')}`;
+    toast(msg + ' \u2014 click map to clear', 'info', true);
+  }, 150);
+}
+
+// Hover a row: highlight on the graph while hovering, clear on leave
+function hoverFlowLogEntry(index) {
+  const record = flFilteredRecords[index];
+  if (!record) return;
+  const resolved = resolveFlowPath(record);
+  if (resolved) applyFlowHighlight(resolved);
+}
+
+function unhoverFlowLogEntry() {
+  clearFlowHighlight();
+}
+
+// BFS shortest path between two nodes, limited to maxDepth hops
+function bfsPath(adj, startId, endId, maxDepth) {
+  if (startId === endId) return { nodes: [startId], links: [] };
+  const visited = new Set([startId]);
+  const queue = [{ id: startId, path: [startId], links: [], depth: 0 }];
+
+  while (queue.length > 0) {
+    const { id, path, links, depth } = queue.shift();
+    if (depth >= maxDepth) continue;
+
+    const neighbors = adj.get(id) || [];
+    for (const { neighborId, linkIdx } of neighbors) {
+      if (visited.has(neighborId)) continue;
+      const newPath = [...path, neighborId];
+      const newLinks = [...links, linkIdx];
+
+      if (neighborId === endId) {
+        return { nodes: newPath, links: newLinks };
+      }
+
+      visited.add(neighborId);
+      queue.push({ id: neighborId, path: newPath, links: newLinks, depth: depth + 1 });
+    }
+  }
+  return null; // no path found within maxDepth
+}
+
+function exportFlowLogCSV() {
+  if (!flFilteredRecords.length) { toast('No records to export', 'warning'); return; }
+
+  const headers = ['Time', 'Source IP', 'Src Port', 'Dest IP', 'Dst Port', 'Protocol', 'Packets', 'Bytes', 'Action', 'NIC ID', 'Account ID', 'Log Status'];
+  const rows = flFilteredRecords.map(r => [
+    r.start ? new Date(r.start * 1000).toISOString() : '',
+    r.srcaddr, r.srcport, r.dstaddr, r.dstport,
+    PROTO_MAP[r.protocol] || r.protocol,
+    r.packets, r.bytes, r.action, r.interfaceId, r.accountId, r.logStatus,
+  ]);
+
+  let csv = headers.join(',') + '\n';
+  rows.forEach(row => {
+    csv += row.map(v => {
+      const s = String(v);
+      return s.includes(',') || s.includes('"') ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }).join(',') + '\n';
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'flowlogs-export-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Exported ' + flFilteredRecords.length.toLocaleString() + ' records to CSV', 'success');
+}
+
 // ============================== GLOBAL KEYBOARD SHORTCUTS ==============================
 document.addEventListener('keydown', (e) => {
   const tag = document.activeElement?.tagName?.toLowerCase();
@@ -6926,10 +8419,14 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (document.getElementById('localeMenu')?.classList.contains('open')) { closeLocaleMenu(); return; }
     if (document.getElementById('exportDropdown')?.classList.contains('open')) { closeExportMenu(); return; }
+    if (document.getElementById('flowlogDropdown')?.classList.contains('open')) { closeFlowLogMenu(); return; }
     const tableOv = document.getElementById('tableOverlay');
     if (tableOv && tableOv.style.display !== 'none') { closeTableView(); return; }
     const secOv = document.getElementById('securityOverlay');
     if (secOv && secOv.style.display !== 'none') { closeSecurityOverlay(); return; }
+    const flOv = document.getElementById('flowlogOverlay');
+    if (flOv && flOv.style.display !== 'none') { closeFlowLogExplorer(); return; }
+    if (heatmapActive) { clearHeatmap(); return; }
     document.getElementById('shortcutsOverlay').style.display = 'none';
     closeDetail();
     clearSearch();
@@ -6956,6 +8453,8 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'g' || e.key === 'G') setViewMode('map');
   else if (e.key === 't' || e.key === 'T') openTableView();
   else if (e.key === 's' || e.key === 'S') openSecurityOverlay();
+  else if (e.key === 'w' || e.key === 'W') openFlowLogExplorer();
+  else if (e.key === 'x' || e.key === 'X') toggleHeatmap();
   else if (e.key === 'r' || e.key === 'R') resetView();
 });
 </script>
