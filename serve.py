@@ -64,6 +64,14 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         else:
             super().do_GET()
 
+    def do_POST(self) -> None:
+        """Route POST requests to the proxy (needed for AI Model Hub API)."""
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/proxy":
+            self._handle_proxy(parsed, method="POST")
+        else:
+            self._send_json_error(501, f"Unsupported POST path: {parsed.path}")
+
     def do_OPTIONS(self) -> None:
         """Handle CORS preflight requests."""
         self.send_response(200)
@@ -72,7 +80,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
 
     # ── Proxy ────────────────────────────────────────────────────────
 
-    def _handle_proxy(self, parsed: urllib.parse.ParseResult) -> None:
+    def _handle_proxy(self, parsed: urllib.parse.ParseResult, method: str = "GET") -> None:
         """Forward a request to the IONOS API and relay the response."""
         params = urllib.parse.parse_qs(parsed.query)
         target_url = params.get("url", [""])[0].strip()
@@ -110,7 +118,13 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         # Build the upstream request
-        req = urllib.request.Request(target_url, method="GET")
+        post_data = None
+        if method == "POST":
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length > 0:
+                post_data = self.rfile.read(content_length)
+
+        req = urllib.request.Request(target_url, method=method, data=post_data)
         req.add_header("Authorization", f"Bearer {token}")
         req.add_header("Content-Type", "application/json")
         req.add_header("User-Agent", "IONOS-Cloud-Network-Visualizer/1.1")
@@ -183,7 +197,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 "Access-Control-Allow-Origin",
                 f"http://localhost:{ProxyHandler.server_port}",
             )
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header(
             "Access-Control-Allow-Headers", "Content-Type, X-Token, Authorization"
         )

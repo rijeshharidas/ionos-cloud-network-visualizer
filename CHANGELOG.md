@@ -5,6 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-02-23
+
+### Added (1.9.0)
+
+- **AI Cloud Assistant** — General-purpose AI-powered infrastructure analysis using IONOS AI Model Hub (OpenAI-compatible API). Analyzes topology, security posture, billing/traffic, flow logs, and database services. Slide-out chat panel with multi-turn conversation, model selector (Llama 3.1 8B, Mistral Small 24B, Llama 3.3 70B), cost banner, and context-aware quick suggestions. Press `A` to open.
+- Dynamic AI context builder (`buildAiContext`) sends topology summary, server inventory with specs, LAN layout, database services, network infrastructure, security posture metrics, billing/data transfer stats, and flow log analysis to the model
+- Dynamic suggestion buttons that adapt based on loaded data: infrastructure summary, security assessment, traffic patterns, rejected flows, cost optimization, database overview
+- Context-aware system prompt (`buildAiSystemPrompt`) adapts persona based on available data (topology, flow logs, billing)
+- All VDC names from billing API included in AI context (covers entire contract, not just loaded VDC)
+- **Flow Log Enrichment** — IP-to-resource tagging (maps IPs to servers/services via topology), well-known port labels (SSH, HTTP, HTTPS, MySQL, etc.), and threat/scan flagging (Telnet, SMB, RDP, VNC + ICMP probes on REJECT)
+- NIC-to-server resolution: "Server / NIC" column shows server name alongside full NIC UUID
+- "External" badge on REJECT rows for unresolved IPs
+- **Right-click context menu** on flow log rows: Copy Row, Copy Source IP, Copy Dest IP, Copy NIC UUID, Copy as JSON, Filter by Source IP, Filter by Dest IP. Works in both inline and pop-out tables.
+- Horizontal scroll on enriched flow log table (`min-width: 1100px`)
+- Proxy POST support in `serve.py` for AI Model Hub API (`do_POST` handler forwarding request body)
+
+### Changed (1.9.0)
+
+- AI panel title: "Network AI Assistant" → "AI Cloud Assistant"
+- AI button now visible as soon as topology loads (not only when flow logs are loaded)
+- AI model costs updated to EUR pricing from official IONOS SE price list
+- `escapeHtml()` rewritten from DOM-based (createElement per call) to pure string replacement — eliminates thousands of temporary DOM elements during table rendering
+- System prompt includes anti-hallucination instruction: "Only reference resources explicitly present in context"
+- `serve.py` CORS headers updated to allow POST method
+- Locale dropdown alignment: consistent 28px height matching theme toggle, centered vertically
+
+### Fixed (1.9.0)
+
+- Context menu click handlers not firing: root cause was `flCtxRecord` set before `hideFlContextMenu()` which nulled it out; moved assignment after hide call
+- Context menu event delegation: replaced `DOMContentLoaded` wrapper (already fired by script execution time) with direct event delegation on `#flContextMenu` using `e.stopPropagation()`
+- AI guard blocking all messages when no flow logs loaded — now allows messages with topology-only data
+
+### Security (1.9.0)
+
+- Prompt injection defence: new `sanitizeName()` strips newlines, control characters, and limits to 100 chars on all infrastructure names before AI context embedding
+- AI context overflow protection: `AI_MAX_CONTEXT_CHARS` (12,000) truncates large topologies to stay within model token limits
+- AI request timeout: `AbortController` with 45-second timeout prevents hung requests
+- AI rate limiting: 2-second cooldown between requests prevents spam
+- HTTP 429 (rate limit) error now shows specific user-facing message
+- In-flight AI requests cancelled on disconnect cleanup
+
+## [1.8.1] - 2026-02-23
+
+### Added (1.8.1)
+
+- Flow Log Explorer dockable bottom-panel mode: toggle between centered overlay and bottom-docked panel to keep the map visible while browsing flow logs
+- Dock toggle button in Flow Log Explorer header with distinct float/dock icons
+- Top-edge resize handle in docked mode for adjustable panel height (drag to resize, persisted via localStorage)
+- Dock preference persisted across sessions via localStorage
+- Row click in docked mode highlights the selected row in-place and keeps the explorer open (no need to close/reopen)
+- Pop-out to separate window: open the Flow Log Explorer in its own browser window (drag to a second monitor) with full filter/sort/page controls and real-time hover-to-highlight on the main map
+- Pop-out window auto-syncs filters, sorting, pagination, and NIC options with the main app
+- Connection status indicator in pop-out footer; graceful handling when main window is closed
+
+### Fixed (1.8.1)
+
+- README banner SVG: removed duplicate IONOS logo box, single centered wordmark with proper spacing
+
 ## [1.8.0] - 2026-02-20
 
 ### Added (1.8.0)

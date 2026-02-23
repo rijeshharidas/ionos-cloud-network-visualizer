@@ -570,6 +570,101 @@
   .connected-item:hover, .connected-item:focus-visible { background: var(--bg-hover); }
   .connected-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
+  /* ---- AI Assistant Panel ---- */
+  .ai-panel {
+    width: 0; overflow: hidden; background: var(--bg-secondary); border-left: 1px solid var(--border);
+    flex-shrink: 0; display: flex; flex-direction: column; transition: width 0.3s ease;
+    position: relative; z-index: 50;
+  }
+  .ai-panel.open { width: 400px; overflow: visible; }
+  .ai-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(168,85,247,0.08) 0%, transparent 100%);
+    flex-shrink: 0;
+  }
+  .ai-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+  .ai-title svg { flex-shrink: 0; }
+  .ai-controls { display: flex; align-items: center; gap: 6px; }
+  .ai-controls select {
+    font-size: 11px; padding: 4px 6px; border-radius: 5px; border: 1px solid var(--border);
+    background: var(--bg-tertiary); color: var(--text-secondary); font-family: inherit; cursor: pointer;
+  }
+  .ai-cost-banner {
+    padding: 10px 14px; font-size: 11px; color: #fbbf24; background: rgba(251,191,36,0.08);
+    border-bottom: 1px solid rgba(251,191,36,0.2); display: flex; align-items: center;
+    gap: 8px; flex-shrink: 0; line-height: 1.4;
+  }
+  .ai-cost-banner.hidden { display: none; }
+  .ai-cost-banner button {
+    padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 600;
+    border: 1px solid rgba(251,191,36,0.4); background: rgba(251,191,36,0.12); color: #fbbf24;
+    cursor: pointer; white-space: nowrap; font-family: inherit;
+  }
+  .ai-cost-banner button:hover { background: rgba(251,191,36,0.25); }
+  .ai-messages {
+    flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+    min-height: 0;
+  }
+  .ai-msg {
+    max-width: 90%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5;
+    word-wrap: break-word;
+  }
+  .ai-msg-user {
+    align-self: flex-end; background: rgba(17,199,230,0.15); color: var(--text-primary);
+    border-bottom-right-radius: 4px;
+  }
+  .ai-msg-assistant {
+    align-self: flex-start; background: var(--bg-tertiary); color: var(--text-primary);
+    border-bottom-left-radius: 4px; white-space: pre-wrap;
+  }
+  .ai-msg-error {
+    align-self: flex-start; background: rgba(239,68,68,0.1); color: #f87171;
+    border-bottom-left-radius: 4px; font-size: 12px;
+  }
+  .ai-typing {
+    align-self: flex-start; padding: 10px 14px; background: var(--bg-tertiary);
+    border-radius: 12px; border-bottom-left-radius: 4px; font-size: 13px;
+    color: var(--text-muted);
+  }
+  .ai-typing-dots { display: inline-flex; gap: 3px; }
+  .ai-typing-dots span {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);
+    animation: aiDot 1.4s infinite ease-in-out;
+  }
+  .ai-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .ai-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes aiDot { 0%,80%,100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+  .ai-suggestions {
+    padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .ai-suggest-btn {
+    padding: 5px 12px; border-radius: 16px; font-size: 11px; font-weight: 500;
+    border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary);
+    cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap;
+  }
+  .ai-suggest-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--accent); }
+  .ai-input-area {
+    padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px;
+    align-items: flex-end; flex-shrink: 0;
+  }
+  .ai-input-area textarea {
+    flex: 1; resize: none; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg-tertiary); color: var(--text-primary); font-family: inherit; font-size: 13px;
+    outline: none; line-height: 1.4;
+  }
+  .ai-input-area textarea:focus { border-color: var(--accent); }
+  .ai-input-area button {
+    padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none;
+    background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; cursor: pointer;
+    font-family: inherit; transition: opacity 0.15s; flex-shrink: 0;
+  }
+  .ai-input-area button:hover { opacity: 0.85; }
+  .ai-input-area button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ai-welcome { text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 12px; line-height: 1.6; }
+  .ai-welcome svg { margin-bottom: 12px; opacity: 0.5; }
+
   /* ---- Metrics Charts ---- */
   #metricsContainer { margin-top: 4px; }
   .metrics-loading { font-size: 10px; color: var(--text-muted); }
@@ -811,12 +906,13 @@
   .cdn-badge.cdn-badge-off { background: var(--bg-hover); color: var(--text-muted); font-weight: 600; }
 
   /* ---- Language Dropdown ---- */
-  .locale-dropdown-wrapper { position: relative; display: inline-flex; margin-left: auto; flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
+  .locale-dropdown-wrapper { position: relative; display: inline-flex; margin-left: auto; flex-shrink: 0; align-self: center; }
   .locale-toggle {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    padding: 3px 8px; height: 28px; border-radius: 6px; font-size: 11px; font-weight: 600;
     cursor: pointer; background: rgba(17,199,230,0.1); color: var(--text-secondary);
     border: 1px solid rgba(17,199,230,0.2); transition: all 0.15s ease; line-height: 1;
+    box-sizing: border-box;
   }
   .locale-toggle:hover { background: rgba(17,199,230,0.18); color: var(--text-primary); }
   .locale-toggle .locale-flag { font-size: 14px; line-height: 1; }
@@ -953,6 +1049,37 @@
   .fl-resize-handle:hover { opacity: 0.7; }
   .fl-resize-handle svg { position: absolute; bottom: 4px; right: 4px; }
   .flowlog-dialog.fl-dragged { transform: none; }
+
+  /* Docked bottom-panel mode */
+  .flowlog-dialog.fl-docked {
+    top: auto !important; left: 0 !important; right: 0; bottom: 0;
+    transform: none !important;
+    width: 100vw; max-width: 100vw; height: 35vh; min-height: 180px;
+    border-radius: 14px 14px 0 0;
+    resize: none;
+    transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+  }
+  .flowlog-dialog.fl-docked .fl-resize-handle { display: none; }
+  .flowlog-dialog.fl-docked .fl-drag-hint { display: none; }
+  /* Top-edge resize bar for docked mode */
+  .fl-dock-resize {
+    display: none; height: 6px; cursor: ns-resize;
+    background: transparent; flex-shrink: 0; position: relative;
+  }
+  .fl-dock-resize::after {
+    content: ''; position: absolute; left: 50%; top: 2px; transform: translateX(-50%);
+    width: 40px; height: 3px; border-radius: 2px; background: var(--text-muted); opacity: 0.25;
+    transition: opacity 0.15s;
+  }
+  .fl-dock-resize:hover::after { opacity: 0.6; }
+  .flowlog-dialog.fl-docked .fl-dock-resize { display: block; }
+  .flowlog-dialog.fl-docked .flowlog-header { cursor: default; }
+  .flowlog-dialog.fl-docked .flowlog-header:active { cursor: default; }
+
+  /* Dock button styling */
+  .fl-btn-dock { position: relative; }
+  .fl-btn-dock svg { vertical-align: middle; }
+
   .flowlog-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 16px 24px; border-bottom: 1px solid var(--border);
@@ -1015,7 +1142,7 @@
   .fl-dropzone.drag-over { background: var(--accent-glow); border: 2px dashed var(--accent); border-radius: 12px; margin: 12px; }
 
   /* Flow log table */
-  .fl-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .fl-table { min-width: 1100px; width: 100%; border-collapse: collapse; font-size: 12px; }
   .fl-table thead { position: sticky; top: 0; z-index: 2; }
   .fl-table th {
     padding: 8px 10px; text-align: left; font-weight: 600; font-size: 11px;
@@ -1038,6 +1165,29 @@
   .fl-table tr { cursor: pointer; }
   .fl-table tr.fl-row-highlighted td { background: rgba(17,199,230,0.1); }
   .fl-table .fl-empty { text-align: center; padding: 40px; color: var(--text-muted); font-family: inherit; font-style: italic; }
+  .fl-table td:nth-child(2), .fl-table td:nth-child(4) { white-space: nowrap; }
+  .fl-ip-tag { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 3px; margin-left: 4px; font-weight: 600; vertical-align: middle; opacity: 0.9; }
+  .fl-port-label { display: inline-block; font-size: 9px; color: var(--text-muted); margin-left: 3px; font-style: italic; }
+  .fl-threat-badge { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(248,113,113,0.15); color: #f87171; font-weight: 600; margin-left: 4px; }
+  .fl-nic-id { font-size: 9px; color: var(--text-muted); opacity: 0.7; margin-left: 2px; }
+  .fl-table td:last-child { white-space: nowrap; }
+
+  /* Flow log context menu */
+  .fl-context-menu {
+    position: fixed; z-index: 10000; min-width: 200px;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    font-size: 12px; font-family: 'Inter', sans-serif;
+    display: none;
+  }
+  .fl-context-menu.visible { display: block; }
+  .fl-ctx-item {
+    padding: 7px 14px; cursor: pointer; color: var(--text-secondary);
+    display: flex; align-items: center; gap: 8px; transition: background 0.1s;
+  }
+  .fl-ctx-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .fl-ctx-item svg { flex-shrink: 0; opacity: 0.6; }
+  .fl-ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
 
   /* Flow log highlight states on graph */
   .node.hl-dimmed { opacity: 0.15 !important; transition: opacity 0.3s; }
@@ -1374,6 +1524,9 @@
     <button onclick="openTableView()" id="tableViewBtn" aria-label="Table view" data-tip="Table view (T)" data-i18n-tip="toolbar.tableView">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
     </button>
+    <button onclick="toggleAiPanel()" id="aiToggleBtn" aria-label="AI Assistant" data-tip="AI Cloud Assistant (A)" style="display:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.09 6.26L20 10.27l-4.91 3.82L16.18 22 12 18.27 7.82 22l1.09-7.91L4 10.27l5.91-2.01L12 2z"/></svg>
+    </button>
     <div class="flowlog-dropdown-wrapper">
       <button onclick="toggleFlowLogMenu()" id="flowlogMenuBtn" aria-label="Flow Logs" data-tip="Flow Logs" data-i18n-tip="toolbar.flowlogsMenu">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -1427,6 +1580,36 @@
   <div class="detail-content" id="detailContent"></div>
 </div>
 
+<!-- AI Assistant Panel -->
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-header">
+    <div class="ai-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.09 6.26L20 10.27l-4.91 3.82L16.18 22 12 18.27 7.82 22l1.09-7.91L4 10.27l5.91-2.01L12 2z"/></svg>
+      <span>AI Cloud Assistant</span>
+    </div>
+    <div class="ai-controls">
+      <select id="aiModelSelect" onchange="aiSelectedModel=this.value" title="Select AI model"></select>
+      <button class="detail-close" onclick="closeAiPanel()" title="Close">&times;</button>
+    </div>
+  </div>
+  <div class="ai-cost-banner" id="aiCostBanner">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1L1 14h14L8 1z"/><line x1="8" y1="6" x2="8" y2="9"/><circle cx="8" cy="11.5" r="0.5" fill="currentColor"/></svg>
+    <span>AI queries use the <strong>IONOS AI Model Hub</strong> and may incur costs on your account.</span>
+    <button onclick="dismissAiCostBanner()">Understood</button>
+  </div>
+  <div class="ai-messages" id="aiMessages">
+    <div class="ai-welcome">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round"><path d="M12 2l2.09 6.26L20 10.27l-4.91 3.82L16.18 22 12 18.27 7.82 22l1.09-7.91L4 10.27l5.91-2.01L12 2z"/></svg>
+      <div>Ask about your cloud infrastructure — topology, security posture, billing, traffic, or flow log analysis.<br>The AI receives a context summary of all loaded data.</div>
+    </div>
+  </div>
+  <div class="ai-suggestions" id="aiSuggestions"></div>
+  <div class="ai-input-area">
+    <textarea id="aiInput" rows="2" placeholder="Ask about your infrastructure..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage();}"></textarea>
+    <button id="aiSendBtn" onclick="sendAiMessage()">Send</button>
+  </div>
+</div>
+
 <!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
 
@@ -1471,6 +1654,7 @@
       <tr><th>W</th><td data-i18n="shortcuts.flowlogs">Flow Log Explorer</td></tr>
       <tr><th>X</th><td data-i18n="shortcuts.heatmap">Traffic Heatmap</td></tr>
       <tr><th>B</th><td data-i18n="shortcuts.billingHeatmap">Data Transfer Heatmap</td></tr>
+      <tr><th>A</th><td data-i18n="shortcuts.aiAssistant">AI Cloud Assistant</td></tr>
       <tr><th>?</th><td data-i18n="shortcuts.help">Show this help</td></tr>
     </table>
   </div>
@@ -1498,9 +1682,22 @@
   </div>
 </div>
 
+<!-- Flow Log Context Menu -->
+<div class="fl-context-menu" id="flContextMenu">
+  <div class="fl-ctx-item" data-action="copy-row"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 012 9.5v-7A1.5 1.5 0 013.5 1h7A1.5 1.5 0 0112 2.5V5"/></svg>Copy Row</div>
+  <div class="fl-ctx-item" data-action="copy-src-ip"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 012 9.5v-7A1.5 1.5 0 013.5 1h7A1.5 1.5 0 0112 2.5V5"/></svg>Copy Source IP</div>
+  <div class="fl-ctx-item" data-action="copy-dst-ip"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 012 9.5v-7A1.5 1.5 0 013.5 1h7A1.5 1.5 0 013.5 1h7A1.5 1.5 0 0112 2.5V5"/></svg>Copy Dest IP</div>
+  <div class="fl-ctx-item" data-action="copy-nic"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 012 9.5v-7A1.5 1.5 0 013.5 1h7A1.5 1.5 0 0112 2.5V5"/></svg>Copy NIC UUID</div>
+  <div class="fl-ctx-sep"></div>
+  <div class="fl-ctx-item" data-action="copy-json"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M9 2v4h4"/></svg>Copy as JSON</div>
+  <div class="fl-ctx-item" data-action="filter-src"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 3h14M3 7h10M5 11h6"/></svg>Filter by Source IP</div>
+  <div class="fl-ctx-item" data-action="filter-dst"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 3h14M3 7h10M5 11h6"/></svg>Filter by Dest IP</div>
+</div>
+
 <!-- Flow Log Explorer Overlay -->
 <div class="flowlog-overlay" id="flowlogOverlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Flow Log Explorer">
   <div class="flowlog-dialog" id="flowlogDialog">
+    <div class="fl-dock-resize" id="flDockResize"></div>
     <div class="flowlog-header">
       <h2>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -1513,6 +1710,12 @@
         <button class="fl-btn fl-btn-accent" onclick="document.getElementById('flFileInput').click()">+ Add Files</button>
         <button class="fl-btn" onclick="exportFlowLogCSV()" id="flExportBtn" style="display:none;">&#8681; CSV</button>
         <button class="fl-btn" onclick="clearFlowLogs()" id="flClearBtn" style="display:none;">Clear</button>
+        <button class="fl-btn fl-btn-dock" onclick="toggleFlowLogDock()" id="flDockBtn" title="Dock to bottom (see map while browsing)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="1" y1="9" x2="15" y2="9"/></svg>
+        </button>
+        <button class="fl-btn" onclick="popOutFlowLogExplorer()" id="flPopoutBtn" title="Open in separate window (drag to second monitor)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="11" height="11" rx="2"/><polyline points="7 1 15 1 15 9"/><line x1="15" y1="1" x2="9" y2="7"/></svg>
+        </button>
         <button class="detail-close" onclick="closeFlowLogExplorer()">&times;</button>
       </div>
     </div>
@@ -1569,6 +1772,7 @@
         <span><span class="fl-stat-label">Rejected:</span><span class="fl-stat-value fl-stat-reject" id="flStatReject">0</span></span>
         <span><span class="fl-stat-label">Files:</span><span class="fl-stat-value" id="flStatFiles">0</span></span>
         <span><span class="fl-stat-label">Shown:</span><span class="fl-stat-value" id="flStatShown">0</span></span>
+        <span><span class="fl-stat-label">Tagged:</span><span class="fl-stat-value" id="flStatTagged" style="color:var(--accent)">0</span></span>
       </div>
       <div class="fl-page-controls">
         <button onclick="flPagePrev()" id="flPrevBtn" disabled>&laquo; Prev</button>
@@ -1608,7 +1812,23 @@ const API_BASES = {
   dns: 'https://dns.de-fra.ionos.com',
   cdn: 'https://cdn.de-fra.ionos.com',
   billing: 'https://api.ionos.com/billing',
+  ai: 'https://openai.inference.de-txl.ionos.com/v1',
 };
+
+// ============================== AI MODEL HUB ==============================
+const AI_MODELS = [
+  { id: 'meta-llama/Meta-Llama-3.1-8B-Instruct', label: 'Llama 3.1 8B', cost: '~€0.15–0.25/M tokens' },
+  { id: 'mistralai/Mistral-Small-24B-Instruct-2501', label: 'Mistral Small 24B', cost: '~€0.45–0.65/M tokens' },
+  { id: 'meta-llama/Meta-Llama-3.3-70B-Instruct', label: 'Llama 3.3 70B', cost: '~€1.50–1.75/M tokens' },
+];
+let aiSelectedModel = AI_MODELS[0].id;
+let aiConversationHistory = [];
+let aiPanelOpen = false;
+let aiAbortController = null;
+let aiLastRequestTime = 0;
+const AI_COOLDOWN_MS = 2000;       // min interval between requests
+const AI_TIMEOUT_MS = 45000;       // 45s timeout for LLM inference
+const AI_MAX_CONTEXT_CHARS = 12000; // truncate context if too large
 
 // ============================== LOCATION FLAGS ==============================
 const LOCATION_CITIES = {
@@ -7212,6 +7432,12 @@ function disconnect() {
   _billingByServer = new Map();
   _billingByVdc = new Map();
 
+  // Clear AI state
+  if (aiAbortController) { aiAbortController.abort(); aiAbortController = null; }
+  closeAiPanel();
+  clearAiConversation();
+  updateAiButtonVisibility();
+
   // Reset token input and connect button
   document.getElementById('tokenInput').value = '';
   const btn = document.getElementById('connectBtn');
@@ -7361,6 +7587,7 @@ async function loadVDC() {
     renderGraph(data);
     setTimeout(() => zoomFit(), 1500);
     toast(t('toast.loadedResources', {count: data.nodes.length}), 'success');
+    updateAiButtonVisibility();
 
     // Update map background to show VDC region
     updateMapBackground(dcLocation);
@@ -7590,6 +7817,7 @@ async function loadLocation() {
     renderGraph(mergedData);
     setTimeout(() => zoomFit(), 1500);
     toast(t('toast.loadedLocation', {dcCount: dcsInLoc.length, nodeCount: cleanedNodes.length}), 'success');
+    updateAiButtonVisibility();
 
     // Update map background to show location region
     updateMapBackground(loc);
@@ -7681,10 +7909,11 @@ function formatRAM(mb) {
   return `${mb} MB`;
 }
 
+const _escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const _escapeRe = /[&<>"']/g;
 function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  if (typeof str !== 'string') return '';
+  return str.replace(_escapeRe, c => _escapeMap[c]);
 }
 
 document.getElementById('tokenInput').addEventListener('keydown', (e) => {
@@ -8095,6 +8324,239 @@ function clearHeatmap() {
 
 // ============================== FLOW LOG EXPLORER ==============================
 const PROTO_MAP = { 1: 'ICMP', 6: 'TCP', 17: 'UDP', 47: 'GRE', 50: 'ESP', 58: 'ICMPv6' };
+
+// Well-known port labels for flow log enrichment
+const WELL_KNOWN_PORTS = {
+  20: 'FTP-D', 21: 'FTP', 22: 'SSH', 23: 'Telnet', 25: 'SMTP',
+  53: 'DNS', 67: 'DHCP', 68: 'DHCP', 80: 'HTTP', 110: 'POP3',
+  123: 'NTP', 143: 'IMAP', 161: 'SNMP', 162: 'SNMP', 443: 'HTTPS',
+  445: 'SMB', 465: 'SMTPS', 514: 'Syslog', 587: 'SMTP',
+  993: 'IMAPS', 995: 'POP3S', 1433: 'MSSQL', 1521: 'Oracle',
+  3306: 'MySQL', 3389: 'RDP', 5432: 'Postgres', 5672: 'AMQP',
+  5900: 'VNC', 6379: 'Redis', 8080: 'HTTP-Alt', 8443: 'HTTPS-Alt',
+  9090: 'Prometheus', 9200: 'Elastic', 27017: 'MongoDB',
+};
+
+// Ports commonly targeted by scanners/bots — used for threat flagging
+const THREAT_PORTS = new Set([
+  23, 445, 1433, 3389, 5900, // Telnet, SMB, MSSQL, RDP, VNC
+]);
+
+// Resolve an IP to a topology resource tag (O(1) lookup)
+function resolveIpTag(ip) {
+  if (!graphData?._ipToNodes) return null;
+  const nodeIds = graphData._ipToNodes.get(ip);
+  if (!nodeIds || nodeIds.size === 0) return null;
+  const nodeMap = graphData._nodeMap;
+  if (!nodeMap) return null;
+  const firstId = nodeIds.values().next().value;
+  const node = nodeMap.get(firstId);
+  if (!node) return null;
+  const typeInfo = NODE_TYPES[node.type];
+  return {
+    name: node.name || node.id,
+    type: node.type,
+    label: typeInfo?.label || node.type,
+    color: typeInfo?.color || '#94a3b8',
+  };
+}
+
+// Check if an IP+port combo looks like a scan/bot attempt
+function isExternalThreatCandidate(ip, port, proto) {
+  if (!ip) return false;
+  // If IP belongs to our infrastructure, it's not a threat
+  if (graphData?._ipToNodes?.has(ip)) return false;
+  // ICMP from external IPs is a common probe/scan
+  if (proto === 1 || proto === 58) return true; // ICMP / ICMPv6
+  return port && THREAT_PORTS.has(port);
+}
+
+// Check if an IP is external (not in loaded topology)
+function isExternalIp(ip) {
+  if (!ip || !graphData?._ipToNodes) return false;
+  return !graphData._ipToNodes.has(ip);
+}
+
+// Render enriched IP cell with resource tag
+function enrichIpCell(ip, action) {
+  if (!ip) return '-';
+  let html = escapeHtml(ip);
+  const tag = resolveIpTag(ip);
+  if (tag) {
+    const shortName = tag.name.length > 20 ? tag.name.substring(0, 18) + '..' : tag.name;
+    html += ` <span class="fl-ip-tag" style="background:${tag.color}22;color:${tag.color}">${escapeHtml(tag.label)}: ${escapeHtml(shortName)}</span>`;
+  } else if (action === 'REJECT' && isExternalIp(ip)) {
+    html += ' <span class="fl-ip-tag" style="background:rgba(248,113,113,0.12);color:#f87171">External</span>';
+  }
+  return html;
+}
+
+// Resolve NIC UUID to server name
+function resolveNicLabel(nicId) {
+  if (!nicId || !graphData?._nicToNode || !graphData?._nodeMap) return null;
+  const nodeId = graphData._nicToNode.get(nicId);
+  if (!nodeId) return null;
+  const node = graphData._nodeMap.get(nodeId);
+  if (!node) return null;
+  return node.name || null;
+}
+
+// Render enriched port cell with service label and threat badge
+function enrichPortCell(port, ip, action, proto) {
+  let html = port ? String(port) : '-';
+  if (port) {
+    const label = WELL_KNOWN_PORTS[port];
+    if (label) {
+      html += ` <span class="fl-port-label">${escapeHtml(label)}</span>`;
+    }
+  }
+  if (isExternalThreatCandidate(ip, port, proto) && action === 'REJECT') {
+    html += ' <span class="fl-threat-badge">\u26A0 Scan</span>';
+  }
+  return html;
+}
+
+// Render enriched NIC cell with server name + full NIC UUID
+function enrichNicCell(nicId) {
+  if (!nicId) return '-';
+  const serverName = resolveNicLabel(nicId);
+  if (serverName) {
+    const shortServer = serverName.length > 18 ? serverName.substring(0, 16) + '..' : serverName;
+    return `<span>${escapeHtml(shortServer)}</span> <span class="fl-nic-id">${escapeHtml(nicId)}</span>`;
+  }
+  return `<span class="fl-nic-id">${escapeHtml(nicId)}</span>`;
+}
+
+// ---- Flow Log Context Menu ----
+let flCtxRecord = null; // the record for the currently open context menu
+
+function showFlContextMenu(e, record, targetDoc) {
+  e.preventDefault();
+  e.stopPropagation(); // prevent document click listener from immediately hiding menu
+
+  // Determine which document the menu is in (parent or popout)
+  const doc = targetDoc || document;
+  const menuId = doc === document ? 'flContextMenu' : 'poContextMenu';
+  const menu = doc.getElementById(menuId);
+  if (!menu) return;
+
+  // Hide any other open context menu first (this nulls flCtxRecord)
+  hideFlContextMenu();
+
+  // Set record AFTER hide so it doesn't get nulled out
+  flCtxRecord = record;
+
+  // Position near cursor, but keep within viewport
+  const win = doc.defaultView || window;
+  const mx = Math.min(e.clientX, win.innerWidth - 220);
+  const my = Math.min(e.clientY, win.innerHeight - 280);
+  menu.style.left = mx + 'px';
+  menu.style.top = my + 'px';
+  menu.classList.add('visible');
+  menu._activeDoc = doc; // track which doc owns this menu
+}
+
+function hideFlContextMenu() {
+  // Hide in both parent and popout
+  const menu1 = document.getElementById('flContextMenu');
+  if (menu1) menu1.classList.remove('visible');
+  if (flPopoutWindow && !flPopoutWindow.closed) {
+    const menu2 = flPopoutWindow.document.getElementById('poContextMenu');
+    if (menu2) menu2.classList.remove('visible');
+  }
+  flCtxRecord = null;
+}
+
+// Copy text to clipboard with toast feedback
+function flCopyToClipboard(text, label) {
+  navigator.clipboard.writeText(text).then(() => {
+    toast('Copied ' + label, 'info', true);
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('Copied ' + label, 'info', true);
+  });
+}
+
+// Handle context menu actions
+function handleFlCtxAction(action) {
+  if (!flCtxRecord) { console.warn('[FlowLog] No record for context action:', action); return; }
+  // Save reference before hideFlContextMenu nulls flCtxRecord
+  const r = flCtxRecord;
+  const proto = PROTO_MAP[r.protocol] || r.protocol;
+  const time = r.start ? new Date(r.start * 1000).toLocaleString() : '-';
+
+  switch (action) {
+    case 'copy-row': {
+      const srcTag = resolveIpTag(r.srcaddr);
+      const dstTag = resolveIpTag(r.dstaddr);
+      const srcLabel = srcTag ? ` (${srcTag.label}: ${srcTag.name})` : '';
+      const dstLabel = dstTag ? ` (${dstTag.label}: ${dstTag.name})` : '';
+      const srcPortLabel = WELL_KNOWN_PORTS[r.srcport] ? ` ${WELL_KNOWN_PORTS[r.srcport]}` : '';
+      const dstPortLabel = WELL_KNOWN_PORTS[r.dstport] ? ` ${WELL_KNOWN_PORTS[r.dstport]}` : '';
+      const text = `${time}\t${r.srcaddr}${srcLabel}\t${r.srcport || '-'}${srcPortLabel}\t${r.dstaddr}${dstLabel}\t${r.dstport || '-'}${dstPortLabel}\t${proto}\t${r.packets}\t${r.bytes}\t${r.action}\t${r.interfaceId || '-'}`;
+      flCopyToClipboard(text, 'row');
+      break;
+    }
+    case 'copy-src-ip':
+      flCopyToClipboard(r.srcaddr || '', 'source IP');
+      break;
+    case 'copy-dst-ip':
+      flCopyToClipboard(r.dstaddr || '', 'dest IP');
+      break;
+    case 'copy-nic':
+      flCopyToClipboard(r.interfaceId || '', 'NIC UUID');
+      break;
+    case 'copy-json': {
+      const obj = {
+        time, srcaddr: r.srcaddr, srcport: r.srcport, dstaddr: r.dstaddr,
+        dstport: r.dstport, protocol: proto, packets: r.packets,
+        bytes: r.bytes, action: r.action, interfaceId: r.interfaceId,
+      };
+      const srcTag = resolveIpTag(r.srcaddr);
+      const dstTag = resolveIpTag(r.dstaddr);
+      if (srcTag) obj.srcResource = `${srcTag.label}: ${srcTag.name}`;
+      if (dstTag) obj.dstResource = `${dstTag.label}: ${dstTag.name}`;
+      if (WELL_KNOWN_PORTS[r.srcport]) obj.srcService = WELL_KNOWN_PORTS[r.srcport];
+      if (WELL_KNOWN_PORTS[r.dstport]) obj.dstService = WELL_KNOWN_PORTS[r.dstport];
+      flCopyToClipboard(JSON.stringify(obj, null, 2), 'JSON');
+      break;
+    }
+    case 'filter-src': {
+      const input = document.getElementById('flFilterSrc');
+      if (input) { input.value = r.srcaddr || ''; filterFlowLogs(); }
+      break;
+    }
+    case 'filter-dst': {
+      const input = document.getElementById('flFilterDst');
+      if (input) { input.value = r.dstaddr || ''; filterFlowLogs(); }
+      break;
+    }
+  }
+  hideFlContextMenu();
+}
+
+// Wire context menu using event delegation (handles both menus)
+document.getElementById('flContextMenu')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const item = e.target.closest('.fl-ctx-item[data-action]');
+  if (item) handleFlCtxAction(item.dataset.action);
+});
+
+// Dismiss context menu on click elsewhere or Escape
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.fl-context-menu')) hideFlContextMenu();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideFlContextMenu();
+});
+
 let flAllRecords = [];      // all parsed flow log records
 let flFilteredRecords = []; // after filtering
 let flFiles = [];           // loaded file metadata: {name, nicId, timestamp, recordCount}
@@ -8104,22 +8566,554 @@ let flPage = 0;
 const FL_PAGE_SIZE = 500;
 let flFilterTimeout = null;
 
+let flDocked = false; // dock state
+
 function openFlowLogExplorer() {
   const overlay = document.getElementById('flowlogOverlay');
   const dialog = document.getElementById('flowlogDialog');
   overlay.style.display = '';
-  // Reset position to center on each open
-  dialog.classList.remove('fl-dragged');
-  dialog.style.top = '50%';
-  dialog.style.left = '50%';
-  dialog.style.transform = 'translate(-50%, -50%)';
-  // Re-setup drag-drop each time
+
+  // Restore dock preference
+  const savedDock = localStorage.getItem('fl-docked');
+  flDocked = savedDock === '1';
+
+  if (flDocked) {
+    dialog.classList.add('fl-docked');
+    dialog.classList.remove('fl-dragged');
+    dialog.style.top = ''; dialog.style.left = ''; dialog.style.transform = '';
+    // Restore saved height
+    const savedH = localStorage.getItem('fl-dock-height');
+    if (savedH) dialog.style.height = savedH;
+  } else {
+    dialog.classList.remove('fl-docked');
+    dialog.classList.remove('fl-dragged');
+    dialog.style.top = '50%'; dialog.style.left = '50%';
+    dialog.style.transform = 'translate(-50%, -50%)';
+    dialog.style.height = '';
+  }
+  updateDockButton();
   setupFlowLogDropzone();
   setupFlowLogDrag();
+  setupFlDockResize();
+}
+
+function toggleFlowLogDock() {
+  const dialog = document.getElementById('flowlogDialog');
+  flDocked = !flDocked;
+  localStorage.setItem('fl-docked', flDocked ? '1' : '0');
+
+  if (flDocked) {
+    dialog.classList.add('fl-docked');
+    dialog.classList.remove('fl-dragged');
+    dialog.style.top = ''; dialog.style.left = ''; dialog.style.transform = '';
+    const savedH = localStorage.getItem('fl-dock-height');
+    if (savedH) dialog.style.height = savedH;
+  } else {
+    dialog.classList.remove('fl-docked');
+    dialog.classList.remove('fl-dragged');
+    dialog.style.top = '50%'; dialog.style.left = '50%';
+    dialog.style.transform = 'translate(-50%, -50%)';
+    dialog.style.height = '';
+  }
+  updateDockButton();
+}
+
+function updateDockButton() {
+  const btn = document.getElementById('flDockBtn');
+  if (!btn) return;
+  if (flDocked) {
+    btn.title = 'Float (restore centered dialog)';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="10" rx="2"/><path d="M3 8h10"/></svg>';
+  } else {
+    btn.title = 'Dock to bottom (see map while browsing)';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="1" y1="9" x2="15" y2="9"/></svg>';
+  }
+}
+
+// Top-edge resize for docked mode
+let flDockResizeState = null;
+function setupFlDockResize() {
+  const handle = document.getElementById('flDockResize');
+  const dialog = document.getElementById('flowlogDialog');
+  if (!handle || handle._bound) return;
+  handle._bound = true;
+
+  handle.addEventListener('mousedown', (e) => {
+    if (!flDocked) return;
+    e.preventDefault();
+    const rect = dialog.getBoundingClientRect();
+    flDockResizeState = { startY: e.clientY, origHeight: rect.height };
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!flDockResizeState) return;
+    const dy = flDockResizeState.startY - e.clientY;
+    const newH = Math.max(200, Math.min(window.innerHeight * 0.85, flDockResizeState.origHeight + dy));
+    dialog.style.height = newH + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (!flDockResizeState) return;
+    localStorage.setItem('fl-dock-height', dialog.style.height);
+    flDockResizeState = null;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
 }
 
 function closeFlowLogExplorer() {
   document.getElementById('flowlogOverlay').style.display = 'none';
+  // Also close popout if open
+  if (flPopoutWindow && !flPopoutWindow.closed) {
+    flPopoutWindow.close();
+  }
+  flPopoutWindow = null;
+}
+
+// ---- Pop-out to separate window ----
+let flPopoutWindow = null;
+
+function popOutFlowLogExplorer() {
+  if (flPopoutWindow && !flPopoutWindow.closed) {
+    flPopoutWindow.focus();
+    return;
+  }
+
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+
+  const w = window.open('', 'FlowLogExplorer', 'width=1100,height=600,menubar=no,toolbar=no,location=no,status=no');
+  if (!w) {
+    toast('Pop-up blocked — please allow pop-ups for this page', 'warning');
+    return;
+  }
+  flPopoutWindow = w;
+
+  // Close the inline explorer
+  document.getElementById('flowlogOverlay').style.display = 'none';
+
+  // Build the popout document
+  w.document.write(buildPopoutHTML(theme));
+  w.document.close();
+
+  // When popout closes, restore inline
+  w.addEventListener('beforeunload', () => {
+    flPopoutWindow = null;
+  });
+
+  // Wire all popout controls from the PARENT context
+  // This avoids window.opener issues — all handlers run in the parent's scope
+  setTimeout(() => {
+    if (!w || w.closed) return;
+    const d = w.document;
+
+    // Filter inputs — sync to parent DOM then trigger filterFlowLogs
+    let poFilterTimeout = null;
+    const syncAndFilter = () => {
+      clearTimeout(poFilterTimeout);
+      poFilterTimeout = setTimeout(() => {
+        if (w.closed) return;
+        const map = [
+          ['flSearch', 'poSearch'], ['flFilterAction', 'poFilterAction'],
+          ['flFilterProto', 'poFilterProto'], ['flFilterSrc', 'poFilterSrc'],
+          ['flFilterDst', 'poFilterDst'], ['flFilterPort', 'poFilterPort'],
+          ['flFilterNic', 'poFilterNic'],
+        ];
+        map.forEach(([pid, lid]) => {
+          const pe = document.getElementById(pid);
+          const le = d.getElementById(lid);
+          if (pe && le) pe.value = le.value;
+        });
+        filterFlowLogs();
+      }, 150);
+    };
+
+    // Attach input/change listeners on filter elements
+    ['poSearch', 'poFilterSrc', 'poFilterDst', 'poFilterPort'].forEach(id => {
+      const el = d.getElementById(id);
+      if (el) el.addEventListener('input', syncAndFilter);
+    });
+    ['poFilterAction', 'poFilterProto', 'poFilterNic'].forEach(id => {
+      const el = d.getElementById(id);
+      if (el) el.addEventListener('change', syncAndFilter);
+    });
+
+    // Buttons
+    d.querySelector('[data-action="add-files"]')?.addEventListener('click', () => {
+      document.getElementById('flFileInput').click();
+    });
+    d.querySelector('[data-action="export-csv"]')?.addEventListener('click', () => exportFlowLogCSV());
+    d.querySelector('[data-action="clear"]')?.addEventListener('click', () => clearFlowLogs());
+
+    // Pagination
+    d.getElementById('poPrevBtn')?.addEventListener('click', () => flPagePrev());
+    d.getElementById('poNextBtn')?.addEventListener('click', () => flPageNext());
+
+    // Sync NIC filter options
+    const parentNic = document.getElementById('flFilterNic');
+    const popoutNic = d.getElementById('poFilterNic');
+    if (parentNic && popoutNic) popoutNic.innerHTML = parentNic.innerHTML;
+
+    // Connection checker
+    const hint = d.querySelector('.po-connection-hint');
+    const checkInterval = setInterval(() => {
+      if (w.closed) { clearInterval(checkInterval); return; }
+      if (!window || window.closed) {
+        if (hint) {
+          hint.textContent = 'Main window closed \u2014 reopen from app';
+          hint.style.color = 'var(--danger)';
+          hint.style.opacity = '1';
+        }
+      }
+    }, 2000);
+
+    // Wire popout context menu using event delegation
+    const poCtx = d.getElementById('poContextMenu');
+    if (poCtx) {
+      poCtx.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const item = e.target.closest('.fl-ctx-item[data-action]');
+        if (item) handleFlCtxAction(item.dataset.action);
+      });
+      // Dismiss on click elsewhere
+      d.addEventListener('click', (e) => {
+        if (!e.target.closest('.fl-context-menu')) {
+          poCtx.classList.remove('visible');
+        }
+      });
+      d.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') poCtx.classList.remove('visible');
+      });
+    }
+
+    // Render the table
+    renderPopoutTable();
+  }, 50);
+}
+
+function buildPopoutHTML(theme) {
+  return `<!DOCTYPE html>
+<html lang="en" data-theme="${theme}">
+<head>
+<meta charset="UTF-8">
+<title>Flow Log Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #001B41; --bg-secondary: #00264d; --bg-tertiary: #003366;
+    --bg-hover: #004080; --text-primary: #f1f5f9; --text-secondary: #a0c4e8;
+    --text-muted: #6a9ec8; --border: #1a4a7a; --accent: #11C7E6;
+    --accent-hover: #0ea8c4; --success: #10b981; --warning: #FFAA00; --danger: #ef4444;
+  }
+  html[data-theme="light"] {
+    --bg-primary: #ffffff; --bg-secondary: #f8f9fa; --bg-tertiary: #e8ecf1;
+    --bg-hover: #e0e8f0; --text-primary: #0f172a; --text-secondary: #1e293b;
+    --text-muted: #64748b; --border: #cbd5e1; --accent: #0284c7;
+    --accent-hover: #0369a1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary); color: var(--text-primary);
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  .po-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(17,199,230,0.06) 0%, transparent 100%);
+    flex-shrink: 0;
+  }
+  .po-header h2 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .po-header h2 svg { flex-shrink: 0; }
+  .po-header .fl-count { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  .po-controls { display: flex; align-items: center; gap: 8px; }
+  .po-controls input[type="text"] {
+    width: 180px; padding: 6px 10px; font-size: 12px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--bg-tertiary); color: var(--text-primary);
+    font-family: inherit; outline: none;
+  }
+  .po-controls input[type="text"]:focus { border-color: var(--accent); }
+  .fl-btn {
+    padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); background: var(--bg-tertiary);
+    color: var(--text-secondary); transition: all 0.15s; font-family: inherit;
+  }
+  .fl-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .fl-btn-accent { background: rgba(17,199,230,0.15); color: var(--accent); border-color: rgba(17,199,230,0.3); }
+  .fl-btn-accent:hover { background: rgba(17,199,230,0.25); }
+  .po-filters {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 10px 20px; border-bottom: 1px solid var(--border); font-size: 12px; flex-shrink: 0;
+  }
+  .po-filters label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+  .po-filters select, .po-filters input[type="text"] {
+    padding: 4px 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg-tertiary); color: var(--text-primary); font-family: inherit; outline: none;
+  }
+  .po-filters select { min-width: 80px; }
+  .po-filters input[type="text"] { width: 120px; }
+  .fl-filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .po-body { flex: 1; overflow: auto; min-height: 0; }
+  .fl-table { min-width: 1100px; width: 100%; border-collapse: collapse; font-size: 12px; }
+  .fl-table thead { position: sticky; top: 0; z-index: 2; }
+  .fl-table th {
+    padding: 8px 10px; text-align: left; font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted);
+    background: var(--bg-tertiary); border-bottom: 1px solid var(--border);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  .fl-table th:hover { color: var(--text-primary); }
+  .fl-table th .sort-arrow { margin-left: 4px; font-size: 9px; }
+  .fl-table td {
+    padding: 6px 10px; border-bottom: 1px solid var(--bg-tertiary);
+    color: var(--text-secondary); white-space: nowrap;
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace; font-size: 11px;
+  }
+  .fl-table tr { cursor: pointer; }
+  .fl-table tr:hover td { background: var(--bg-hover); }
+  .fl-table tr.fl-row-reject td { color: #f87171; }
+  .fl-table tr.fl-row-highlighted td { background: rgba(17,199,230,0.1); }
+  .fl-table .fl-action-accept { color: var(--success); font-weight: 600; }
+  .fl-table .fl-action-reject { color: var(--danger); font-weight: 600; }
+  .fl-table .fl-proto { color: var(--accent); }
+  .fl-table .fl-empty { text-align: center; padding: 40px; color: var(--text-muted); font-family: inherit; font-style: italic; }
+  .fl-table td:nth-child(2), .fl-table td:nth-child(4) { white-space: nowrap; }
+  .fl-ip-tag { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 3px; margin-left: 4px; font-weight: 600; vertical-align: middle; opacity: 0.9; }
+  .fl-port-label { display: inline-block; font-size: 9px; color: var(--text-muted); margin-left: 3px; font-style: italic; }
+  .fl-threat-badge { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(248,113,113,0.15); color: #f87171; font-weight: 600; margin-left: 4px; }
+  .fl-nic-id { font-size: 9px; color: var(--text-muted); opacity: 0.7; margin-left: 2px; }
+  .fl-table td:last-child { white-space: nowrap; }
+  .fl-context-menu {
+    position: fixed; z-index: 10000; min-width: 200px;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    font-size: 12px; font-family: 'Inter', sans-serif; display: none;
+  }
+  .fl-context-menu.visible { display: block; }
+  .fl-ctx-item {
+    padding: 7px 14px; cursor: pointer; color: var(--text-secondary);
+    display: flex; align-items: center; gap: 8px; transition: background 0.1s;
+  }
+  .fl-ctx-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .fl-ctx-item svg { flex-shrink: 0; opacity: 0.6; }
+  .fl-ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .po-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; border-top: 1px solid var(--border); font-size: 12px;
+    color: var(--text-muted); flex-shrink: 0;
+  }
+  .po-footer .fl-stats { display: flex; gap: 16px; }
+  .fl-stat-label { color: var(--text-muted); }
+  .fl-stat-value { font-weight: 600; color: var(--text-secondary); margin-left: 4px; }
+  .fl-stat-accept { color: var(--success) !important; }
+  .fl-stat-reject { color: var(--danger) !important; }
+  .fl-page-controls { display: flex; align-items: center; gap: 6px; }
+  .fl-page-controls button {
+    padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;
+    background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border); font-family: inherit;
+  }
+  .fl-page-controls button:hover { background: var(--bg-hover); }
+  .fl-page-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .po-connection-hint {
+    position: fixed; bottom: 8px; right: 12px; font-size: 10px; color: var(--text-muted); opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+  <div class="po-header">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Flow Log Explorer
+      <span class="fl-count" id="poRecordCount"></span>
+    </h2>
+    <div class="po-controls">
+      <input type="text" id="poSearch" placeholder="Search IPs, ports...">
+      <button class="fl-btn fl-btn-accent" data-action="add-files">+ Add Files</button>
+      <button class="fl-btn" data-action="export-csv" id="poExportBtn">&#8681; CSV</button>
+      <button class="fl-btn" data-action="clear">Clear</button>
+    </div>
+  </div>
+  <div class="po-filters" id="poFilters">
+    <label>Action:</label>
+    <select id="poFilterAction">
+      <option value="">All</option><option value="ACCEPT">ACCEPT</option><option value="REJECT">REJECT</option>
+    </select>
+    <span class="fl-filter-sep"></span>
+    <label>Protocol:</label>
+    <select id="poFilterProto">
+      <option value="">All</option><option value="6">TCP (6)</option><option value="17">UDP (17)</option><option value="1">ICMP (1)</option>
+    </select>
+    <span class="fl-filter-sep"></span>
+    <label>Src IP:</label>
+    <input type="text" id="poFilterSrc" placeholder="e.g. 10.0.0">
+    <span class="fl-filter-sep"></span>
+    <label>Dst IP:</label>
+    <input type="text" id="poFilterDst" placeholder="e.g. 192.168">
+    <span class="fl-filter-sep"></span>
+    <label>Port:</label>
+    <input type="text" id="poFilterPort" placeholder="e.g. 443" style="width:70px;">
+    <span class="fl-filter-sep"></span>
+    <label>NIC:</label>
+    <select id="poFilterNic">
+      <option value="">All NICs</option>
+    </select>
+  </div>
+  <div class="po-body" id="poBody"></div>
+  <div class="fl-context-menu" id="poContextMenu">
+    <div class="fl-ctx-item" data-action="copy-row"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 012 9.5v-7A1.5 1.5 0 013.5 1h7A1.5 1.5 0 0112 2.5V5"/></svg>Copy Row</div>
+    <div class="fl-ctx-item" data-action="copy-src-ip"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 012 9.5v-7A1.5 1.5 0 013.5 1h7A1.5 1.5 0 0112 2.5V5"/></svg>Copy Source IP</div>
+    <div class="fl-ctx-item" data-action="copy-dst-ip"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 012 9.5v-7A1.5 1.5 0 013.5 1h7A1.5 1.5 0 0112 2.5V5"/></svg>Copy Dest IP</div>
+    <div class="fl-ctx-item" data-action="copy-nic"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 11H3.5A1.5 1.5 0 012 9.5v-7A1.5 1.5 0 013.5 1h7A1.5 1.5 0 0112 2.5V5"/></svg>Copy NIC UUID</div>
+    <div class="fl-ctx-sep"></div>
+    <div class="fl-ctx-item" data-action="copy-json"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M9 2v4h4"/></svg>Copy as JSON</div>
+    <div class="fl-ctx-item" data-action="filter-src"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 3h14M3 7h10M5 11h6"/></svg>Filter by Source IP</div>
+    <div class="fl-ctx-item" data-action="filter-dst"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 3h14M3 7h10M5 11h6"/></svg>Filter by Dest IP</div>
+  </div>
+  <div class="po-footer">
+    <div class="fl-stats">
+      <span><span class="fl-stat-label">Records:</span><span class="fl-stat-value" id="poStatTotal">0</span></span>
+      <span><span class="fl-stat-label">Accepted:</span><span class="fl-stat-value fl-stat-accept" id="poStatAccept">0</span></span>
+      <span><span class="fl-stat-label">Rejected:</span><span class="fl-stat-value fl-stat-reject" id="poStatReject">0</span></span>
+      <span><span class="fl-stat-label">Files:</span><span class="fl-stat-value" id="poStatFiles">0</span></span>
+      <span><span class="fl-stat-label">Shown:</span><span class="fl-stat-value" id="poStatShown">0</span></span>
+    </div>
+    <div class="fl-page-controls">
+      <button id="poPrevBtn" disabled>&laquo; Prev</button>
+      <span id="poPageInfo">Page 1</span>
+      <button id="poNextBtn">Next &raquo;</button>
+    </div>
+  </div>
+  <div class="po-connection-hint">Connected to main window &bull; hover to highlight on map</div>
+</body>
+</html>`;
+}
+
+function renderPopoutTable() {
+  const w = flPopoutWindow;
+  if (!w || w.closed) return;
+
+  const body = w.document.getElementById('poBody');
+  if (!body) return;
+
+  const cols = [
+    { key: 'start', label: 'Time' },
+    { key: 'srcaddr', label: 'Source IP' },
+    { key: 'srcport', label: 'Src Port' },
+    { key: 'dstaddr', label: 'Dest IP' },
+    { key: 'dstport', label: 'Dst Port' },
+    { key: 'protocol', label: 'Proto' },
+    { key: 'packets', label: 'Packets' },
+    { key: 'bytes', label: 'Bytes' },
+    { key: 'action', label: 'Action' },
+    { key: 'interfaceId', label: 'Server / NIC' },
+  ];
+
+  const parts = ['<table class="fl-table"><thead><tr>'];
+  for (let c = 0; c < cols.length; c++) {
+    const col = cols[c];
+    const isSorted = flSortCol === col.key;
+    const arrow = isSorted ? (flSortDir === 'asc' ? '\u25B2' : '\u25BC') : '\u25B8';
+    parts.push(`<th data-col="${col.key}">${col.label}<span class="sort-arrow">${arrow}</span></th>`);
+  }
+  parts.push('</tr></thead><tbody>');
+
+  const startIdx = flPage * FL_PAGE_SIZE;
+  const pageRows = flFilteredRecords.slice(startIdx, startIdx + FL_PAGE_SIZE);
+
+  if (pageRows.length === 0) {
+    parts.push(`<tr><td colspan="${cols.length}" class="fl-empty">${flAllRecords.length === 0 ? 'No flow log records loaded' : 'No records match the current filters'}</td></tr>`);
+  } else {
+    for (let idx = 0; idx < pageRows.length; idx++) {
+      const r = pageRows[idx];
+      const rowClass = r.action === 'REJECT' ? ' class="fl-row-reject"' : '';
+      const time = r.start ? new Date(r.start * 1000).toLocaleString() : '-';
+      const proto = PROTO_MAP[r.protocol] || r.protocol;
+      const actionClass = r.action === 'ACCEPT' ? 'fl-action-accept' : (r.action === 'REJECT' ? 'fl-action-reject' : '');
+
+      const globalIdx = startIdx + idx;
+
+      parts.push(
+        `<tr${rowClass} data-idx="${globalIdx}" title="Click to pin highlight, hover to preview">`,
+        `<td>${escapeHtml(time)}</td>`,
+        `<td>${enrichIpCell(r.srcaddr, r.action)}</td>`,
+        `<td>${enrichPortCell(r.srcport, r.srcaddr, r.action, r.protocol)}</td>`,
+        `<td>${enrichIpCell(r.dstaddr, r.action)}</td>`,
+        `<td>${enrichPortCell(r.dstport, r.dstaddr, r.action, r.protocol)}</td>`,
+        `<td class="fl-proto">${escapeHtml(String(proto))}</td>`,
+        `<td>${r.packets.toLocaleString()}</td>`,
+        `<td>${formatFlowBytes(r.bytes)}</td>`,
+        `<td class="${actionClass}">${escapeHtml(r.action)}</td>`,
+        `<td>${enrichNicCell(r.interfaceId)}</td>`,
+        '</tr>'
+      );
+    }
+  }
+
+  parts.push('</tbody></table>');
+  body.innerHTML = parts.join('');
+
+  // Attach event listeners from the PARENT context (not inline handlers)
+  // so they directly call parent functions without needing window.opener
+  body.querySelectorAll('.fl-table th[data-col]').forEach(th => {
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', () => sortFlowLog(th.dataset.col));
+  });
+  body.querySelectorAll('.fl-table tbody tr[data-idx]').forEach(tr => {
+    const globalIdx = parseInt(tr.dataset.idx);
+    tr.addEventListener('mouseenter', () => hoverFlowLogEntry(globalIdx));
+    tr.addEventListener('mouseleave', () => unhoverFlowLogEntry());
+    tr.addEventListener('contextmenu', (e) => {
+      const record = flFilteredRecords[globalIdx];
+      if (record) showFlContextMenu(e, record, w.document);
+    });
+    tr.addEventListener('click', () => {
+      // Highlight on map persistently
+      const record = flFilteredRecords[globalIdx];
+      if (!record) return;
+      const resolved = resolveFlowPath(record);
+      if (!resolved) {
+        toast(flowDescText(record) + ' \u2014 ' + noMatchReason(record), 'warning');
+        return;
+      }
+      applyFlowHighlight(resolved);
+      // Highlight row in popout
+      body.querySelectorAll('.fl-table tbody tr').forEach(r => r.classList.remove('fl-row-highlighted'));
+      tr.classList.add('fl-row-highlighted');
+      // Toast
+      const names = graphData.nodes.filter(n => resolved.matchedNodeIds.has(n.id)).map(n => n.name);
+      toast(flowDescText(record) + ' \u2014 ' + names.join(', '), 'info', true);
+    });
+  });
+
+  // Update pagination and stats in popout
+  const totalPages = Math.max(1, Math.ceil(flFilteredRecords.length / FL_PAGE_SIZE));
+  const pageInfo = w.document.getElementById('poPageInfo');
+  if (pageInfo) pageInfo.textContent = 'Page ' + (flPage + 1) + ' of ' + totalPages;
+  const prevBtn = w.document.getElementById('poPrevBtn');
+  if (prevBtn) prevBtn.disabled = flPage === 0;
+  const nextBtn = w.document.getElementById('poNextBtn');
+  if (nextBtn) nextBtn.disabled = flPage >= totalPages - 1;
+
+  // Stats
+  const total = flAllRecords.length;
+  let accepts = 0, rejects = 0;
+  for (let i = 0; i < flFilteredRecords.length; i++) {
+    if (flFilteredRecords[i].action === 'ACCEPT') accepts++;
+    else if (flFilteredRecords[i].action === 'REJECT') rejects++;
+  }
+  const el = (id, val) => { const e = w.document.getElementById(id); if (e) e.textContent = val; };
+  el('poStatTotal', total.toLocaleString());
+  el('poStatAccept', accepts.toLocaleString());
+  el('poStatReject', rejects.toLocaleString());
+  el('poStatFiles', flFiles.length);
+  el('poStatShown', flFilteredRecords.length.toLocaleString());
+  el('poRecordCount', '(' + flFilteredRecords.length.toLocaleString() + ' of ' + total.toLocaleString() + ')');
+
+  // Sync NIC filter options
+  const parentNic = document.getElementById('flFilterNic');
+  const popoutNic = w.document.getElementById('poFilterNic');
+  if (parentNic && popoutNic && popoutNic.innerHTML !== parentNic.innerHTML) {
+    popoutNic.innerHTML = parentNic.innerHTML;
+  }
 }
 
 // ---- Draggable dialog ----
@@ -8131,7 +9125,8 @@ function setupFlowLogDrag() {
   header._flDragBound = true;
 
   header.addEventListener('mousedown', (e) => {
-    // Don't drag if clicking on buttons, inputs, selects
+    // Don't drag if clicking on buttons, inputs, selects, or if docked
+    if (flDocked) return;
     if (e.target.closest('button, input, select, .detail-close')) return;
     e.preventDefault();
     const rect = dialog.getBoundingClientRect();
@@ -8455,6 +9450,7 @@ function _applyFlowLogFilters() {
 
   // Update stats
   updateFlowLogStats();
+  updateAiButtonVisibility();
 
   // Reset page
   flPage = 0;
@@ -8501,6 +9497,18 @@ function updateFlowLogStats() {
   document.getElementById('flStatFiles').textContent = flFiles.length;
   document.getElementById('flStatShown').textContent = flFilteredRecords.length.toLocaleString();
   document.getElementById('flRecordCount').textContent = '(' + flFilteredRecords.length.toLocaleString() + ' of ' + total.toLocaleString() + ')';
+
+  // Count tagged IPs (IPs that match topology resources)
+  if (graphData?._ipToNodes) {
+    const taggedIps = new Set();
+    for (let i = 0; i < flFilteredRecords.length; i++) {
+      const r = flFilteredRecords[i];
+      if (r.srcaddr && graphData._ipToNodes.has(r.srcaddr)) taggedIps.add(r.srcaddr);
+      if (r.dstaddr && graphData._ipToNodes.has(r.dstaddr)) taggedIps.add(r.dstaddr);
+    }
+    const el = document.getElementById('flStatTagged');
+    if (el) el.textContent = taggedIps.size + ' IPs';
+  }
 }
 
 function renderFlowLogTable() {
@@ -8517,7 +9525,7 @@ function renderFlowLogTable() {
     { key: 'packets', label: 'Packets' },
     { key: 'bytes', label: 'Bytes' },
     { key: 'action', label: 'Action' },
-    { key: 'interfaceId', label: 'NIC' },
+    { key: 'interfaceId', label: 'Server / NIC' },
   ];
 
   // Header — use array.join() instead of string += to avoid O(n²) string allocation
@@ -8543,21 +9551,21 @@ function renderFlowLogTable() {
       const time = r.start ? new Date(r.start * 1000).toLocaleString() : '-';
       const proto = PROTO_MAP[r.protocol] || r.protocol;
       const actionClass = r.action === 'ACCEPT' ? 'fl-action-accept' : (r.action === 'REJECT' ? 'fl-action-reject' : '');
-      const nicShort = r.interfaceId ? r.interfaceId.substring(0, 8) + '...' : '-';
+
       const globalIdx = startIdx + idx;
 
       parts.push(
-        `<tr${rowClass} onclick="highlightFlowLogEntry(${globalIdx})" onmouseenter="hoverFlowLogEntry(${globalIdx})" onmouseleave="unhoverFlowLogEntry()" title="Click to pin highlight, hover to preview">`,
+        `<tr${rowClass} onclick="highlightFlowLogEntry(${globalIdx})" onmouseenter="hoverFlowLogEntry(${globalIdx})" onmouseleave="unhoverFlowLogEntry()" oncontextmenu="showFlContextMenu(event, flFilteredRecords[${globalIdx}])" title="Click to pin highlight, hover to preview, right-click to copy">`,
         `<td>${escapeHtml(time)}</td>`,
-        `<td>${escapeHtml(r.srcaddr)}</td>`,
-        `<td>${r.srcport || '-'}</td>`,
-        `<td>${escapeHtml(r.dstaddr)}</td>`,
-        `<td>${r.dstport || '-'}</td>`,
+        `<td>${enrichIpCell(r.srcaddr, r.action)}</td>`,
+        `<td>${enrichPortCell(r.srcport, r.srcaddr, r.action, r.protocol)}</td>`,
+        `<td>${enrichIpCell(r.dstaddr, r.action)}</td>`,
+        `<td>${enrichPortCell(r.dstport, r.dstaddr, r.action, r.protocol)}</td>`,
         `<td class="fl-proto">${escapeHtml(String(proto))}</td>`,
         `<td>${r.packets.toLocaleString()}</td>`,
         `<td>${formatFlowBytes(r.bytes)}</td>`,
         `<td class="${actionClass}">${escapeHtml(r.action)}</td>`,
-        `<td title="${escapeHtml(r.interfaceId)}">${escapeHtml(nicShort)}</td>`,
+        `<td>${enrichNicCell(r.interfaceId)}</td>`,
         '</tr>'
       );
     }
@@ -8571,6 +9579,9 @@ function renderFlowLogTable() {
   document.getElementById('flPageInfo').textContent = 'Page ' + (flPage + 1) + ' of ' + totalPages;
   document.getElementById('flPrevBtn').disabled = flPage === 0;
   document.getElementById('flNextBtn').disabled = flPage >= totalPages - 1;
+
+  // Also sync to popout window if open
+  if (flPopoutWindow && !flPopoutWindow.closed) renderPopoutTable();
 }
 
 function formatFlowBytes(b) {
@@ -8759,8 +9770,8 @@ function highlightFlowLogEntry(index) {
     return;
   }
 
-  // Close the dialog so graph is fully visible
-  closeFlowLogExplorer();
+  // In docked mode, keep explorer open — map is visible above
+  if (!flDocked) closeFlowLogExplorer();
 
   setTimeout(() => {
     applyFlowHighlight(resolved);
@@ -8774,8 +9785,19 @@ function highlightFlowLogEntry(index) {
       .map(n => n.name);
     let msg = `${desc} \u2014 ${names.join(', ')}`;
     if (intermediates.length) msg += ` via ${intermediates.join(', ')}`;
-    toast(msg + ' \u2014 click map to clear', 'info', true);
-  }, 150);
+    toast(msg + (flDocked ? '' : ' \u2014 click map to clear'), 'info', true);
+
+    // Highlight the clicked row in the table
+    if (flDocked) {
+      const tbody = document.querySelector('.fl-table tbody');
+      if (tbody) {
+        tbody.querySelectorAll('tr').forEach(r => r.classList.remove('fl-row-highlighted'));
+        const pageIdx = index - flPage * FL_PAGE_SIZE;
+        const row = tbody.querySelectorAll('tr')[pageIdx];
+        if (row) row.classList.add('fl-row-highlighted');
+      }
+    }
+  }, flDocked ? 0 : 150);
 }
 
 // Hover a row: highlight on the graph while hovering, clear on leave
@@ -8846,6 +9868,487 @@ function exportFlowLogCSV() {
   toast('Exported ' + flFilteredRecords.length.toLocaleString() + ' records to CSV', 'success');
 }
 
+// ============================== AI FLOW LOG ANALYST ==============================
+
+function toggleAiPanel() {
+  aiPanelOpen = !aiPanelOpen;
+  const panel = document.getElementById('aiPanel');
+  if (aiPanelOpen) {
+    panel.classList.add('open');
+    // Populate model selector on first open
+    const sel = document.getElementById('aiModelSelect');
+    if (sel && sel.options.length === 0) {
+      AI_MODELS.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `${m.label} (${m.cost})`;
+        sel.appendChild(opt);
+      });
+      sel.value = aiSelectedModel;
+    }
+    // Restore cost banner state
+    if (localStorage.getItem('ai-cost-dismissed') === '1') {
+      document.getElementById('aiCostBanner')?.classList.add('hidden');
+    }
+    updateAiSuggestions();
+    document.getElementById('aiInput')?.focus();
+  } else {
+    panel.classList.remove('open');
+  }
+}
+
+function openAiPanel() {
+  if (!aiPanelOpen) toggleAiPanel();
+}
+
+function closeAiPanel() {
+  if (aiPanelOpen) toggleAiPanel();
+}
+
+function updateAiSuggestions() {
+  const container = document.getElementById('aiSuggestions');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const suggestions = [];
+  const hasTopology = graphData?.nodes?.length > 0;
+  const hasFlowLogs = flAllRecords.length > 0;
+  const hasBilling = _billingByServer.size > 0 || _billingByVdc.size > 0;
+  const hasDatabases = graphData?.nodes?.some(n => ['postgres', 'mongodb', 'mysql', 'mariadb', 'kafka'].includes(n.type));
+
+  // Always available when topology is loaded
+  if (hasTopology) {
+    suggestions.push({ label: 'Summarize infrastructure', prompt: 'Give me a concise overview of my cloud infrastructure — servers, networks, databases, and any notable observations.' });
+    suggestions.push({ label: 'Security assessment', prompt: 'Assess the security posture of my infrastructure. Check firewall coverage, flow log monitoring, security groups, and highlight any gaps or concerns.' });
+  }
+
+  // Flow log suggestions
+  if (hasFlowLogs) {
+    suggestions.push({ label: 'Traffic patterns', prompt: 'Analyze the traffic patterns in my flow logs. Identify the top talkers, busiest ports, and any unusual activity.' });
+    suggestions.push({ label: 'Rejected flows', prompt: 'Analyze the rejected flows. Are there patterns suggesting attacks, misconfigurations, or missing firewall rules?' });
+  }
+
+  // Billing suggestions
+  if (hasBilling) {
+    suggestions.push({ label: 'Cost optimization', prompt: 'Review my data transfer and billing data. Which servers consume the most bandwidth? Are there cost optimization opportunities?' });
+  }
+
+  // Database suggestions
+  if (hasDatabases) {
+    suggestions.push({ label: 'Database overview', prompt: 'Summarize my database services — types, versions, instance counts, and any recommendations for updates or improvements.' });
+  }
+
+  // Limit to 4 suggestions max
+  suggestions.slice(0, 4).forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'ai-suggest-btn';
+    btn.textContent = s.label;
+    btn.onclick = () => sendAiMessage(s.prompt);
+    container.appendChild(btn);
+  });
+}
+
+function dismissAiCostBanner() {
+  document.getElementById('aiCostBanner')?.classList.add('hidden');
+  localStorage.setItem('ai-cost-dismissed', '1');
+}
+
+function addAiMessage(text, role) {
+  const container = document.getElementById('aiMessages');
+  if (!container) return;
+  // Remove welcome message on first interaction
+  const welcome = container.querySelector('.ai-welcome');
+  if (welcome) welcome.remove();
+
+  const el = document.createElement('div');
+  el.className = `ai-msg ai-msg-${role}`;
+  if (role === 'assistant') {
+    // Basic markdown-like formatting: **bold**, `code`, newlines
+    let html = escapeHtml(text)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code style="background:var(--bg-hover);padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>');
+    el.innerHTML = html;
+  } else {
+    el.textContent = text;
+  }
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+  return el;
+}
+
+function addAiTypingIndicator() {
+  const container = document.getElementById('aiMessages');
+  if (!container) return null;
+  const el = document.createElement('div');
+  el.className = 'ai-typing';
+  el.innerHTML = '<span class="ai-typing-dots"><span></span><span></span><span></span></span> Analyzing...';
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+  return el;
+}
+
+// Build dynamic system prompt based on what data is loaded
+function buildAiSystemPrompt(contextStr) {
+  const hasTopology = graphData?.nodes?.length > 0;
+  const hasFlowLogs = flAllRecords.length > 0;
+  const hasBilling = _billingByServer.size > 0 || _billingByVdc.size > 0;
+  const ctx = contextStr || buildAiContext();
+
+  let prompt = 'You are an IONOS Cloud infrastructure assistant. Give concise, actionable insights. Format key findings with **bold**. Use short paragraphs. Only reference resources, IPs, and data explicitly present in the context below — do not guess or invent details. If information is missing, say so.';
+  if (hasTopology) prompt += ' You have full visibility into the user\'s cloud topology — servers, LANs, databases, load balancers, VPNs, NAT gateways, and Kubernetes clusters.';
+  if (hasFlowLogs) prompt += ' You can analyze network flow logs for traffic patterns, security threats, and anomalies. When mentioning IPs, include their resource names if known.';
+  if (hasBilling) prompt += ' You have access to billing and data transfer metrics. Provide cost-aware recommendations and identify high-traffic resources.';
+  prompt += '\n\nCurrent infrastructure context:\n' + ctx;
+  return prompt;
+}
+
+// Sanitize names for AI context — strip newlines and control chars to prevent prompt injection
+function sanitizeName(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(/[\n\r\t]/g, ' ').replace(/[^\x20-\x7E\xA0-\xFF]/g, '').substring(0, 100);
+}
+
+// Build concise context string from all loaded data
+function buildAiContext() {
+  const parts = [];
+
+  // ── VDC inventory (from billing API — covers all VDCs in contract) ──
+  if (_billingByVdc.size > 0) {
+    const vdcNames = [];
+    _billingByVdc.forEach((v, id) => {
+      vdcNames.push(v.name ? `${sanitizeName(v.name)} (${id})` : id);
+    });
+    parts.push(`Virtual Data Centers (${vdcNames.length}): ${vdcNames.join(', ')}`);
+  } else if (currentDC) {
+    // Fallback: only the currently loaded VDC
+    parts.push(`Current VDC: ${sanitizeName(currentDC.properties?.name) || currentDC.id}`);
+  }
+
+  // ── Topology summary ──
+  if (graphData?.nodes?.length > 0) {
+    const typeCounts = {};
+    let totalCores = 0, totalRamMB = 0;
+    graphData.nodes.forEach(n => {
+      typeCounts[n.type] = (typeCounts[n.type] || 0) + 1;
+      if ((n.type === 'server' || n.type === 'cube') && n.data) {
+        totalCores += n.data.cores || 0;
+        totalRamMB += n.data.ram || 0;
+      }
+    });
+    const summary = Object.entries(typeCounts)
+      .map(([t, c]) => `${NODE_TYPES[t]?.label || t}: ${c}`)
+      .join(', ');
+    parts.push(`Topology: ${graphData.nodes.length} resources — ${summary}`);
+    if (totalCores > 0) {
+      parts.push(`Compute: ${totalCores} total vCPUs, ${(totalRamMB / 1024).toFixed(1)} GB total RAM`);
+    }
+  }
+
+  // ── Server inventory (top 15) ──
+  if (graphData?.nodes?.length > 0) {
+    const servers = graphData.nodes.filter(n => n.type === 'server' || n.type === 'cube');
+    if (servers.length > 0) {
+      parts.push('\nServers:');
+      servers.slice(0, 15).forEach(s => {
+        const d = s.data || {};
+        const nics = d.nics || [];
+        const ips = nics.flatMap(n => n.ips || []);
+        const fwCount = nics.filter(n => n.firewall).length;
+        const flCount = nics.filter(n => n.flowLogsEnabled).length;
+        const hasSG = (d.securityGroupCount || 0) > 0 || nics.some(n => (n.securityGroupCount || 0) > 0);
+        parts.push(`  ${sanitizeName(s.name)} — ${d.cores || '?'}C/${((d.ram || 0) / 1024).toFixed(0)}GB, ${d.vmState || '?'}, ${ips.length} IPs${fwCount > 0 ? ', FW on' : ', FW off'}${flCount > 0 ? ', FL on' : ''}${hasSG ? ', SG on' : ''}`);
+      });
+      if (servers.length > 15) parts.push(`  ...and ${servers.length - 15} more`);
+    }
+  }
+
+  // ── Network layout (LANs) ──
+  if (graphData?.nodes?.length > 0) {
+    const lans = graphData.nodes.filter(n => n.type === 'lan');
+    if (lans.length > 0) {
+      parts.push('\nLANs:');
+      lans.forEach(l => {
+        const d = l.data || {};
+        const connCount = graphData.links?.filter(lk => lk.source?.id === l.id || lk.target?.id === l.id || lk.source === l.id || lk.target === l.id).length || 0;
+        parts.push(`  ${sanitizeName(l.name)} — ${d.isPublic ? 'Public' : 'Private'}${d.cidr ? ', ' + d.cidr : ''}, ${connCount} connections`);
+      });
+    }
+  }
+
+  // ── Database services ──
+  if (graphData?.nodes?.length > 0) {
+    const dbs = graphData.nodes.filter(n => ['postgres', 'mongodb', 'mysql', 'mariadb', 'kafka'].includes(n.type));
+    if (dbs.length > 0) {
+      parts.push('\nDatabase/Streaming Services:');
+      dbs.forEach(d => {
+        const info = d.data || {};
+        parts.push(`  ${NODE_TYPES[d.type]?.label || d.type}: ${sanitizeName(d.name)} — v${info.version || '?'}, ${info.instances || '?'} instance(s)`);
+      });
+    }
+  }
+
+  // ── Load balancers, NAT gateways, VPNs ──
+  if (graphData?.nodes?.length > 0) {
+    const infra = graphData.nodes.filter(n => ['alb', 'nlb', 'nat', 'vpn_wg', 'vpn_ipsec', 'nfs', 'pcc'].includes(n.type));
+    if (infra.length > 0) {
+      parts.push('\nNetwork Infrastructure:');
+      infra.forEach(i => {
+        const d = i.data || {};
+        const ips = d.ips?.join(', ') || d.publicIps?.join(', ') || '';
+        parts.push(`  ${NODE_TYPES[i.type]?.label || i.type}: ${sanitizeName(i.name)}${ips ? ' (' + ips + ')' : ''}`);
+      });
+    }
+  }
+
+  // ── Security posture ──
+  if (graphData?.nodes?.length > 0) {
+    const servers = graphData.nodes.filter(n => n.type === 'server' || n.type === 'cube');
+    if (servers.length > 0) {
+      let fwEnabled = 0, flEnabled = 0, sgEnabled = 0;
+      const sgDetails = [];
+      servers.forEach(s => {
+        const nics = s.data?.nics || [];
+        if (nics.some(n => n.firewall)) fwEnabled++;
+        if (nics.some(n => n.flowLogsEnabled)) flEnabled++;
+        const hasSrvSG = (s.data?.securityGroupCount || 0) > 0;
+        const hasNicSG = nics.some(n => (n.securityGroupCount || 0) > 0);
+        if (hasSrvSG || hasNicSG) {
+          sgEnabled++;
+          // Collect SG names for this server
+          const sgIds = new Set();
+          (s.data?.securityGroupIds || []).forEach(id => sgIds.add(id));
+          nics.forEach(n => (n.securityGroupIds || []).forEach(id => sgIds.add(id)));
+          const sgNames = [...sgIds].map(id => {
+            const sg = graphData._securityGroups?.get(id);
+            return sg ? sg.name : id.substring(0, 8);
+          });
+          if (sgNames.length) sgDetails.push(`${sanitizeName(s.name)}: ${sgNames.map(n => sanitizeName(n)).join(', ')}`);
+        }
+      });
+      parts.push(`\nSecurity Posture: ${fwEnabled}/${servers.length} servers with firewall, ${flEnabled}/${servers.length} with flow logs, ${sgEnabled}/${servers.length} with security groups`);
+      if (sgDetails.length > 0) {
+        parts.push('Security Group Assignments:');
+        sgDetails.forEach(d => parts.push(`  ${d}`));
+      }
+    }
+  }
+
+  // ── Billing / data transfer ──
+  if (_billingByVdc.size > 0) {
+    parts.push('\nData Transfer by VDC (billing period):');
+    _billingByVdc.forEach((v, id) => {
+      parts.push(`  ${sanitizeName(v.name) || id} — In: ${v.totalIn.toFixed(2)} GB, Out: ${v.totalOut.toFixed(2)} GB`);
+    });
+  }
+  if (_billingByServer.size > 0) {
+    const topTransfer = [..._billingByServer.entries()]
+      .map(([id, v]) => ({ id, total: v.totalIn + v.totalOut, ...v }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+    if (topTransfer.length > 0) {
+      parts.push('\nTop Servers by Data Transfer:');
+      topTransfer.forEach(s => {
+        const node = graphData?.nodes?.find(n => n.id === `srv-${s.id}` || n.id === `cube-${s.id}`);
+        const name = sanitizeName(node?.name) || s.id;
+        parts.push(`  ${name} — In: ${s.totalIn.toFixed(2)} GB, Out: ${s.totalOut.toFixed(2)} GB`);
+      });
+    }
+  }
+
+  // ── Flow log analysis (if loaded) ──
+  if (flAllRecords.length > 0) {
+    const records = flFilteredRecords;
+    const total = flAllRecords.length;
+    const filtered = records.length;
+
+    let accepts = 0, rejects = 0, totalBytes = 0;
+    const srcCounts = new Map(), dstCounts = new Map(), portCounts = new Map();
+
+    for (let i = 0; i < records.length; i++) {
+      const r = records[i];
+      if (r.action === 'ACCEPT') accepts++;
+      else if (r.action === 'REJECT') rejects++;
+      totalBytes += r.bytes || 0;
+
+      if (r.srcaddr) srcCounts.set(r.srcaddr, (srcCounts.get(r.srcaddr) || 0) + 1);
+      if (r.dstaddr) dstCounts.set(r.dstaddr, (dstCounts.get(r.dstaddr) || 0) + 1);
+      if (r.dstport) portCounts.set(r.dstport, (portCounts.get(r.dstport) || 0) + 1);
+    }
+
+    parts.push(`\nFlow Log Summary: ${filtered} records shown (${total} total), ${accepts} ACCEPT, ${rejects} REJECT, ${formatFlowBytes(totalBytes)} total traffic.`);
+
+    const topSrc = [...srcCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+    if (topSrc.length) {
+      parts.push('\nTop Source IPs:');
+      topSrc.forEach(([ip, cnt]) => {
+        const tag = resolveIpTag(ip);
+        const label = tag ? ` [${tag.label}: ${sanitizeName(tag.name)}]` : ' [External]';
+        parts.push(`  ${ip}${label} — ${cnt} flows`);
+      });
+    }
+
+    const topDst = [...dstCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+    if (topDst.length) {
+      parts.push('\nTop Destination IPs:');
+      topDst.forEach(([ip, cnt]) => {
+        const tag = resolveIpTag(ip);
+        const label = tag ? ` [${tag.label}: ${sanitizeName(tag.name)}]` : ' [External]';
+        parts.push(`  ${ip}${label} — ${cnt} flows`);
+      });
+    }
+
+    const topPorts = [...portCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+    if (topPorts.length) {
+      parts.push('\nTop Destination Ports:');
+      topPorts.forEach(([port, cnt]) => {
+        const svc = WELL_KNOWN_PORTS[port] || '';
+        parts.push(`  ${port}${svc ? ' (' + svc + ')' : ''} — ${cnt} flows`);
+      });
+    }
+
+    // Active filters
+    const filters = [];
+    const srcF = document.getElementById('flFilterSrc')?.value;
+    const dstF = document.getElementById('flFilterDst')?.value;
+    const portF = document.getElementById('flFilterPort')?.value;
+    const actionF = document.getElementById('flFilterAction')?.value;
+    if (srcF) filters.push(`Source IP: ${srcF}`);
+    if (dstF) filters.push(`Dest IP: ${dstF}`);
+    if (portF) filters.push(`Port: ${portF}`);
+    if (actionF) filters.push(`Action: ${actionF}`);
+    if (filters.length) parts.push('\nActive Flow Log Filters: ' + filters.join(', '));
+  }
+
+  return parts.join('\n');
+}
+
+async function sendAiMessage(presetPrompt) {
+  const input = document.getElementById('aiInput');
+  const sendBtn = document.getElementById('aiSendBtn');
+  const userMsg = presetPrompt || (input ? input.value.trim() : '');
+  if (!userMsg) return;
+  if (input && !presetPrompt) input.value = '';
+
+  // Ensure panel is open
+  if (!aiPanelOpen) openAiPanel();
+
+  // Check if connected
+  if (!apiToken) {
+    addAiMessage('Please connect with your IONOS API token first.', 'error');
+    return;
+  }
+
+  // Check if any data is loaded
+  if (graphData.nodes.length === 0 && flAllRecords.length === 0) {
+    addAiMessage('No data loaded yet. Please connect to a data center first.', 'error');
+    return;
+  }
+
+  // Rate limiting — prevent spam
+  const now = Date.now();
+  if (now - aiLastRequestTime < AI_COOLDOWN_MS) {
+    toast('Please wait a moment before sending another message.', 'info', true);
+    return;
+  }
+
+  // Cancel any in-flight request
+  if (aiAbortController) {
+    aiAbortController.abort();
+    aiAbortController = null;
+  }
+
+  addAiMessage(userMsg, 'user');
+  if (sendBtn) sendBtn.disabled = true;
+  aiLastRequestTime = now;
+
+  const typing = addAiTypingIndicator();
+
+  // Build system prompt with context truncation to stay within token limits
+  let context = buildAiContext();
+  if (context.length > AI_MAX_CONTEXT_CHARS) {
+    context = context.substring(0, AI_MAX_CONTEXT_CHARS) + '\n\n[Context truncated — showing most important data]';
+  }
+  const systemPrompt = buildAiSystemPrompt(context);
+
+  // Abort controller with timeout
+  aiAbortController = new AbortController();
+  const timeoutId = setTimeout(() => aiAbortController?.abort(), AI_TIMEOUT_MS);
+
+  try {
+    const endpoint = `${API_BASES.ai}/chat/completions`;
+    const fetchUrl = useProxy()
+      ? `/proxy?url=${encodeURIComponent(endpoint)}`
+      : endpoint;
+
+    const headers = {
+      'Authorization': `Bearer ${apiToken}`,
+      'Content-Type': 'application/json',
+    };
+    if (useProxy()) headers['X-Token'] = apiToken;
+
+    const resp = await fetch(fetchUrl, {
+      method: 'POST',
+      headers,
+      signal: aiAbortController.signal,
+      body: JSON.stringify({
+        model: aiSelectedModel,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...aiConversationHistory,
+          { role: 'user', content: userMsg },
+        ],
+        temperature: 0.3,
+        max_tokens: 1024,
+      }),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      if (resp.status === 429) throw new Error('Rate limited — please wait and try again.');
+      throw new Error(`${resp.status}: ${errText.substring(0, 200)}`);
+    }
+
+    const data = await resp.json();
+    const reply = data.choices?.[0]?.message?.content || 'No response received.';
+
+    if (typing) typing.remove();
+    addAiMessage(reply, 'assistant');
+
+    // Track conversation for multi-turn context (keep last 6 turns)
+    aiConversationHistory.push({ role: 'user', content: userMsg });
+    aiConversationHistory.push({ role: 'assistant', content: reply });
+    if (aiConversationHistory.length > 12) aiConversationHistory = aiConversationHistory.slice(-12);
+
+  } catch (e) {
+    if (typing) typing.remove();
+    if (e.name === 'AbortError') {
+      addAiMessage('Request timed out or was cancelled. Please try again.', 'error');
+    } else {
+      addAiMessage('Error: ' + e.message, 'error');
+      toast('AI request failed: ' + e.message, 'error');
+    }
+  } finally {
+    clearTimeout(timeoutId);
+    aiAbortController = null;
+    if (sendBtn) sendBtn.disabled = false;
+    if (input) input.focus();
+  }
+}
+
+function clearAiConversation() {
+  aiConversationHistory = [];
+  const container = document.getElementById('aiMessages');
+  if (container) {
+    container.innerHTML = '<div class="ai-welcome"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round"><path d="M12 2l2.09 6.26L20 10.27l-4.91 3.82L16.18 22 12 18.27 7.82 22l1.09-7.91L4 10.27l5.91-2.01L12 2z"/></svg><div>Ask about your cloud infrastructure — topology, security posture, billing, traffic, or flow log analysis.<br>The AI receives a context summary of all loaded data.</div></div>';
+  }
+}
+
+// Show AI button when flow logs are loaded
+function updateAiButtonVisibility() {
+  const btn = document.getElementById('aiToggleBtn');
+  if (btn) btn.style.display = (graphData.nodes.length > 0 || flAllRecords.length > 0) ? '' : 'none';
+}
+
 // ============================== GLOBAL KEYBOARD SHORTCUTS ==============================
 document.addEventListener('keydown', (e) => {
   const tag = document.activeElement?.tagName?.toLowerCase();
@@ -8861,6 +10364,7 @@ document.addEventListener('keydown', (e) => {
     if (secOv && secOv.style.display !== 'none') { closeSecurityOverlay(); return; }
     const flOv = document.getElementById('flowlogOverlay');
     if (flOv && flOv.style.display !== 'none') { closeFlowLogExplorer(); return; }
+    if (aiPanelOpen) { closeAiPanel(); return; }
     if (heatmapActive) { clearHeatmap(); return; }
     document.getElementById('shortcutsOverlay').style.display = 'none';
     closeDetail();
@@ -8892,6 +10396,7 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'x' || e.key === 'X') toggleHeatmap();
   else if (e.key === 'b' || e.key === 'B') { setHeatmapMode('billing'); if (!heatmapActive) toggleHeatmap(); else applyHeatmap(); }
   else if (e.key === 'r' || e.key === 'R') resetView();
+  else if (e.key === 'a' || e.key === 'A') { if (graphData.nodes.length > 0 || flAllRecords.length > 0) toggleAiPanel(); }
 });
 </script>
 </body>

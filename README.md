@@ -53,7 +53,9 @@
 
 🛡️ **Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, and Cross Connect. Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
 
-📜 **Flow Log Explorer** — Drag-and-drop IONOS flow log files (`.log` or `.log.gz`) into the explorer panel to analyze traffic records. Filter by source/destination IP, port range, protocol, action (ACCEPT/REJECT), and NIC interface. Click any row to trace the source→destination path on the topology graph using BFS path-finding with highlighted intermediate nodes. Hover rows for live preview. Export filtered results as CSV. Press `W` to open.
+📜 **Flow Log Explorer** — Drag-and-drop IONOS flow log files (`.log` or `.log.gz`) into the explorer panel to analyze traffic records. Filter by source/destination IP, port range, protocol, action (ACCEPT/REJECT), and NIC interface. Click any row to trace the source→destination path on the topology graph using BFS path-finding with highlighted intermediate nodes. Hover rows for live preview. Enriched columns show IP-to-resource tags, well-known port labels, threat/scan badges, and server names alongside NIC UUIDs. Right-click any row for copy and filter actions. Export filtered results as CSV. Press `W` to open.
+
+🤖 **AI Cloud Assistant** — An AI-powered analysis panel using the IONOS AI Model Hub. Ask natural-language questions about your infrastructure — topology overview, security assessment, cost optimization, traffic patterns, or flow log analysis. The assistant receives a dynamic context summary of all loaded data (servers, LANs, databases, billing, security posture, flow logs) and adapts its suggestions based on what's available. Choose from Llama 3.1 8B, Mistral Small 24B, or Llama 3.3 70B. Press `A` to open.
 
 🔥 **Traffic Heatmap** — Visualize traffic patterns as color-coded halos around nodes. Toggle between Volume mode (bytes transferred), Security mode (rejected packet ratio), and Transfer mode (billing data). Nodes glow from cool blue to hot red based on traffic intensity, with a gradient legend and aggregate statistics. Press `X` to activate with flow logs, or `B` for Data Transfer heatmap.
 
@@ -244,6 +246,7 @@ Your API token never leaves your machine.
 | CDN | `cdn.de-fra.ionos.com` | Centralized |
 | Data Transfer (Traffic) | `/billing/{contract}/traffic` | Per Contract |
 | Data Transfer (Utilization) | `/billing/{contract}/utilization` | Per Contract |
+| AI Model Hub | `openai.inference.de-txl.ionos.com/v1` | Centralized |
 | Locations | `/cloudapi/v6/locations` | Centralized |
 | User Management | `/cloudapi/v6/um` | Centralized |
 
@@ -277,6 +280,7 @@ python3 serve.py [options]
 | `W` | Flow Log Explorer |
 | `X` | Traffic Heatmap |
 | `B` | Data Transfer Heatmap |
+| `A` | AI Cloud Assistant |
 | `G` | Global map view |
 
 ## Security
@@ -287,6 +291,7 @@ python3 serve.py [options]
 | **In-Memory Storage** | Tokens live exclusively in browser memory — cleared when you close the tab. No cookies, no disk persistence. |
 | **Localhost Binding** | The proxy binds to `127.0.0.1` only, preventing remote access. |
 | **XSS Protection** | All user-controlled content is escaped before rendering in the DOM. |
+| **AI Context Sanitization** | Infrastructure names are stripped of newlines and control characters before embedding in AI prompts to prevent prompt injection. Context size is capped to stay within model token limits. |
 
 ## Contributing
 
