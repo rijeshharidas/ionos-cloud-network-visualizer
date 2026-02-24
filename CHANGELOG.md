@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed (1.9.1)
 
 - AI panel close animation causing layout glitch — content overflowing during width transition. Fixed by using `min-width` transition, removing `overflow: visible`, and conditionally applying `border-left` only when panel is open
+- White/blue band across map when AI panel is open during navigation — Leaflet default `#ddd` background was showing through unloaded tiles; set map container background to `var(--bg-primary)`. Added `ResizeObserver` on `.main-area` for automatic `invalidateSize`. Root fix: AI panel now auto-closes before map navigation so container dimensions are stable when Leaflet calculates tile bounds
+- Toolbar buttons overflowing outside the bar when AI panel is open — added `max-width: calc(100% - 40px)` constraint with flexible button shrinking; reduced padding and gap for compact layout
+- AI panel auto-closes on navigation (global map, VDC switch, location view) to prevent map resize artifacts and toolbar overflow
 - VDC loading overlay showing onboarding content bleed-through — changed from semi-transparent `rgba(15, 23, 42, 0.85)` to fully opaque `var(--bg-primary)` with `z-index: 200`
 - MCP docs search failing silently — added SSE response parsing in proxy, dynamic tool name discovery via `tools/list`, robust JSON-RPC error handling, and diagnostic logging
 

@@ -248,8 +248,10 @@
   #mapBackground {
     position: absolute; inset: 0; z-index: 0;
     opacity: 0; transition: opacity 0.6s ease, z-index 0s;
-    pointer-events: none;
+    pointer-events: none; background: var(--bg-primary);
   }
+  /* Override Leaflet default #ddd background so unloaded tiles blend with the app theme */
+  #mapBackground.leaflet-container { background: var(--bg-primary); }
   #mapBackground.visible { opacity: 0.85; }
   #mapBackground .leaflet-control-container { display: none; }
   #mapBackground .leaflet-tile-pane { filter: grayscale(0.1) brightness(1.1) contrast(1.15); }
@@ -811,19 +813,21 @@
   /* ---- Toolbar ---- */
   .toolbar {
     position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 4px;
+    display: flex; gap: 2px; align-items: center;
     background: var(--bg-secondary); border: 1px solid var(--border);
     border-radius: 8px; padding: 4px; z-index: 10;
+    max-width: calc(100% - 40px);
   }
   .toolbar button {
     position: relative;
     background: none; border: none; color: var(--text-secondary);
-    padding: 6px 10px; border-radius: 4px; cursor: pointer;
+    padding: 6px 7px; border-radius: 4px; cursor: pointer;
     font-size: 13px; transition: all 0.15s;
+    flex-shrink: 1; min-width: 0;
   }
   .toolbar button:hover, .toolbar button:focus-visible { background: var(--bg-tertiary); color: var(--text-primary); }
   .toolbar button.active { background: var(--accent); color: #fff; }
-  .toolbar-divider { width: 1px; background: var(--border); margin: 2px 4px; }
+  .toolbar-divider { width: 1px; flex-shrink: 0; background: var(--border); margin: 2px 4px; }
   .toolbar button::after {
     content: attr(data-tip);
     position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
@@ -4295,6 +4299,18 @@ function initMapBackground() {
   bgTileLayer = L.tileLayer(getMapTileUrl(), {
     subdomains: 'abcd', maxZoom: 19,
   }).addTo(bgMap);
+
+  // Auto-invalidate map whenever the main-area container resizes
+  // (handles AI panel open/close, detail panel, sidebar, window resize)
+  if (typeof ResizeObserver !== 'undefined') {
+    const mainArea = document.getElementById('mainArea');
+    if (mainArea && !mainArea._mapResizeObserver) {
+      mainArea._mapResizeObserver = new ResizeObserver(() => {
+        if (bgMap) bgMap.invalidateSize({ animate: false });
+      });
+      mainArea._mapResizeObserver.observe(mainArea);
+    }
+  }
 }
 
 function updateMapTheme() {
@@ -4309,8 +4325,8 @@ function updateMapBackground(location) {
     document.getElementById('mapBackground').classList.remove('visible');
     return;
   }
+  bgMap.invalidateSize({ animate: false });
   bgMap.setView([coords[0], coords[1]], coords[2], { animate: false });
-  setTimeout(() => bgMap.invalidateSize(), 100);
   if (mapVisible) document.getElementById('mapBackground').classList.add('visible');
 }
 
@@ -4423,6 +4439,9 @@ function showMapOverview() {
   if (!bgMap) return;
   const el = document.getElementById('mapBackground');
 
+  // Close AI panel instantly (no transition) so Leaflet sees correct container size
+  closeAiPanelInstant();
+
   // Clear previous state
   clearMapMarkers();
   mapDrillRegion = null;
@@ -4456,10 +4475,10 @@ function showMapOverview() {
   // If no user VDCs, still show available locations on the map
   if (clusters.length === 0 && Object.keys(LOCATION_COORDS).length > 0) {
     const allCoords = Object.values(LOCATION_COORDS).map(c => [c[0], c[1]]);
+    bgMap.invalidateSize({ animate: false });
     bgMap.fitBounds(allCoords, { padding: [60, 60], maxZoom: 5, animate: false });
     bgMap.setMaxBounds([[15, -140], [72, 45]]);
     bgMap.setMinZoom(2);
-    setTimeout(() => bgMap.invalidateSize(), 150);
     return;
   }
 
@@ -4494,6 +4513,10 @@ function showMapOverview() {
     mapMarkers.push(marker);
   });
 
+  // Force Leaflet to re-measure container BEFORE setting the view
+  // (critical when AI/detail panels have changed the available width)
+  bgMap.invalidateSize({ animate: false });
+
   // Fit map to show all locations (active clusters + available DCs)
   if (bounds.length === 1) {
     bgMap.setView(bounds[0], 8, { animate: false });
@@ -4503,8 +4526,6 @@ function showMapOverview() {
   // Constrain to Europe + North America
   bgMap.setMaxBounds([[15, -140], [72, 45]]);
   bgMap.setMinZoom(2);
-
-  setTimeout(() => bgMap.invalidateSize(), 150);
 
   // Show billing panel with region-level summary
   updateMapBillingPanel();
@@ -7717,6 +7738,7 @@ async function loadVDC() {
   if (!dcId) return;
 
   // Clean up previous view state
+  closeAiPanelInstant();
   closeDetail();
   closeHighlightsOverlay();
 
@@ -7881,6 +7903,7 @@ async function loadLocation() {
   if (!loc) return;
 
   // Clean up previous view state
+  closeAiPanelInstant();
   closeDetail();
   closeHighlightsOverlay();
 
@@ -8188,13 +8211,13 @@ document.getElementById('tokenInput').addEventListener('keydown', (e) => {
 
   // Show all DC locations as markers
   showAvailableLocations([]);
+  bgMap.invalidateSize({ animate: false });
   const allCoords = Object.values(LOCATION_COORDS).map(c => [c[0], c[1]]);
   if (allCoords.length > 0) {
     bgMap.fitBounds(allCoords, { padding: [60, 60], maxZoom: 5, animate: false });
   }
   bgMap.setMaxBounds([[15, -140], [72, 45]]);
   bgMap.setMinZoom(2);
-  setTimeout(() => bgMap.invalidateSize(), 150);
 })();
 
 // ============================== FEATURE CAROUSEL ==============================
@@ -10234,6 +10257,19 @@ function openAiPanel() {
 
 function closeAiPanel() {
   if (aiPanelOpen) toggleAiPanel();
+}
+
+/** Close the AI panel instantly (skip CSS transition) — use before map navigation
+ *  so Leaflet sees the final container dimensions immediately. */
+function closeAiPanelInstant() {
+  if (!aiPanelOpen) return;
+  const panel = document.getElementById('aiPanel');
+  // Disable transitions, remove open state, force reflow, then re-enable
+  panel.style.transition = 'none';
+  panel.classList.remove('open');
+  aiPanelOpen = false;
+  void panel.offsetWidth;            // force reflow
+  panel.style.transition = '';       // restore CSS transition for future use
 }
 
 function updateAiSuggestions() {
