@@ -438,6 +438,43 @@
   .onboarding-footer { margin-top: 16px; font-size: 11px; color: var(--text-muted); }
   .onboarding-footer kbd { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-family: inherit; font-size: 11px; }
 
+  /* ---- Feature Carousel (pre-login) ---- */
+  .feature-carousel { margin-top: 20px; position: relative; overflow: hidden; border-radius: 10px; background: var(--bg-secondary); border: 1px solid var(--border); }
+  .feature-carousel-track { display: flex; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
+  .feature-slide { min-width: 100%; padding: 16px 20px; box-sizing: border-box; display: flex; align-items: center; gap: 14px; }
+  .feature-slide-icon { font-size: 28px; flex-shrink: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(17,199,230,0.08); }
+  .feature-slide-content { flex: 1; text-align: left; }
+  .feature-slide-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .feature-slide-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.45; }
+  .feature-carousel-dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0 10px; }
+  .feature-carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); opacity: 0.35; cursor: pointer; transition: all 0.3s; border: none; padding: 0; }
+  .feature-carousel-dot.active { opacity: 1; background: var(--accent); transform: scale(1.3); }
+
+  /* ---- Post-connect Loading Screen ---- */
+  .connect-loading-overlay { position: absolute; inset: 0; background: var(--bg-primary); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 200; opacity: 0; transition: opacity 0.4s; }
+  .connect-loading-overlay.active { display: flex; opacity: 1; }
+  .connect-loading-overlay.fade-out { opacity: 0; }
+  .connect-loading-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+  .connect-loading-subtitle { font-size: 12px; color: var(--text-muted); margin-top: -12px; }
+  .connect-loading-checklist { display: flex; flex-direction: column; gap: 10px; min-width: 300px; }
+  .connect-loading-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border); transition: all 0.4s; }
+  .connect-loading-item.active { border-color: var(--accent); background: rgba(17,199,230,0.06); }
+  .connect-loading-item.done { border-color: var(--success); background: rgba(16,185,129,0.06); }
+  .connect-loading-item-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; background: var(--bg-tertiary); color: var(--text-muted); transition: all 0.3s; }
+  .connect-loading-item.active .connect-loading-item-icon { background: rgba(17,199,230,0.15); color: var(--accent); }
+  .connect-loading-item.done .connect-loading-item-icon { background: rgba(16,185,129,0.15); color: var(--success); }
+  .connect-loading-item-text { font-size: 12px; color: var(--text-secondary); transition: color 0.3s; }
+  .connect-loading-item.active .connect-loading-item-text { color: var(--text-primary); font-weight: 500; }
+  .connect-loading-item.done .connect-loading-item-text { color: var(--success); }
+  .connect-loading-spinner { width: 12px; height: 12px; border: 2px solid var(--bg-tertiary); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .connect-loading-check { display: none; }
+  .connect-loading-item.done .connect-loading-check { display: block; }
+  .connect-loading-item.done .connect-loading-spinner { display: none; }
+  .connect-loading-item .connect-loading-spinner { display: none; }
+  .connect-loading-item.active .connect-loading-spinner { display: block; }
+  .connect-loading-progress { width: 300px; height: 3px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .connect-loading-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--success)); border-radius: 2px; transition: width 0.6s ease; }
+
   /* ---- Search (Canvas Overlay) ---- */
   .canvas-search {
     position: absolute; top: 16px; left: 16px; z-index: 15;
@@ -1452,7 +1489,7 @@
           </g>
         </svg>
         <div class="onboarding-appname" data-i18n="onboarding.title">Network Visualizer</div>
-        <p data-i18n="onboarding.subtitle">Visualize your cloud network topology, flow logs, and data transfer</p>
+        <p data-i18n="onboarding.subtitle">Visualize, analyze, and get AI-powered insights for your IONOS Cloud infrastructure</p>
       </div>
       <div class="onboarding-steps">
         <div class="onboarding-step">
@@ -1477,6 +1514,49 @@
           </div>
         </div>
       </div>
+
+      <!-- Feature carousel -->
+      <div class="feature-carousel" id="featureCarousel">
+        <div class="feature-carousel-track" id="featureCarouselTrack">
+          <div class="feature-slide">
+            <div class="feature-slide-icon">🤖</div>
+            <div class="feature-slide-content">
+              <div class="feature-slide-title">AI Cloud Assistant</div>
+              <div class="feature-slide-desc">Ask your infrastructure anything — security audits, cost optimization, traffic analysis. Powered by IONOS AI Model Hub.</div>
+            </div>
+          </div>
+          <div class="feature-slide">
+            <div class="feature-slide-icon">🗺️</div>
+            <div class="feature-slide-content">
+              <div class="feature-slide-title">Global Traffic Map</div>
+              <div class="feature-slide-desc">See all your regions on an interactive map with data transfer volumes, VDC clusters, and drill-down to topology.</div>
+            </div>
+          </div>
+          <div class="feature-slide">
+            <div class="feature-slide-icon">📡</div>
+            <div class="feature-slide-content">
+              <div class="feature-slide-title">DNS & CDN Discovery</div>
+              <div class="feature-slide-desc">Automatic DNS zone resolution, reverse DNS enrichment, CDN distribution detection — all mapped to your topology.</div>
+            </div>
+          </div>
+          <div class="feature-slide">
+            <div class="feature-slide-icon">📜</div>
+            <div class="feature-slide-content">
+              <div class="feature-slide-title">Flow Log Explorer</div>
+              <div class="feature-slide-desc">Drag-and-drop flow logs for traffic analysis with path tracing, threat detection, and AI-powered insights.</div>
+            </div>
+          </div>
+          <div class="feature-slide">
+            <div class="feature-slide-icon">📊</div>
+            <div class="feature-slide-content">
+              <div class="feature-slide-title">Billing & Data Transfer</div>
+              <div class="feature-slide-desc">Per-VDC and per-server transfer metrics, 30-day trends, and cost-aware heatmaps from the IONOS Billing API.</div>
+            </div>
+          </div>
+        </div>
+        <div class="feature-carousel-dots" id="featureCarouselDots"></div>
+      </div>
+
       <div class="onboarding-footer" data-i18n-html="onboarding.shortcutHint">
         Press <kbd>?</kbd> for keyboard shortcuts
       </div>
@@ -1484,6 +1564,57 @@
   </div>
 
   <svg id="graphSvg"></svg>
+
+  <!-- Post-connect progressive loading screen -->
+  <div class="connect-loading-overlay" id="connectLoadingOverlay">
+    <div class="connect-loading-title">Setting up your cloud view</div>
+    <div class="connect-loading-subtitle">Loading services in the background — your dashboard will be ready in a moment</div>
+    <div class="connect-loading-checklist" id="connectLoadingChecklist">
+      <div class="connect-loading-item" data-step="auth">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">Authenticating & loading contracts</div>
+      </div>
+      <div class="connect-loading-item" data-step="datacenters">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">Discovering data centers</div>
+      </div>
+      <div class="connect-loading-item" data-step="map">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">Building global map</div>
+      </div>
+      <div class="connect-loading-item" data-step="billing">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">Fetching billing & data transfer</div>
+      </div>
+      <div class="connect-loading-item" data-step="dns">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">Resolving DNS zones & CDN</div>
+      </div>
+      <div class="connect-loading-item" data-step="ready">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">AI Assistant ready</div>
+      </div>
+    </div>
+    <div class="connect-loading-progress"><div class="connect-loading-progress-fill" id="connectLoadingProgressFill"></div></div>
+  </div>
 
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-stages" id="loadingStages">
@@ -1913,7 +2044,7 @@ const TRANSLATIONS = {
     'toolbar.globalMap': 'Global map (G)',
     // Onboarding
     'onboarding.title': 'Network Visualizer',
-    'onboarding.subtitle': 'Visualize your cloud network topology, flow logs, and data transfer',
+    'onboarding.subtitle': 'Visualize, analyze, and get AI-powered insights for your IONOS Cloud infrastructure',
     'onboarding.step1Title': 'Get API Token',
     'onboarding.step1Desc': 'Generate a token at <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> under Management \u2192 Token Manager',
     'onboarding.step2Title': 'Connect',
@@ -2133,7 +2264,7 @@ const TRANSLATIONS = {
     'toolbar.resetView': 'Zur\u00fccksetzen & Einpassen (R)',
     'toolbar.globalMap': 'Weltkarte (G)',
     'onboarding.title': 'Netzwerk-Visualizer',
-    'onboarding.subtitle': 'Netzwerktopologie, Flow-Logs und Datentransfer visualisieren',
+    'onboarding.subtitle': 'Visualisieren, analysieren und KI-gest\u00fctzte Einblicke in Ihre IONOS Cloud-Infrastruktur',
     'onboarding.step1Title': 'API-Token erhalten',
     'onboarding.step1Desc': 'Erstellen Sie einen Token auf <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> unter Verwaltung \u2192 Token-Manager',
     'onboarding.step2Title': 'Verbinden',
@@ -2343,7 +2474,7 @@ const TRANSLATIONS = {
     'toolbar.resetView': 'Restablecer y ajustar (R)',
     'toolbar.globalMap': 'Mapa global (G)',
     'onboarding.title': 'Visualizador de Red',
-    'onboarding.subtitle': 'Visualice topolog\u00eda de red, registros de flujo y transferencia de datos',
+    'onboarding.subtitle': 'Visualice, analice y obtenga informaci\u00f3n con IA de su infraestructura IONOS Cloud',
     'onboarding.step1Title': 'Obtener token API',
     'onboarding.step1Desc': 'Genere un token en <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> en Gesti\u00f3n \u2192 Token Manager',
     'onboarding.step2Title': 'Conectar',
@@ -2553,7 +2684,7 @@ const TRANSLATIONS = {
     'toolbar.resetView': 'R\u00e9initialiser et ajuster (R)',
     'toolbar.globalMap': 'Carte mondiale (G)',
     'onboarding.title': 'Visualiseur R\u00e9seau',
-    'onboarding.subtitle': 'Visualisez topologie r\u00e9seau, journaux de flux et transfert de donn\u00e9es',
+    'onboarding.subtitle': 'Visualisez, analysez et obtenez des informations IA sur votre infrastructure IONOS Cloud',
     'onboarding.step1Title': 'Obtenir un jeton API',
     'onboarding.step1Desc': 'G\u00e9n\u00e9rez un jeton sur <a href="https://dcd.ionos.com" target="_blank" style="color:var(--accent);">dcd.ionos.com</a> sous Gestion \u2192 Token Manager',
     'onboarding.step2Title': 'Connecter',
@@ -7291,6 +7422,11 @@ async function connect(isSwitching = false) {
   btn.disabled = true;
   btn.textContent = 'Connecting...';
 
+  // Show progressive loading screen and stop carousel
+  showConnectLoading();
+  setConnectLoadingStep('auth');
+  if (window._stopFeatureCarousel) window._stopFeatureCarousel();
+
   try {
     // 1. Fetch Contracts first if not already switching
     if (!isSwitching) {
@@ -7303,10 +7439,14 @@ async function connect(isSwitching = false) {
         }
     }
 
+    completeConnectLoadingStep('auth');
+    setConnectLoadingStep('datacenters');
+
     // 2. Fetch Datacenters (will now use X-Contract header if currentContract is set)
     datacenters = await fetchDatacenters();
     if (datacenters.length === 0) {
       toast(t('toast.noDataCenters'), 'warning');
+      hideConnectLoading();
       return;
     }
 
@@ -7348,11 +7488,17 @@ async function connect(isSwitching = false) {
     locSel.disabled = false;
     document.getElementById('refreshLocBtn').disabled = false;
 
+    completeConnectLoadingStep('datacenters');
+    setConnectLoadingStep('map');
+
     toast(t('toast.foundDcs', {count: datacenters.length}), 'success');
 
     // Initialize map and show global overview (remove pre-login dimming)
     document.getElementById('mapBackground').classList.remove('pre-login');
     initMapBackground();
+
+    completeConnectLoadingStep('map');
+    setConnectLoadingStep('billing');
 
     // Start billing data fetch early (needs contract number + token, both available now)
     loadBillingData();
@@ -7398,8 +7544,22 @@ async function connect(isSwitching = false) {
 
     // Fetch IP blocks and DNS/CDN in background (non-blocking)
     // Note: loadBillingData() already started earlier for faster panel display
+    completeConnectLoadingStep('billing');
+    setConnectLoadingStep('dns');
     loadIPBlocks();
-    loadDNSData();
+    loadDNSData().then(() => {
+      completeConnectLoadingStep('dns');
+      setConnectLoadingStep('ready');
+      // Brief pause then mark ready and hide
+      setTimeout(() => {
+        completeConnectLoadingStep('ready');
+        hideConnectLoading();
+      }, 600);
+    }).catch(() => {
+      completeConnectLoadingStep('dns');
+      completeConnectLoadingStep('ready');
+      hideConnectLoading();
+    });
 
     // Switch Connect button to Disconnect
     btn.disabled = false;
@@ -7412,6 +7572,7 @@ async function connect(isSwitching = false) {
     console.error(e);
     btn.disabled = false;
     btn.textContent = t('sidebar.connect');
+    hideConnectLoading();
   }
 }
 
@@ -7945,6 +8106,86 @@ document.getElementById('tokenInput').addEventListener('keydown', (e) => {
   bgMap.setMinZoom(2);
   setTimeout(() => bgMap.invalidateSize(), 150);
 })();
+
+// ============================== FEATURE CAROUSEL ==============================
+(function initFeatureCarousel() {
+  const track = document.getElementById('featureCarouselTrack');
+  const dotsContainer = document.getElementById('featureCarouselDots');
+  if (!track || !dotsContainer) return;
+  const slides = track.querySelectorAll('.feature-slide');
+  if (slides.length === 0) return;
+  let current = 0;
+  let interval = null;
+
+  // Create dots
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'feature-carousel-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', `Feature ${i + 1}`);
+    dot.addEventListener('click', () => goTo(i));
+    dotsContainer.appendChild(dot);
+  });
+
+  function goTo(idx) {
+    current = idx;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dotsContainer.querySelectorAll('.feature-carousel-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  function next() { goTo((current + 1) % slides.length); }
+
+  function startAutoplay() { if (interval) clearInterval(interval); interval = setInterval(next, 4500); }
+  function stopAutoplay() { if (interval) { clearInterval(interval); interval = null; } }
+
+  // Auto-rotate, pause on hover
+  startAutoplay();
+  const carousel = document.getElementById('featureCarousel');
+  carousel.addEventListener('mouseenter', stopAutoplay);
+  carousel.addEventListener('mouseleave', startAutoplay);
+
+  // Store stop function so connect() can kill it
+  window._stopFeatureCarousel = stopAutoplay;
+})();
+
+// ============================== CONNECT LOADING SCREEN ==============================
+function showConnectLoading() {
+  const overlay = document.getElementById('connectLoadingOverlay');
+  if (overlay) { overlay.classList.add('active'); overlay.classList.remove('fade-out'); }
+}
+function setConnectLoadingStep(stepName) {
+  const items = document.querySelectorAll('.connect-loading-item');
+  const fill = document.getElementById('connectLoadingProgressFill');
+  let foundIdx = -1;
+  items.forEach((item, i) => {
+    const step = item.dataset.step;
+    if (step === stepName) foundIdx = i;
+    item.classList.remove('active', 'done');
+    if (foundIdx >= 0 && i < foundIdx) item.classList.add('done');
+    else if (i === foundIdx) item.classList.add('active');
+  });
+  if (fill && foundIdx >= 0) {
+    fill.style.width = `${((foundIdx + 1) / items.length) * 100}%`;
+  }
+}
+function completeConnectLoadingStep(stepName) {
+  const item = document.querySelector(`.connect-loading-item[data-step="${stepName}"]`);
+  if (item) { item.classList.remove('active'); item.classList.add('done'); }
+}
+function hideConnectLoading() {
+  const overlay = document.getElementById('connectLoadingOverlay');
+  if (!overlay) return;
+  // Mark all done
+  overlay.querySelectorAll('.connect-loading-item').forEach(i => { i.classList.remove('active'); i.classList.add('done'); });
+  const fill = document.getElementById('connectLoadingProgressFill');
+  if (fill) fill.style.width = '100%';
+  // Fade out after a brief moment
+  setTimeout(() => {
+    overlay.classList.add('fade-out');
+    setTimeout(() => { overlay.classList.remove('active', 'fade-out'); }, 500);
+  }, 800);
+}
 
 // ============================== THEME INIT ==============================
 currentTheme = detectTheme();
@@ -9994,10 +10235,10 @@ function buildAiSystemPrompt(contextStr) {
   const hasBilling = _billingByServer.size > 0 || _billingByVdc.size > 0;
   const ctx = contextStr || buildAiContext();
 
-  let prompt = 'You are an IONOS Cloud infrastructure assistant. Give concise, actionable insights. Format key findings with **bold**. Use short paragraphs. Only reference resources, IPs, and data explicitly present in the context below — do not guess or invent details. If information is missing, say so.';
-  if (hasTopology) prompt += ' You have full visibility into the user\'s cloud topology — servers, LANs, databases, load balancers, VPNs, NAT gateways, and Kubernetes clusters.';
+  let prompt = 'You are an IONOS Cloud infrastructure assistant. Give concise, actionable insights. Format key findings with **bold**. Use short paragraphs. Only reference resources, IPs, and data explicitly present in the context below — do not guess or invent details. If information is missing, say so. IMPORTANT: The context contains data at two scopes — items marked [Contract-wide] cover ALL VDCs in the account, while items marked with a specific VDC name only cover that loaded VDC. When answering, clearly distinguish between contract-wide data and VDC-specific data. If asked about resources in a VDC that is not currently loaded, explain that only the loaded VDC topology is available but billing/VDC inventory is contract-wide.';
+  if (hasTopology) prompt += ' You have full visibility into the currently loaded VDC\'s topology — servers, LANs, databases, load balancers, VPNs, NAT gateways, and Kubernetes clusters.';
   if (hasFlowLogs) prompt += ' You can analyze network flow logs for traffic patterns, security threats, and anomalies. When mentioning IPs, include their resource names if known.';
-  if (hasBilling) prompt += ' You have access to billing and data transfer metrics. Provide cost-aware recommendations and identify high-traffic resources.';
+  if (hasBilling) prompt += ' You have access to contract-wide billing and data transfer metrics across all VDCs. Provide cost-aware recommendations and identify high-traffic resources.';
   prompt += '\n\nCurrent infrastructure context:\n' + ctx;
   return prompt;
 }
@@ -10012,16 +10253,22 @@ function sanitizeName(s) {
 function buildAiContext() {
   const parts = [];
 
+  // Determine the loaded VDC name for section headers
+  const loadedVdcName = currentDC ? (sanitizeName(currentDC.properties?.name) || currentDC.id) : 'loaded VDC';
+
   // ── VDC inventory (from billing API — covers all VDCs in contract) ──
   if (_billingByVdc.size > 0) {
     const vdcNames = [];
     _billingByVdc.forEach((v, id) => {
       vdcNames.push(v.name ? `${sanitizeName(v.name)} (${id})` : id);
     });
-    parts.push(`Virtual Data Centers (${vdcNames.length}): ${vdcNames.join(', ')}`);
+    parts.push(`[Contract-wide] Virtual Data Centers (${vdcNames.length}): ${vdcNames.join(', ')}`);
+    if (currentDC) {
+      parts.push(`Currently loaded VDC: ${loadedVdcName}`);
+    }
   } else if (currentDC) {
     // Fallback: only the currently loaded VDC
-    parts.push(`Current VDC: ${sanitizeName(currentDC.properties?.name) || currentDC.id}`);
+    parts.push(`Current VDC: ${loadedVdcName}`);
   }
 
   // ── Topology summary ──
@@ -10038,7 +10285,7 @@ function buildAiContext() {
     const summary = Object.entries(typeCounts)
       .map(([t, c]) => `${NODE_TYPES[t]?.label || t}: ${c}`)
       .join(', ');
-    parts.push(`Topology: ${graphData.nodes.length} resources — ${summary}`);
+    parts.push(`[${loadedVdcName}] Topology: ${graphData.nodes.length} resources — ${summary}`);
     if (totalCores > 0) {
       parts.push(`Compute: ${totalCores} total vCPUs, ${(totalRamMB / 1024).toFixed(1)} GB total RAM`);
     }
@@ -10048,7 +10295,7 @@ function buildAiContext() {
   if (graphData?.nodes?.length > 0) {
     const servers = graphData.nodes.filter(n => n.type === 'server' || n.type === 'cube');
     if (servers.length > 0) {
-      parts.push('\nServers:');
+      parts.push(`\n[${loadedVdcName}] Servers:`);
       servers.slice(0, 15).forEach(s => {
         const d = s.data || {};
         const nics = d.nics || [];
@@ -10066,7 +10313,7 @@ function buildAiContext() {
   if (graphData?.nodes?.length > 0) {
     const lans = graphData.nodes.filter(n => n.type === 'lan');
     if (lans.length > 0) {
-      parts.push('\nLANs:');
+      parts.push(`\n[${loadedVdcName}] LANs:`);
       lans.forEach(l => {
         const d = l.data || {};
         const connCount = graphData.links?.filter(lk => lk.source?.id === l.id || lk.target?.id === l.id || lk.source === l.id || lk.target === l.id).length || 0;
@@ -10079,7 +10326,7 @@ function buildAiContext() {
   if (graphData?.nodes?.length > 0) {
     const dbs = graphData.nodes.filter(n => ['postgres', 'mongodb', 'mysql', 'mariadb', 'kafka'].includes(n.type));
     if (dbs.length > 0) {
-      parts.push('\nDatabase/Streaming Services:');
+      parts.push(`\n[${loadedVdcName}] Database/Streaming Services:`);
       dbs.forEach(d => {
         const info = d.data || {};
         parts.push(`  ${NODE_TYPES[d.type]?.label || d.type}: ${sanitizeName(d.name)} — v${info.version || '?'}, ${info.instances || '?'} instance(s)`);
@@ -10091,7 +10338,7 @@ function buildAiContext() {
   if (graphData?.nodes?.length > 0) {
     const infra = graphData.nodes.filter(n => ['alb', 'nlb', 'nat', 'vpn_wg', 'vpn_ipsec', 'nfs', 'pcc'].includes(n.type));
     if (infra.length > 0) {
-      parts.push('\nNetwork Infrastructure:');
+      parts.push(`\n[${loadedVdcName}] Network Infrastructure:`);
       infra.forEach(i => {
         const d = i.data || {};
         const ips = d.ips?.join(', ') || d.publicIps?.join(', ') || '';
@@ -10125,7 +10372,7 @@ function buildAiContext() {
           if (sgNames.length) sgDetails.push(`${sanitizeName(s.name)}: ${sgNames.map(n => sanitizeName(n)).join(', ')}`);
         }
       });
-      parts.push(`\nSecurity Posture: ${fwEnabled}/${servers.length} servers with firewall, ${flEnabled}/${servers.length} with flow logs, ${sgEnabled}/${servers.length} with security groups`);
+      parts.push(`\n[${loadedVdcName}] Security Posture: ${fwEnabled}/${servers.length} servers with firewall, ${flEnabled}/${servers.length} with flow logs, ${sgEnabled}/${servers.length} with security groups`);
       if (sgDetails.length > 0) {
         parts.push('Security Group Assignments:');
         sgDetails.forEach(d => parts.push(`  ${d}`));
@@ -10135,7 +10382,7 @@ function buildAiContext() {
 
   // ── Billing / data transfer ──
   if (_billingByVdc.size > 0) {
-    parts.push('\nData Transfer by VDC (billing period):');
+    parts.push('\n[Contract-wide] Data Transfer by VDC (billing period):');
     _billingByVdc.forEach((v, id) => {
       parts.push(`  ${sanitizeName(v.name) || id} — In: ${v.totalIn.toFixed(2)} GB, Out: ${v.totalOut.toFixed(2)} GB`);
     });

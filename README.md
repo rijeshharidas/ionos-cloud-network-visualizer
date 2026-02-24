@@ -12,13 +12,15 @@
 </p>
 
 <p align="center">
-  A browser-based interactive network topology visualizer for IONOS Cloud infrastructure.<br>
-  See your entire cloud at a glance — from a global map of regions down to individual servers, LANs, managed services, flow logs, and data transfer.
+  Visualize, analyze, and get AI-powered insights for your IONOS Cloud infrastructure.<br>
+  From a global map of regions down to individual servers, LANs, managed services, flow logs, and billing —<br>
+  with a built-in <strong>AI Cloud Assistant</strong> that understands your entire topology.
 </p>
 
 ---
 
 <p align="center">
+  <a href="#ai-cloud-assistant">AI Assistant</a> &nbsp;·&nbsp;
   <a href="#key-capabilities">Key Capabilities</a> &nbsp;·&nbsp;
   <a href="#quick-start">Quick Start</a> &nbsp;·&nbsp;
   <a href="#view-modes">View Modes</a> &nbsp;·&nbsp;
@@ -28,6 +30,21 @@
   <a href="#security">Security</a> &nbsp;·&nbsp;
   <a href="#contributing">Contributing</a>
 </p>
+
+---
+
+## AI Cloud Assistant
+
+> *"Which servers have no firewall enabled?"* · *"Give me a cost optimization report"* · *"Summarize rejected traffic"*
+
+Ask your infrastructure anything. The built-in AI Cloud Assistant connects to the **IONOS AI Model Hub** and understands your full cloud context — topology, servers, LANs, databases, security posture, billing, and flow logs. It adapts its analysis based on what's loaded: connect a VDC for infrastructure Q&A, load flow logs for traffic analysis, or use billing data for cost insights.
+
+- **Security assessment** — identify servers without firewalls, unprotected NICs, missing security groups
+- **Cost optimization** — spot high-transfer servers, compare VDC billing, right-size recommendations
+- **Traffic analysis** — top talkers, rejected flows, suspicious port scanning, protocol breakdown
+- **Infrastructure overview** — resource inventory, compute capacity, database health, network layout
+
+Choose from **Llama 3.1 8B** (fast), **Mistral Small 24B** (balanced), or **Llama 3.3 70B** (deep analysis). Press `A` to open.
 
 ---
 
@@ -54,8 +71,6 @@
 🛡️ **Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, and Cross Connect. Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
 
 📜 **Flow Log Explorer** — Drag-and-drop IONOS flow log files (`.log` or `.log.gz`) into the explorer panel to analyze traffic records. Filter by source/destination IP, port range, protocol, action (ACCEPT/REJECT), and NIC interface. Click any row to trace the source→destination path on the topology graph using BFS path-finding with highlighted intermediate nodes. Hover rows for live preview. Enriched columns show IP-to-resource tags, well-known port labels, threat/scan badges, and server names alongside NIC UUIDs. Right-click any row for copy and filter actions. Export filtered results as CSV. Press `W` to open.
-
-🤖 **AI Cloud Assistant** — An AI-powered analysis panel using the IONOS AI Model Hub. Ask natural-language questions about your infrastructure — topology overview, security assessment, cost optimization, traffic patterns, or flow log analysis. The assistant receives a dynamic context summary of all loaded data (servers, LANs, databases, billing, security posture, flow logs) and adapts its suggestions based on what's available. Choose from Llama 3.1 8B, Mistral Small 24B, or Llama 3.3 70B. Press `A` to open.
 
 🔥 **Traffic Heatmap** — Visualize traffic patterns as color-coded halos around nodes. Toggle between Volume mode (bytes transferred), Security mode (rejected packet ratio), and Transfer mode (billing data). Nodes glow from cool blue to hot red based on traffic intensity, with a gradient legend and aggregate statistics. Press `X` to activate with flow logs, or `B` for Data Transfer heatmap.
 
