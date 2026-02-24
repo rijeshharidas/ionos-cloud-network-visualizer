@@ -611,6 +611,63 @@
   .connected-item:hover, .connected-item:focus-visible { background: var(--bg-hover); }
   .connected-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
+  /* ---- AI Edge Tabs (open / close sliders) ---- */
+  /* Shared base for both open and close edge tabs */
+  .ai-edge-tab, .ai-edge-tab-close {
+    position: fixed; top: 50%;
+    transform: translateY(-50%) translateX(100%);
+    display: flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.10) 0%, var(--bg-secondary) 100%);
+    border: 1px solid rgba(168,85,247,0.25); border-right: none;
+    border-radius: 10px 0 0 10px;
+    padding: 10px 7px; cursor: pointer; z-index: 51;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, opacity 0.3s ease;
+    box-shadow: -2px 0 12px rgba(0,0,0,0.2);
+    opacity: 0; pointer-events: none;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    writing-mode: vertical-rl; text-orientation: mixed;
+  }
+  .ai-edge-tab { right: 0; }
+  .ai-edge-tab-close { right: 400px; }
+
+  /* Visible / hidden states */
+  .ai-edge-tab.visible, .ai-edge-tab-close.visible {
+    transform: translateY(-50%) translateX(0);
+    opacity: 1; pointer-events: auto;
+  }
+  .ai-edge-tab:hover, .ai-edge-tab-close:hover {
+    transform: translateY(-50%) translateX(-2px);
+    box-shadow: -4px 0 20px rgba(168,85,247,0.3);
+    border-color: rgba(168,85,247,0.5);
+  }
+
+  /* Icon */
+  .ai-edge-tab .ai-tab-icon, .ai-edge-tab-close .ai-tab-icon {
+    width: 14px; height: 14px; flex-shrink: 0;
+    filter: drop-shadow(0 0 3px rgba(168,85,247,0.4));
+  }
+
+  /* Label text — horizontal reading inside vertical tab */
+  .ai-edge-tab .ai-tab-label, .ai-edge-tab-close .ai-tab-label {
+    font-size: 10px; font-weight: 600; color: rgba(168,85,247,0.85);
+    letter-spacing: 0.5px;
+  }
+  .ai-edge-tab:hover .ai-tab-label, .ai-edge-tab-close:hover .ai-tab-label { color: #a855f7; }
+
+  /* Chevron arrow for close tab */
+  .ai-edge-tab-close .ai-tab-chevron {
+    width: 12px; height: 12px; color: rgba(168,85,247,0.7);
+    transition: transform 0.2s ease;
+  }
+  .ai-edge-tab-close:hover .ai-tab-chevron { transform: translateX(2px); color: #a855f7; }
+
+  /* Pulse animation on first appearance */
+  @keyframes ai-tab-pulse {
+    0%, 100% { box-shadow: -2px 0 12px rgba(0,0,0,0.2); }
+    50% { box-shadow: -2px 0 20px rgba(168,85,247,0.35); }
+  }
+  .ai-edge-tab.visible.pulse { animation: ai-tab-pulse 1.5s ease-in-out 2; }
+
   /* ---- AI Assistant Panel ---- */
   .ai-panel {
     width: 0; min-width: 0; overflow: hidden; background: var(--bg-secondary); border-left: none;
@@ -1745,6 +1802,25 @@
 <!-- Detail Panel -->
 <div class="detail-panel" id="detailPanel">
   <div class="detail-content" id="detailContent"></div>
+</div>
+
+<!-- AI Edge Tab: open (visible when panel is closed) -->
+<div class="ai-edge-tab" id="aiEdgeTab" onclick="toggleAiPanel()" title="Open AI Cloud Assistant (A)">
+  <svg class="ai-tab-icon" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round">
+    <path d="M12 2l2.09 6.26L20 10.27l-4.91 3.82L16.18 22 12 18.27 7.82 22l1.09-7.91L4 10.27l5.91-2.01L12 2z"/>
+  </svg>
+  <span class="ai-tab-label">AI Assistant</span>
+</div>
+
+<!-- AI Edge Tab: close (visible when panel is open) -->
+<div class="ai-edge-tab-close" id="aiEdgeTabClose" onclick="closeAiPanel()" title="Close Assistant">
+  <svg class="ai-tab-icon" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round">
+    <path d="M12 2l2.09 6.26L20 10.27l-4.91 3.82L16.18 22 12 18.27 7.82 22l1.09-7.91L4 10.27l5.91-2.01L12 2z"/>
+  </svg>
+  <span class="ai-tab-label">Close</span>
+  <svg class="ai-tab-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M6 3l5 5-5 5"/>
+  </svg>
 </div>
 
 <!-- AI Assistant Panel -->
@@ -3620,17 +3696,47 @@ async function apiFetch(url, { signal } = {}) {
   const resp = await fetch(fetchUrl, opts);
   if (!resp.ok) {
     if (resp.status === 404) return null;
-    const text = await resp.text();
-    throw new Error(`API ${resp.status}: ${text.substring(0, 200)}`);
+    const text = await resp.text().catch(() => '');
+    const err = new Error(`API ${resp.status}: ${text.substring(0, 200)}`);
+    err.status = resp.status;
+    throw err;
   }
   return resp.json();
 }
 
+/** apiFetch with automatic retry for transient errors (502, 503, 504, network). */
+async function apiFetchWithRetry(url, opts = {}, retries = 2, delayMs = 1500) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await apiFetch(url, opts);
+    } catch (e) {
+      if (e.name === 'AbortError') throw e;
+      const isTransient = [502, 503, 504].includes(e.status) || e.message.includes('timed out') || e.message.includes('Failed to fetch');
+      if (!isTransient || attempt === retries) throw e;
+      console.warn(`[Retry] ${url} attempt ${attempt + 1} failed (${e.message}), retrying in ${delayMs}ms...`);
+      await new Promise(r => setTimeout(r, delayMs * (attempt + 1)));
+    }
+  }
+}
+
+/** Non-throwing fetch — returns null on failure. Shows toast for transient API errors. */
+const _apiWarnings = new Set();  // deduplicate warning toasts per service host
 async function safeFetch(url, opts) {
   try { return await apiFetch(url, opts); }
   catch (e) {
-    if (e.name === 'AbortError') throw e;  // Propagate abort — don't swallow
-    console.warn(`Fetch failed for ${url}:`, e.message); return null;
+    if (e.name === 'AbortError') throw e;
+    const svc = url.replace(/^https?:\/\//, '').split('/')[0];
+    if ([502, 503, 504].includes(e.status) || e.message?.includes('timed out')) {
+      console.warn(`[API] ${svc} unavailable (${e.status || 'timeout'}):`, e.message);
+      if (!_apiWarnings.has(svc)) {
+        _apiWarnings.add(svc);
+        toast(`${svc} temporarily unavailable — some data may be missing`, 'warning');
+        setTimeout(() => _apiWarnings.delete(svc), 30000);  // allow re-warning after 30s
+      }
+    } else {
+      console.warn(`Fetch failed for ${url}:`, e.message);
+    }
+    return null;
   }
 }
 
@@ -3638,7 +3744,7 @@ async function safeFetch(url, opts) {
 // ============================ FETCH CONTRACTS =============================
 
 async function fetchContracts() {
-  const data = await apiFetch('https://api.ionos.com/cloudapi/v6/contracts');
+  const data = await apiFetchWithRetry('https://api.ionos.com/cloudapi/v6/contracts');
   return (data && data.items) ? data.items : [];
 }
 
@@ -3658,7 +3764,7 @@ async function handleContractChange(val) {
 // ============================== DATA FETCHING ==============================
 
 async function fetchDatacenters() {
-  const data = await apiFetch(`${API_BASES.cloud}/datacenters?depth=1`);
+  const data = await apiFetchWithRetry(`${API_BASES.cloud}/datacenters?depth=1`);
   return (data && data.items) ? data.items : [];
 }
 
@@ -3715,7 +3821,7 @@ async function loadDynamicLocations() {
 }
 
 async function fetchDCDetails(dcId) {
-  return await apiFetch(`${API_BASES.cloud}/datacenters/${dcId}?depth=5`);
+  return await apiFetchWithRetry(`${API_BASES.cloud}/datacenters/${dcId}?depth=5`);
 }
 
 async function fetchServerNICs(dcId, serverId) {
@@ -7489,14 +7595,18 @@ async function connect(isSwitching = false) {
   if (window._stopFeatureCarousel) window._stopFeatureCarousel();
 
   try {
-    // 1. Fetch Contracts first if not already switching
+    // 1. Fetch Contracts first if not already switching (non-critical — app works without it)
     if (!isSwitching) {
-        const contracts = await fetchContracts();
-        userContracts = contracts;
-        if (contracts.length > 0) {
-            // Set default if not set
-            if (!currentContract) currentContract = contracts[0].properties.contractNumber;
-            showUserInfo({ ...(currentUser || {}), contracts });
+        try {
+          const contracts = await fetchContracts();
+          userContracts = contracts;
+          if (contracts.length > 0) {
+              if (!currentContract) currentContract = contracts[0].properties.contractNumber;
+              showUserInfo({ ...(currentUser || {}), contracts });
+          }
+        } catch (e) {
+          console.warn('[VDC-Viz] Contracts fetch failed, continuing without:', e.message);
+          toast('Contract info unavailable — continuing with default', 'warning');
         }
     }
 
@@ -7628,6 +7738,9 @@ async function connect(isSwitching = false) {
     btn.onclick = disconnect;
     btn.classList.remove('btn-primary');
     btn.classList.add('btn-disconnect');
+
+    // Show AI edge tab with pulse to draw attention on first connect
+    showAiEdgeTab(true);
   } catch (e) {
     toast(t('toast.connectionFailed', {error: e.message}), 'error');
     console.error(e);
@@ -7662,6 +7775,11 @@ function disconnect() {
   closeAiPanel();
   clearAiConversation();
   updateAiButtonVisibility();
+  // Hide AI edge tabs
+  const tab = document.getElementById('aiEdgeTab');
+  const closeTab = document.getElementById('aiEdgeTabClose');
+  if (tab) tab.classList.remove('visible', 'pulse');
+  if (closeTab) closeTab.classList.remove('visible');
 
   // Reset token input and connect button
   document.getElementById('tokenInput').value = '';
@@ -7767,6 +7885,12 @@ async function loadVDC() {
       fetchKafkaClusters(dcLocation),
     ]);
 
+    // If core DC data fetch failed, abort gracefully
+    if (!dcData) {
+      toast(t('toast.loadFailed', {error: 'Cloud API unavailable — please try again'}), 'error');
+      return;
+    }
+
     // Ensure all servers have NIC data - fallback to per-server fetch if depth didn't include them
     completeVdcLoadingStep('servers');
     setVdcLoadingStep('nics');
@@ -7830,6 +7954,8 @@ async function loadVDC() {
     console.error(e);
   } finally {
     hideLoading();
+    // Show AI edge tab if panel is not open
+    showAiEdgeTab();
   }
 }
 
@@ -10227,8 +10353,13 @@ function exportFlowLogCSV() {
 function toggleAiPanel() {
   aiPanelOpen = !aiPanelOpen;
   const panel = document.getElementById('aiPanel');
+  const tab = document.getElementById('aiEdgeTab');
+  const closeTab = document.getElementById('aiEdgeTabClose');
   if (aiPanelOpen) {
     panel.classList.add('open');
+    if (tab) tab.classList.remove('visible', 'pulse');
+    // Show close tab after panel transition settles
+    if (closeTab) setTimeout(() => { if (aiPanelOpen) closeTab.classList.add('visible'); }, 320);
     // Populate model selector on first open
     const sel = document.getElementById('aiModelSelect');
     if (sel && sel.options.length === 0) {
@@ -10248,6 +10379,8 @@ function toggleAiPanel() {
     document.getElementById('aiInput')?.focus();
   } else {
     panel.classList.remove('open');
+    if (closeTab) closeTab.classList.remove('visible');
+    showAiEdgeTab();
   }
 }
 
@@ -10264,12 +10397,26 @@ function closeAiPanel() {
 function closeAiPanelInstant() {
   if (!aiPanelOpen) return;
   const panel = document.getElementById('aiPanel');
+  const closeTab = document.getElementById('aiEdgeTabClose');
   // Disable transitions, remove open state, force reflow, then re-enable
   panel.style.transition = 'none';
   panel.classList.remove('open');
   aiPanelOpen = false;
+  if (closeTab) closeTab.classList.remove('visible');
   void panel.offsetWidth;            // force reflow
   panel.style.transition = '';       // restore CSS transition for future use
+  showAiEdgeTab();
+}
+
+/** Show AI edge tab with slide-in animation and optional pulse */
+function showAiEdgeTab(withPulse = false) {
+  const tab = document.getElementById('aiEdgeTab');
+  if (!tab || aiPanelOpen) return;
+  tab.classList.add('visible');
+  if (withPulse) {
+    tab.classList.add('pulse');
+    tab.addEventListener('animationend', () => tab.classList.remove('pulse'), { once: true });
+  }
 }
 
 function updateAiSuggestions() {
