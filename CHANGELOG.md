@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2026-02-24
+
+### Added (1.9.1)
+
+- **IONOS Documentation Search (MCP)** — AI assistant can now search the official IONOS Cloud documentation via the GitBook MCP server (`docs.ionos.com/cloud/~gitbook/mcp`). Toggle the "Docs" button in the AI panel header to enable/disable. Results are appended to AI context so answers are grounded in official product docs.
+- MCP client with session management: `initialize` → `tools/list` (auto-discovers search tool) → `tools/call` with JSON-RPC 2.0 over Streamable HTTP
+- New `/mcp-docs` proxy endpoint in `serve.py` — forwards JSON-RPC requests to GitBook MCP, handles SSE-to-JSON conversion for Streamable HTTP transport
+- **Feature carousel on pre-login onboarding** — 5-slide auto-rotating showcase (AI Cloud Assistant, Global Traffic Map, DNS & CDN Discovery, Flow Log Explorer, Billing & Data Transfer) with dot navigation, pause-on-hover
+- **Progressive loading screen on connect** — 6-step animated checklist (authenticating, loading datacenters, building map, fetching billing, discovering DNS, ready) with progress bar and smooth fade-out
+- **VDC drill-down loading** — 4-step animated checklist (servers, NICs, managed services, graph rendering) matching the connect loading style for consistency
+- AI context scoping labels: `[Contract-wide]` prefix for billing/VDC inventory sections, `[VDC-name]` prefix for topology, servers, LANs, databases, security sections. System prompt instructs the AI to distinguish between contract-wide and VDC-specific data.
+
+### Changed (1.9.1)
+
+- VDC inventory in AI context now sourced from Cloud API `/cloudapi/v6/datacenters` instead of billing API — fixes inaccurate counts (billing included deleted VDCs, missed zero-traffic ones)
+- Removed pricing labels from AI model selector dropdown and README (costs change frequently)
+- AI-first README hero section with tagline and dedicated AI Cloud Assistant section with example prompts
+- Onboarding subtitle updated across all 4 locales to highlight AI-powered insights
+- `serve.py` CORS headers updated to expose `Mcp-Session-Id` for MCP session management
+
+### Fixed (1.9.1)
+
+- AI panel close animation causing layout glitch — content overflowing during width transition. Fixed by using `min-width` transition, removing `overflow: visible`, and conditionally applying `border-left` only when panel is open
+- VDC loading overlay showing onboarding content bleed-through — changed from semi-transparent `rgba(15, 23, 42, 0.85)` to fully opaque `var(--bg-primary)` with `z-index: 200`
+- MCP docs search failing silently — added SSE response parsing in proxy, dynamic tool name discovery via `tools/list`, robust JSON-RPC error handling, and diagnostic logging
+
 ## [1.9.0] - 2026-02-23
 
 ### Added (1.9.0)

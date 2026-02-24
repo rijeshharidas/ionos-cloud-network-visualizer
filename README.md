@@ -43,8 +43,9 @@ Ask your infrastructure anything. The built-in AI Cloud Assistant connects to th
 - **Cost optimization** — spot high-transfer servers, compare VDC billing, right-size recommendations
 - **Traffic analysis** — top talkers, rejected flows, suspicious port scanning, protocol breakdown
 - **Infrastructure overview** — resource inventory, compute capacity, database health, network layout
+- **IONOS Documentation search** — toggle the Docs button to search the official IONOS Cloud documentation (via MCP) and receive answers grounded in up-to-date product docs
 
-Choose from **Llama 3.1 8B** (fast), **Mistral Small 24B** (balanced), or **Llama 3.3 70B** (deep analysis). Press `A` to open.
+Choose from **Llama 3.1 8B**, **Mistral Small 24B**, or **Llama 3.3 70B** via the IONOS AI Model Hub. Press `A` to open.
 
 ---
 
@@ -231,7 +232,7 @@ Two files, zero build process:
 | File | Role |
 |------|------|
 | **`ionos-cloud-network-visualizer.html`** | Self-contained frontend — D3.js v7 for topology, Leaflet.js v1.9.4 for maps, all CSS/JS inline |
-| **`serve.py`** | Lightweight localhost CORS proxy (Python stdlib only) bridging browser requests to IONOS Cloud APIs |
+| **`serve.py`** | Lightweight localhost CORS proxy (Python stdlib only) bridging browser requests to IONOS Cloud APIs and the IONOS docs MCP endpoint |
 
 ```text
 Browser (localhost:8080)  →  Proxy (serve.py)  →  IONOS Cloud API (*.ionos.com)
@@ -264,6 +265,7 @@ Your API token never leaves your machine.
 | AI Model Hub | `openai.inference.de-txl.ionos.com/v1` | Centralized |
 | Locations | `/cloudapi/v6/locations` | Centralized |
 | User Management | `/cloudapi/v6/um` | Centralized |
+| IONOS Cloud Docs (MCP) | `docs.ionos.com/cloud/~gitbook/mcp` | Centralized |
 
 ## Configuration
 

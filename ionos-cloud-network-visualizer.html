@@ -563,11 +563,11 @@
   .table-empty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
   /* ---- Loading Stages ---- */
-  .loading-stages { display: flex; gap: 8px; margin-bottom: 16px; }
-  .loading-stage { font-size: 11px; color: var(--text-muted); padding: 4px 10px; border-radius: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); transition: all 0.3s; }
+  .loading-stages { display: flex; gap: 8px; margin-bottom: 16px; /* legacy — kept for compat */ }
+  .loading-stage { font-size: 11px; color: var(--text-muted); padding: 4px 10px; border-radius: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); transition: all 0.3s; display: none; /* hidden — replaced by checklist */ }
   .loading-stage.active { color: var(--accent); border-color: var(--accent); background: rgba(17,199,230,0.1); }
   .loading-stage.done { color: var(--success); border-color: var(--success); background: rgba(16,185,129,0.1); }
-  .loading-bar { width: 200px; height: 3px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden; }
+  .loading-bar { width: 200px; height: 3px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden; display: none; /* hidden — replaced by checklist progress */ }
   .loading-bar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
 
   /* ---- Stat Card Enhancements ---- */
@@ -576,14 +576,16 @@
   /* ---- Loading ---- */
   .loading-overlay {
     position: absolute; inset: 0;
-    background: rgba(15, 23, 42, 0.85);
+    background: var(--bg-primary);
     display: none; align-items: center; justify-content: center;
-    flex-direction: column; gap: 16px; z-index: 100;
+    flex-direction: column; gap: 20px; z-index: 200;
+    opacity: 0; transition: opacity 0.4s;
   }
-  .loading-overlay.active { display: flex; }
+  .loading-overlay.active { display: flex; opacity: 1; }
+  .loading-overlay.fade-out { opacity: 0; }
   .spinner { width: 40px; height: 40px; border: 3px solid var(--bg-tertiary); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-size: 13px; color: var(--text-secondary); }
+  .loading-text { font-size: 13px; color: var(--text-secondary); display: none; }
 
   /* ---- Detail Panel ---- */
   .detail-panel {
@@ -609,11 +611,11 @@
 
   /* ---- AI Assistant Panel ---- */
   .ai-panel {
-    width: 0; overflow: hidden; background: var(--bg-secondary); border-left: 1px solid var(--border);
-    flex-shrink: 0; display: flex; flex-direction: column; transition: width 0.3s ease;
+    width: 0; min-width: 0; overflow: hidden; background: var(--bg-secondary); border-left: none;
+    flex-shrink: 0; display: flex; flex-direction: column; transition: width 0.3s ease, min-width 0.3s ease;
     position: relative; z-index: 50;
   }
-  .ai-panel.open { width: 400px; overflow: visible; }
+  .ai-panel.open { width: 400px; min-width: 400px; border-left: 1px solid var(--border); }
   .ai-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 16px; border-bottom: 1px solid var(--border);
@@ -627,6 +629,11 @@
     font-size: 11px; padding: 4px 6px; border-radius: 5px; border: 1px solid var(--border);
     background: var(--bg-tertiary); color: var(--text-secondary); font-family: inherit; cursor: pointer;
   }
+  .ai-docs-toggle { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; padding: 3px 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-tertiary); user-select: none; transition: all 0.2s; }
+  .ai-docs-toggle:hover { color: var(--text-primary); border-color: var(--accent); }
+  .ai-docs-toggle input { display: none; }
+  .ai-docs-toggle input:checked ~ svg { color: var(--accent); }
+  .ai-docs-toggle input:checked ~ span { color: var(--accent); }
   .ai-cost-banner {
     padding: 10px 14px; font-size: 11px; color: #fbbf24; background: rgba(251,191,36,0.08);
     border-bottom: 1px solid rgba(251,191,36,0.2); display: flex; align-items: center;
@@ -1617,14 +1624,39 @@
   </div>
 
   <div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-stages" id="loadingStages">
-      <div class="loading-stage" data-stage="0" data-i18n="loading.authenticating">Authenticating</div>
-      <div class="loading-stage" data-stage="1" data-i18n="loading.serversLans">Servers & LANs</div>
-      <div class="loading-stage" data-stage="2" data-i18n="loading.managedServices">Managed Services</div>
-      <div class="loading-stage" data-stage="3" data-i18n="loading.buildingGraph">Building Graph</div>
+    <div class="connect-loading-title" id="vdcLoadingTitle">Loading data center</div>
+    <div class="connect-loading-subtitle" id="vdcLoadingSubtitle">Fetching resources and building topology</div>
+    <div class="connect-loading-checklist" id="vdcLoadingChecklist">
+      <div class="connect-loading-item" data-step="servers">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">Fetching servers, LANs & managed services</div>
+      </div>
+      <div class="connect-loading-item" data-step="nics">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">Resolving network interfaces</div>
+      </div>
+      <div class="connect-loading-item" data-step="k8s">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">Loading Kubernetes node pools</div>
+      </div>
+      <div class="connect-loading-item" data-step="graph">
+        <div class="connect-loading-item-icon">
+          <div class="connect-loading-spinner"></div>
+          <svg class="connect-loading-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="connect-loading-item-text">Building topology visualization</div>
+      </div>
     </div>
-    <div class="loading-bar"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
-    <div class="loading-text" id="loadingText" data-i18n="loading.resources">Loading resources...</div>
+    <div class="connect-loading-progress"><div class="connect-loading-progress-fill" id="vdcLoadingProgressFill"></div></div>
   </div>
 
   <div class="toolbar" id="toolbar" style="display:none;">
@@ -1719,6 +1751,11 @@
       <span>AI Cloud Assistant</span>
     </div>
     <div class="ai-controls">
+      <label class="ai-docs-toggle" title="Search IONOS documentation for relevant context">
+        <input type="checkbox" id="aiDocsToggle" checked onchange="aiDocsSearchEnabled=this.checked">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <span>Docs</span>
+      </label>
       <select id="aiModelSelect" onchange="aiSelectedModel=this.value" title="Select AI model"></select>
       <button class="detail-close" onclick="closeAiPanel()" title="Close">&times;</button>
     </div>
@@ -1948,9 +1985,9 @@ const API_BASES = {
 
 // ============================== AI MODEL HUB ==============================
 const AI_MODELS = [
-  { id: 'meta-llama/Meta-Llama-3.1-8B-Instruct', label: 'Llama 3.1 8B', cost: '~€0.15–0.25/M tokens' },
-  { id: 'mistralai/Mistral-Small-24B-Instruct-2501', label: 'Mistral Small 24B', cost: '~€0.45–0.65/M tokens' },
-  { id: 'meta-llama/Meta-Llama-3.3-70B-Instruct', label: 'Llama 3.3 70B', cost: '~€1.50–1.75/M tokens' },
+  { id: 'meta-llama/Meta-Llama-3.1-8B-Instruct', label: 'Llama 3.1 8B' },
+  { id: 'mistralai/Mistral-Small-24B-Instruct-2501', label: 'Mistral Small 24B' },
+  { id: 'meta-llama/Meta-Llama-3.3-70B-Instruct', label: 'Llama 3.3 70B' },
 ];
 let aiSelectedModel = AI_MODELS[0].id;
 let aiConversationHistory = [];
@@ -1960,6 +1997,9 @@ let aiLastRequestTime = 0;
 const AI_COOLDOWN_MS = 2000;       // min interval between requests
 const AI_TIMEOUT_MS = 45000;       // 45s timeout for LLM inference
 const AI_MAX_CONTEXT_CHARS = 12000; // truncate context if too large
+let aiDocsSearchEnabled = true;    // search IONOS docs for context
+let mcpSessionId = null;           // MCP session header for GitBook
+let mcpInitialized = false;        // whether MCP session is established
 
 // ============================== LOCATION FLAGS ==============================
 const LOCATION_CITIES = {
@@ -7595,6 +7635,9 @@ function disconnect() {
 
   // Clear AI state
   if (aiAbortController) { aiAbortController.abort(); aiAbortController = null; }
+  mcpSessionId = null;
+  mcpInitialized = false;
+  _mcpSearchToolName = null;
   closeAiPanel();
   clearAiConversation();
   updateAiButtonVisibility();
@@ -7682,11 +7725,11 @@ async function loadVDC() {
   currentAbortController = new AbortController();
 
   showLoading(t('loading.fetchingDetails'));
+  setVdcLoadingStep('servers');
   currentDC = datacenters.find(dc => dc.id === dcId);
   const dcLocation = currentDC?.properties?.location || '';
 
   try {
-    setLoadingText(t('loading.fetchingServers'));
     const [dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sData, nfsClusters, vpnGateways, kafkaClusters] = await Promise.all([
       fetchDCDetails(dcId),
       fetchNatGateways(dcId),
@@ -7703,7 +7746,8 @@ async function loadVDC() {
     ]);
 
     // Ensure all servers have NIC data - fallback to per-server fetch if depth didn't include them
-    setLoadingText(t('loading.resolvingNics'));
+    completeVdcLoadingStep('servers');
+    setVdcLoadingStep('nics');
     const servers = dcData?.entities?.servers?.items || [];
     console.log(`[VDC-Viz] Found ${servers.length} server(s) in DC response`);
     let nicFallbackCount = 0;
@@ -7724,7 +7768,8 @@ async function loadVDC() {
     }));
     if (nicFallbackCount > 0) console.log(`[VDC-Viz] Used NIC fallback fetch for ${nicFallbackCount} server(s)`);
 
-    setLoadingText(t('loading.fetchingK8s'));
+    completeVdcLoadingStep('nics');
+    setVdcLoadingStep('k8s');
     const k8sNodePools = [];
     const k8sClusters = k8sData?.items || [];
     await Promise.all(k8sClusters.map(async (cluster) => {
@@ -7734,7 +7779,8 @@ async function loadVDC() {
       });
     }));
 
-    setLoadingText(t('loading.buildingViz'));
+    completeVdcLoadingStep('k8s');
+    setVdcLoadingStep('graph');
     const data = buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sNodePools, nfsClusters || {}, vpnGateways, kafkaClusters);
 
     // Tag all nodes/links with _vdcIdx = 0 so collapse toggle works in single-VDC mode
@@ -7846,6 +7892,7 @@ async function loadLocation() {
   if (dcsInLoc.length === 0) { toast(t('toast.noVdcsLocation'), 'warning'); return; }
 
   showLoading(t('loading.loadingVdcs', {count: dcsInLoc.length, location: locationLabel(loc).trim()}));
+  setVdcLoadingStep('servers');
 
   try {
     // Fetch global/shared services ONCE (these are the same regardless of VDC)
@@ -7864,7 +7911,7 @@ async function loadLocation() {
 
     // Fetch per-VDC data in parallel (only DC-specific APIs)
     const allVdcData = await Promise.all(dcsInLoc.map(async (dc, idx) => {
-      setLoadingText(t('loading.fetchingVdc', {index: idx + 1, total: dcsInLoc.length, name: dc.properties?.name || dc.id}));
+      setLoadingText(`Loading VDC ${idx + 1}/${dcsInLoc.length}: ${dc.properties?.name || dc.id}`);
       const dcId = dc.id;
 
       const [dcData, natGWs, albs, nlbs] = await Promise.all([
@@ -7904,7 +7951,11 @@ async function loadLocation() {
     }));
 
     // Merge all VDC graphs into one, prefixing node/link IDs to avoid collisions
-    setLoadingText(t('loading.mergingGraphs'));
+    completeVdcLoadingStep('servers');
+    completeVdcLoadingStep('nics');
+    completeVdcLoadingStep('k8s');
+    setVdcLoadingStep('graph');
+    setLoadingText('Merging topologies');
     const mergedNodes = [];
     const mergedLinks = [];
     const vdcBoundaries = []; // track which nodes belong to which VDC
@@ -8029,11 +8080,50 @@ async function loadLocation() {
 
 // ============================== UTILITIES ==============================
 function showLoading(text) {
-  document.getElementById('loadingOverlay').classList.add('active');
-  document.getElementById('loadingText').textContent = text || 'Loading...';
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('active');
+  overlay.classList.remove('fade-out');
+  // Reset all checklist items
+  overlay.querySelectorAll('.connect-loading-item').forEach(i => i.classList.remove('active', 'done'));
+  const fill = document.getElementById('vdcLoadingProgressFill');
+  if (fill) fill.style.width = '0%';
+  // Set title from text if provided
+  const title = document.getElementById('vdcLoadingTitle');
+  if (title && text) title.textContent = text;
 }
-function setLoadingText(text) { document.getElementById('loadingText').textContent = text; }
-function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
+function setVdcLoadingStep(stepName) {
+  const items = document.querySelectorAll('#vdcLoadingChecklist .connect-loading-item');
+  const fill = document.getElementById('vdcLoadingProgressFill');
+  let foundIdx = -1;
+  items.forEach((item, i) => {
+    if (item.dataset.step === stepName) foundIdx = i;
+    item.classList.remove('active', 'done');
+    if (foundIdx >= 0 && i < foundIdx) item.classList.add('done');
+    else if (i === foundIdx) item.classList.add('active');
+  });
+  if (fill && foundIdx >= 0) fill.style.width = `${((foundIdx + 1) / items.length) * 100}%`;
+}
+function completeVdcLoadingStep(stepName) {
+  const item = document.querySelector(`#vdcLoadingChecklist .connect-loading-item[data-step="${stepName}"]`);
+  if (item) { item.classList.remove('active'); item.classList.add('done'); }
+}
+// Legacy compat — setLoadingText now maps to step names
+function setLoadingText(text) {
+  const sub = document.getElementById('vdcLoadingSubtitle');
+  if (sub) sub.textContent = text;
+}
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (!overlay) return;
+  // Mark all done
+  overlay.querySelectorAll('.connect-loading-item').forEach(i => { i.classList.remove('active'); i.classList.add('done'); });
+  const fill = document.getElementById('vdcLoadingProgressFill');
+  if (fill) fill.style.width = '100%';
+  setTimeout(() => {
+    overlay.classList.add('fade-out');
+    setTimeout(() => { overlay.classList.remove('active', 'fade-out'); }, 500);
+  }, 600);
+}
 
 let flPersistentToast = null;
 function toast(message, type = 'info', persistent = false) {
@@ -10122,7 +10212,7 @@ function toggleAiPanel() {
       AI_MODELS.forEach(m => {
         const opt = document.createElement('option');
         opt.value = m.id;
-        opt.textContent = `${m.label} (${m.cost})`;
+        opt.textContent = m.label;
         sel.appendChild(opt);
       });
       sel.value = aiSelectedModel;
@@ -10229,6 +10319,126 @@ function addAiTypingIndicator() {
 }
 
 // Build dynamic system prompt based on what data is loaded
+// ── MCP Docs Search (IONOS GitBook documentation) ──────────────
+let _mcpRequestId = 0;
+let _mcpSearchToolName = null;  // discovered via tools/list
+
+async function mcpRequest(method, params) {
+  _mcpRequestId++;
+  const body = { jsonrpc: '2.0', id: _mcpRequestId, method, params: params || {} };
+  const headers = { 'Content-Type': 'application/json' };
+  if (mcpSessionId) headers['Mcp-Session-Id'] = mcpSessionId;
+
+  const resp = await fetch('/mcp-docs', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  // Capture session ID from response
+  const sid = resp.headers.get('Mcp-Session-Id');
+  if (sid) mcpSessionId = sid;
+
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => '');
+    throw new Error(`MCP ${resp.status}: ${errText.substring(0, 200)}`);
+  }
+  const json = await resp.json();
+  // Check for JSON-RPC error
+  if (json.error) {
+    throw new Error(`MCP-RPC: ${json.error.message || JSON.stringify(json.error)}`);
+  }
+  return json;
+}
+
+async function initMcpSession() {
+  if (mcpInitialized) return;
+  try {
+    const initResult = await mcpRequest('initialize', {
+      protocolVersion: '2025-03-26',
+      capabilities: {},
+      clientInfo: { name: 'IONOS-Cloud-Visualizer', version: '1.9' },
+    });
+    console.log('[AI] MCP init response:', JSON.stringify(initResult).substring(0, 500));
+    mcpInitialized = true;
+
+    // Send initialized notification (fire-and-forget)
+    mcpRequest('notifications/initialized', {}).catch(() => {});
+
+    // Discover available tools
+    try {
+      const toolsResult = await mcpRequest('tools/list', {});
+      const tools = toolsResult?.result?.tools || [];
+      console.log('[AI] MCP available tools:', tools.map(t => t.name).join(', '));
+      // Find a search-like tool (GitBook typically exposes one)
+      const searchTool = tools.find(t =>
+        /search/i.test(t.name) || /query/i.test(t.name) || /find/i.test(t.name)
+      );
+      if (searchTool) {
+        _mcpSearchToolName = searchTool.name;
+        console.log('[AI] MCP search tool found:', _mcpSearchToolName);
+      } else if (tools.length > 0) {
+        // If no obvious search tool, use the first tool as fallback
+        _mcpSearchToolName = tools[0].name;
+        console.log('[AI] MCP using first available tool:', _mcpSearchToolName);
+      }
+    } catch (e) {
+      console.warn('[AI] MCP tools/list failed:', e.message);
+      // Fallback tool names to try
+      _mcpSearchToolName = 'search';
+    }
+
+    console.log('[AI] MCP docs session initialized, search tool:', _mcpSearchToolName);
+  } catch (e) {
+    console.warn('[AI] MCP docs init failed:', e.message);
+  }
+}
+
+async function searchIonosDocs(query) {
+  if (!aiDocsSearchEnabled) return '';
+  try {
+    await initMcpSession();
+    if (!mcpInitialized || !_mcpSearchToolName) return '';
+
+    console.log('[AI] Searching IONOS docs for:', query, 'using tool:', _mcpSearchToolName);
+    const result = await mcpRequest('tools/call', {
+      name: _mcpSearchToolName,
+      arguments: { query },
+    });
+    console.log('[AI] MCP search result keys:', JSON.stringify(Object.keys(result || {})));
+    console.log('[AI] MCP search result preview:', JSON.stringify(result).substring(0, 800));
+
+    // MCP tools/call result is at result.result.content (JSON-RPC wraps it)
+    // But depending on the response, it could also be directly at result.content
+    const content = result?.result?.content || result?.content;
+    if (!content) {
+      console.warn('[AI] MCP search: no content in result');
+      return '';
+    }
+
+    // Handle both array and string content
+    let texts = [];
+    if (Array.isArray(content)) {
+      texts = content
+        .filter(c => c.type === 'text' && c.text)
+        .map(c => c.text.substring(0, 1500))
+        .slice(0, 3);
+    } else if (typeof content === 'string') {
+      texts = [content.substring(0, 4500)];
+    }
+
+    if (texts.length === 0) {
+      console.warn('[AI] MCP search: content array empty or no text items');
+      return '';
+    }
+    console.log('[AI] MCP docs context length:', texts.join('').length, 'chars');
+    return '\n\n[IONOS Documentation Reference]\n' + texts.join('\n---\n');
+  } catch (e) {
+    console.warn('[AI] Docs search failed:', e.message);
+    return '';
+  }
+}
+
 function buildAiSystemPrompt(contextStr) {
   const hasTopology = graphData?.nodes?.length > 0;
   const hasFlowLogs = flAllRecords.length > 0;
@@ -10239,6 +10449,7 @@ function buildAiSystemPrompt(contextStr) {
   if (hasTopology) prompt += ' You have full visibility into the currently loaded VDC\'s topology — servers, LANs, databases, load balancers, VPNs, NAT gateways, and Kubernetes clusters.';
   if (hasFlowLogs) prompt += ' You can analyze network flow logs for traffic patterns, security threats, and anomalies. When mentioning IPs, include their resource names if known.';
   if (hasBilling) prompt += ' You have access to contract-wide billing and data transfer metrics across all VDCs. Provide cost-aware recommendations and identify high-traffic resources.';
+  if (ctx.includes('[IONOS Documentation Reference]')) prompt += ' You also have excerpts from the official IONOS Cloud documentation. Use these to provide accurate how-to guidance, API references, and service details. Cite the documentation when relevant.';
   prompt += '\n\nCurrent infrastructure context:\n' + ctx;
   return prompt;
 }
@@ -10256,13 +10467,14 @@ function buildAiContext() {
   // Determine the loaded VDC name for section headers
   const loadedVdcName = currentDC ? (sanitizeName(currentDC.properties?.name) || currentDC.id) : 'loaded VDC';
 
-  // ── VDC inventory (from billing API — covers all VDCs in contract) ──
-  if (_billingByVdc.size > 0) {
-    const vdcNames = [];
-    _billingByVdc.forEach((v, id) => {
-      vdcNames.push(v.name ? `${sanitizeName(v.name)} (${id})` : id);
+  // ── VDC inventory (from Cloud API /datacenters — authoritative list) ──
+  if (datacenters.length > 0) {
+    const vdcList = datacenters.map(dc => {
+      const name = sanitizeName(dc.properties?.name) || dc.id;
+      const loc = dc.properties?.location || '';
+      return `${name} (${loc})`;
     });
-    parts.push(`[Contract-wide] Virtual Data Centers (${vdcNames.length}): ${vdcNames.join(', ')}`);
+    parts.push(`[Contract-wide] Virtual Data Centers (${datacenters.length}): ${vdcList.join(', ')}`);
     if (currentDC) {
       parts.push(`Currently loaded VDC: ${loadedVdcName}`);
     }
@@ -10510,8 +10722,18 @@ async function sendAiMessage(presetPrompt) {
 
   const typing = addAiTypingIndicator();
 
-  // Build system prompt with context truncation to stay within token limits
+  // Build infra context and search docs in parallel
   let context = buildAiContext();
+
+  // Search IONOS docs for relevant information (non-blocking, best-effort)
+  let docsContext = '';
+  try {
+    docsContext = await searchIonosDocs(userMsg);
+  } catch (_) { /* docs search failure is non-fatal */ }
+
+  // Append docs to context if found
+  if (docsContext) context += docsContext;
+
   if (context.length > AI_MAX_CONTEXT_CHARS) {
     context = context.substring(0, AI_MAX_CONTEXT_CHARS) + '\n\n[Context truncated — showing most important data]';
   }
