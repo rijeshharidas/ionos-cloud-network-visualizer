@@ -40,7 +40,7 @@
 Ask your infrastructure anything. The built-in AI Cloud Assistant connects to the **IONOS AI Model Hub** and understands your full cloud context — topology, servers, LANs, databases, security posture, billing, and flow logs. It adapts its analysis based on what's loaded: connect a VDC for infrastructure Q&A, load flow logs for traffic analysis, or use billing data for cost insights.
 
 - **Security assessment** — identify servers without firewalls, unprotected NICs, missing security groups
-- **Cost optimization** — spot high-transfer servers, compare VDC billing, right-size recommendations
+- **Cost optimization** — on-demand idle VM scan using real-time telemetry to find stopped-but-billed VMs and running servers with near-zero traffic
 - **Traffic analysis** — top talkers, rejected flows, suspicious port scanning, protocol breakdown
 - **Infrastructure overview** — resource inventory, compute capacity, database health, network layout
 - **IONOS Documentation search** — toggle the Docs button to search the official IONOS Cloud documentation (via MCP) and receive answers grounded in up-to-date product docs
@@ -65,11 +65,15 @@ Choose from **Llama 3.1 8B**, **Mistral Small 24B**, or **Llama 3.3 70B** via th
 
 🌐 **Regional Cross-Connect View** — Load all VDCs within a region onto a single canvas to see Private Cross Connect links between data centers. VDCs in the same metro are treated as one region since they can be interconnected.
 
+💰 **Idle VM Scanner** — On-demand cost optimization scan that batch-queries real-time telemetry (Prometheus) for every server. Identifies stopped-but-billed VMs (SHUTOFF but still provisioned) and running VMs with near-zero network traffic (< 100 B/s). Results appear in the VDC Health panel, highlight on the topology, and feed into the AI assistant for optimization recommendations.
+
+📞 **Support Contacts Map** — Click the "Contact" button on the global map to overlay IONOS support and sales phone numbers / email addresses for 9 countries. Flag-emoji markers with themed popups — useful for quickly finding the right regional contact.
+
 📡 **IP & DNS View** — Toggle IP address labels across the entire topology, enriched with reverse DNS hostnames and forward DNS record names. Public IP block allocations (IPv4 and IPv6) and DNS zones are shown in dedicated sidebar panels. Zones with CDN distributions are flagged with a CDN badge; zones without CDN show a muted "No CDN" indicator.
 
 🖥️ **Compute View** — Toggle compute details across all server and cube nodes showing VM type, CPU cores, RAM, and CPU family. Color-coded by VM type: cyan for dedicated-core (Enterprise), purple for vCPU, orange for Cube, and rose for GPU instances. Press `C` to toggle.
 
-🛡️ **Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, and Cross Connect. Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
+🛡️ **Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, Cross Connect, NIC Multi-Queue, and Idle VMs (cost optimization). Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
 
 📜 **Flow Log Explorer** — Drag-and-drop IONOS flow log files (`.log` or `.log.gz`) into the explorer panel to analyze traffic records. Filter by source/destination IP, port range, protocol, action (ACCEPT/REJECT), and NIC interface. Click any row to trace the source→destination path on the topology graph using BFS path-finding with highlighted intermediate nodes. Hover rows for live preview. Enriched columns show IP-to-resource tags, well-known port labels, threat/scan badges, and server names alongside NIC UUIDs. Right-click any row for copy and filter actions. Export filtered results as CSV. Press `W` to open.
 
@@ -262,6 +266,7 @@ Your API token never leaves your machine.
 | CDN | `cdn.de-fra.ionos.com` | Centralized |
 | Data Transfer (Traffic) | `/billing/{contract}/traffic` | Per Contract |
 | Data Transfer (Utilization) | `/billing/{contract}/utilization` | Per Contract |
+| Telemetry | `api.ionos.com/telemetry/api/v1` | Centralized |
 | AI Model Hub | `openai.inference.de-txl.ionos.com/v1` | Centralized |
 | Locations | `/cloudapi/v6/locations` | Centralized |
 | User Management | `/cloudapi/v6/um` | Centralized |

@@ -18,6 +18,7 @@
 <style>
   :root {
     --bg-primary: #001B41;
+    --bg-primary-rgb: 0, 27, 65;
     --bg-secondary: #00264d;
     --bg-tertiary: #003366;
     --bg-hover: #004080;
@@ -38,6 +39,7 @@
 
   html[data-theme="light"] {
     --bg-primary: #ffffff;
+    --bg-primary-rgb: 255, 255, 255;
     --bg-secondary: #f8f9fa;
     --bg-tertiary: #e8ecf1;
     --bg-hover: #e0e8f0;
@@ -396,6 +398,18 @@
   .map-loc-tooltip .tt-cloud.tt-public { color: #11C7E6; }
   .map-loc-tooltip .tt-cloud.tt-private { color: #BB86FC; }
   .map-loc-tooltip .tt-cloud.tt-both { color: #A0B4FF; }
+
+  /* Contact popup (Leaflet popup) styling */
+  .contact-map-popup .leaflet-popup-content-wrapper {
+    background: var(--bg-secondary) !important; border: 1px solid var(--border) !important;
+    border-radius: 10px !important; box-shadow: 0 6px 24px rgba(0,0,0,0.5) !important;
+    color: var(--text-primary) !important; font-family: inherit !important;
+  }
+  .contact-map-popup .leaflet-popup-content { margin: 10px 14px !important; }
+  .contact-map-popup .leaflet-popup-tip { background: var(--bg-secondary) !important; border: 1px solid var(--border) !important; border-top: none !important; border-left: none !important; }
+  .contact-map-popup .leaflet-popup-close-button { color: var(--text-muted) !important; font-size: 18px !important; top: 4px !important; right: 6px !important; }
+  .contact-map-popup .leaflet-popup-close-button:hover { color: var(--text-primary) !important; }
+
   /* Back to overview button */
   .map-back-btn {
     position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
@@ -407,6 +421,40 @@
   }
   .map-back-btn:hover { background: var(--bg-tertiary); border-color: var(--accent); }
   .map-back-btn.visible { display: flex; }
+
+  /* Support contacts toggle button on global map */
+  .map-support-btn {
+    position: absolute; bottom: 18px; right: 18px; z-index: 10;
+    background: var(--accent); border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 12px; padding: 6px 12px; cursor: pointer;
+    display: none; align-items: center; gap: 6px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5); transition: all 0.2s;
+    color: #fff; font-size: 11px; font-weight: 600; font-family: inherit;
+    letter-spacing: 0.2px;
+  }
+  .map-support-btn:hover { filter: brightness(1.15); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.6); }
+  .map-support-btn.active { background: var(--success); border-color: rgba(255,255,255,0.2); }
+  .map-support-btn.visible { display: flex; }
+
+  /* Contact popup on map markers */
+  .contact-popup { font-family: var(--font); font-size: 11px; line-height: 1.5; min-width: 200px; }
+  .contact-popup .cp-header { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+  .contact-popup .cp-section { margin-bottom: 6px; }
+  .contact-popup .cp-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); margin-bottom: 2px; }
+  .contact-popup .cp-row { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+  .contact-popup .cp-row a { color: var(--accent); text-decoration: none; }
+  .contact-popup .cp-row a:hover { text-decoration: underline; }
+  .contact-popup .cp-icon { width: 14px; text-align: center; flex-shrink: 0; opacity: 0.6; }
+
+  /* Contact marker dot on the map */
+  .contact-marker {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); border: 2px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    cursor: pointer; transition: transform 0.15s;
+  }
+  .contact-marker:hover { transform: scale(1.15); }
 
   .empty-state {
     position: absolute;
@@ -453,15 +501,15 @@
   .feature-carousel-dot.active { opacity: 1; background: var(--accent); transform: scale(1.3); }
 
   /* ---- Post-connect Loading Screen ---- */
-  .connect-loading-overlay { position: absolute; inset: 0; background: var(--bg-primary); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 200; opacity: 0; transition: opacity 0.4s; }
+  .connect-loading-overlay { position: absolute; inset: 0; background: rgba(var(--bg-primary-rgb), 0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 200; opacity: 0; transition: opacity 0.4s; }
   .connect-loading-overlay.active { display: flex; opacity: 1; }
   .connect-loading-overlay.fade-out { opacity: 0; }
-  .connect-loading-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
-  .connect-loading-subtitle { font-size: 12px; color: var(--text-muted); margin-top: -12px; }
+  .connect-loading-title { font-size: 16px; font-weight: 600; color: var(--text-primary); text-shadow: 0 1px 8px rgba(var(--bg-primary-rgb), 0.6); }
+  .connect-loading-subtitle { font-size: 12px; color: var(--text-muted); margin-top: -12px; text-shadow: 0 1px 6px rgba(var(--bg-primary-rgb), 0.5); }
   .connect-loading-checklist { display: flex; flex-direction: column; gap: 10px; min-width: 300px; }
-  .connect-loading-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border); transition: all 0.4s; }
-  .connect-loading-item.active { border-color: var(--accent); background: rgba(17,199,230,0.06); }
-  .connect-loading-item.done { border-color: var(--success); background: rgba(16,185,129,0.06); }
+  .connect-loading-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(var(--bg-primary-rgb), 0.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid var(--border); transition: all 0.4s; }
+  .connect-loading-item.active { border-color: var(--accent); background: rgba(var(--bg-primary-rgb), 0.75); }
+  .connect-loading-item.done { border-color: var(--success); background: rgba(var(--bg-primary-rgb), 0.75); }
   .connect-loading-item-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; background: var(--bg-tertiary); color: var(--text-muted); transition: all 0.3s; }
   .connect-loading-item.active .connect-loading-item-icon { background: rgba(17,199,230,0.15); color: var(--accent); }
   .connect-loading-item.done .connect-loading-item-icon { background: rgba(16,185,129,0.15); color: var(--success); }
@@ -578,7 +626,8 @@
   /* ---- Loading ---- */
   .loading-overlay {
     position: absolute; inset: 0;
-    background: var(--bg-primary);
+    background: rgba(var(--bg-primary-rgb), 0.55);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
     display: none; align-items: center; justify-content: center;
     flex-direction: column; gap: 20px; z-index: 200;
     opacity: 0; transition: opacity 0.4s;
@@ -842,6 +891,8 @@
   .hl-dot-ipv6 { background: #3b82f6; }
   .hl-dot-failover { background: var(--danger); }
   .hl-dot-pcc { background: #ec4899; }
+  .hl-dot-multiq { background: #8b5cf6; }
+  .hl-dot-idle { background: #f59e0b; }
 
   /* Highlight rings around nodes */
   @keyframes hlRingPulse {
@@ -866,6 +917,13 @@
     font-size: 10px; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;
   }
+  .highlights-overlay .hl-group-label {
+    font-size: 9px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; color: var(--text-muted); opacity: 0.6;
+    margin: 6px 0 2px; padding-top: 4px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .highlights-overlay .hl-group-label:first-of-type { border-top: none; margin-top: 2px; }
 
   /* ---- Toolbar ---- */
   .toolbar {
@@ -1073,27 +1131,27 @@
   }
   .security-panel {
     background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 14px;
-    padding: 28px 32px; width: 560px; max-width: 92vw; max-height: 85vh; overflow-y: auto;
+    padding: 20px 24px; width: 520px; max-width: 92vw; max-height: 90vh; overflow-y: auto;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   }
-  .security-panel h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
-  .security-metrics { display: flex; flex-direction: column; gap: 14px; }
+  .security-panel h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  .security-metrics { display: flex; flex-direction: column; gap: 8px; }
   .security-metric {
-    background: var(--bg-tertiary); border-radius: 10px; padding: 14px 16px;
+    background: var(--bg-tertiary); border-radius: 8px; padding: 10px 14px;
     border-left: 4px solid var(--text-muted); cursor: pointer; transition: background 0.15s;
   }
   .security-metric:hover { background: var(--bg-hover); }
   .security-metric.metric-good { border-left-color: #10b981; }
   .security-metric.metric-warning { border-left-color: #f59e0b; }
   .security-metric.metric-danger { border-left-color: #ef4444; }
-  .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .metric-label { font-weight: 600; font-size: 13px; }
-  .metric-value { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+  .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .metric-label { font-weight: 600; font-size: 12px; }
+  .metric-value { font-size: 12px; font-weight: 700; color: var(--text-muted); }
   .metric-value.good { color: #10b981; }
   .metric-value.warning { color: #f59e0b; }
   .metric-value.danger { color: #ef4444; }
   .metric-bar-container {
-    height: 6px; background: var(--bg-primary); border-radius: 3px; overflow: hidden;
+    height: 4px; background: var(--bg-primary); border-radius: 2px; overflow: hidden;
   }
   .metric-bar {
     height: 100%; border-radius: 3px; transition: width 0.4s ease;
@@ -1101,7 +1159,7 @@
   .metric-bar.good { background: #10b981; }
   .metric-bar.warning { background: #f59e0b; }
   .metric-bar.danger { background: #ef4444; }
-  .metric-desc { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .metric-desc { font-size: 10px; color: var(--text-muted); margin-top: 4px; line-height: 1.35; }
 
   /* ---- Toast ---- */
   .toast-container {
@@ -1485,6 +1543,10 @@
 <div class="main-area" id="mainArea">
   <div id="mapBackground"></div>
   <button class="map-back-btn" id="mapBackBtn" onclick="showMapOverview()" data-i18n="map.allRegions">&#x2190; All Regions</button>
+  <button class="map-support-btn" id="mapSupportBtn" onclick="toggleSupportContacts()" title="IONOS Support & Sales Contacts">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94m-1 7.98v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.11 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    Contact
+  </button>
   <div class="map-billing-panel hidden" id="mapBillingPanel"></div>
   <button class="sidebar-expand" id="sidebarExpand" onclick="toggleSidebar()" title="Show sidebar">&#x25B6;</button>
   <div class="canvas-search" id="searchSection" style="display:none;">
@@ -1499,6 +1561,7 @@
   <!-- Highlights Overlay -->
   <div class="highlights-overlay" id="highlightsOverlay">
     <div class="hl-title" data-i18n="highlights.title">Highlights</div>
+    <div class="hl-group-label" data-i18n="highlights.security">Security</div>
     <div class="highlight-checkbox">
       <input type="checkbox" id="hlFirewall" onchange="applyHighlights()">
       <span class="hl-dot hl-dot-firewall"></span>
@@ -1514,6 +1577,7 @@
       <span class="hl-dot hl-dot-secgroups"></span>
       <span data-i18n="highlights.secGroups">Security Groups</span>
     </div>
+    <div class="hl-group-label" data-i18n="highlights.network">Network</div>
     <div class="highlight-checkbox">
       <input type="checkbox" id="hlIPv6" onchange="applyHighlights()">
       <span class="hl-dot hl-dot-ipv6"></span>
@@ -1529,13 +1593,25 @@
       <span class="hl-dot hl-dot-pcc"></span>
       <span data-i18n="highlights.crossConnect">Cross Connect</span>
     </div>
+    <div class="hl-group-label" data-i18n="highlights.performance">Performance</div>
+    <div class="highlight-checkbox">
+      <input type="checkbox" id="hlMultiQ" onchange="applyHighlights()">
+      <span class="hl-dot hl-dot-multiq"></span>
+      <span data-i18n="highlights.multiQueue">NIC Multi-Queue</span>
+    </div>
+    <div class="hl-group-label" data-i18n="highlights.costOpt">Cost Optimization</div>
+    <div class="highlight-checkbox">
+      <input type="checkbox" id="hlIdle" onchange="applyHighlights()">
+      <span class="hl-dot hl-dot-idle"></span>
+      <span data-i18n="highlights.idleVMs">Idle VMs (Stopped &amp; Billed)</span>
+    </div>
   </div>
 
   <!-- Security Posture Overlay -->
   <div class="security-overlay" id="securityOverlay" style="display:none;" onclick="closeSecurityOverlay()" role="dialog" aria-modal="true">
     <div class="security-panel" onclick="event.stopPropagation()">
       <div class="detail-header">
-        <h2 data-i18n="security.title">Security Posture</h2>
+        <h2 data-i18n="security.title">VDC Health</h2>
         <button class="detail-close" onclick="closeSecurityOverlay()">&times;</button>
       </div>
       <div class="security-metrics" id="securityMetrics"></div>
@@ -1742,7 +1818,7 @@
     <button onclick="toggleMapBackground()" id="mapToggleBtn" class="active" aria-label="Toggle map background" data-tip="Map background (M)" data-i18n-tip="toolbar.mapBg">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
     </button>
-    <button onclick="openSecurityOverlay()" id="securityBtn" aria-label="Security posture" data-tip="Security posture (S)" data-i18n-tip="toolbar.security">
+    <button onclick="openSecurityOverlay()" id="securityBtn" aria-label="VDC Health" data-tip="VDC Health (S)" data-i18n-tip="toolbar.security">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
     </button>
     <button onclick="openTableView()" id="tableViewBtn" aria-label="Table view" data-tip="Table view (T)" data-i18n-tip="toolbar.tableView">
@@ -2118,6 +2194,37 @@ const DC_CLOUD_TYPE = {
   'fr/nlb': 'private',
 };
 
+// IONOS Support & Sales contact info per country (for map overlay)
+const IONOS_CONTACTS = [
+  { country: 'Germany',        flag: '🇩🇪', lat: 51.16, lng: 10.45,
+    support: { phone: '+49 30 577 00 820', email: 'support@cloud.ionos.de' },
+    sales:   { phone: '+49 30 577 00 840', email: 'beratung@cloud.ionos.com' }},
+  { country: 'Austria',        flag: '🇦🇹', lat: 47.52, lng: 14.55,
+    support: { phone: '+43 1 385 05 71',   email: 'support@cloud.ionos.at' },
+    sales:   { phone: '+43 1 385 17 26',   email: 'produkt@cloud.ionos.at' }},
+  { country: 'France',         flag: '🇫🇷', lat: 46.60, lng: 2.21,
+    support: { phone: '+33 1 76 54 09 41', email: 'support@cloud.ionos.fr' },
+    sales:   { phone: '+33 1 76 54 37 46', email: 'produit@cloud.ionos.fr' }},
+  { country: 'Spain',          flag: '🇪🇸', lat: 40.46, lng: -3.75,
+    support: { phone: '+34 918 007 623',   email: 'cloud-support@ionos.es' },
+    sales:   { phone: '+34 941 880372',    email: 'partner.sales@ionos.es' }},
+  { country: 'Italy',          flag: '🇮🇹', lat: 41.87, lng: 12.57,
+    support: { phone: '+39 02 354 005 36', email: 'support@cloud.ionos.it' },
+    sales:   { phone: '+39 02 354 005 98', email: 'prodotto@cloud.ionos.it' }},
+  { country: 'United Kingdom', flag: '🇬🇧', lat: 55.38, lng: -3.44,
+    support: { phone: '+44 333 336 1285',  email: 'support@cloud.ionos.co.uk' },
+    sales:   { phone: '+44 333 336 2984',  email: 'sales@cloud.ionos.co.uk' }},
+  { country: 'United States',  flag: '🇺🇸', lat: 39.83, lng: -98.58,
+    support: { phone: '+1 (267) 481-7981', email: 'support@cloud.ionos.com' },
+    sales:   { phone: '+1 (267) 481-7982', email: 'product@cloud.ionos.com' }},
+  { country: 'Canada',         flag: '🇨🇦', lat: 56.13, lng: -106.35,
+    support: { phone: '+1 (267) 481-7981', email: 'support@cloud.ionos.com' },
+    sales:   { phone: '+1 (267) 481-7982', email: 'product@cloud.ionos.ca' }},
+  { country: 'Mexico',         flag: '🇲🇽', lat: 23.63, lng: -102.55,
+    support: { phone: '+52 (55) 4440 9171', email: 'support@cloud.ionos.mx' },
+    sales:   { phone: '+52 (55) 4440 5061', email: 'producto@cloud.ionos.mx' }},
+];
+
 // Cloud type label for tooltips
 function cloudLabel(region) {
   const ct = DC_CLOUD_TYPE[region] || 'public';
@@ -2195,8 +2302,8 @@ const TRANSLATIONS = {
     'toolbar.flowlogsMenu': 'Flow Logs',
     'toolbar.heatmap': 'Traffic Heatmap (X)',
     // Security
-    'toolbar.security': 'Security posture (S)',
-    'security.title': 'Security Posture',
+    'toolbar.security': 'VDC Health (S)',
+    'security.title': 'VDC Health',
     'security.firewall': 'Firewall Coverage',
     'security.firewallGood': 'Excellent — most servers have active firewall rules',
     'security.firewallWarn': 'Moderate — consider enabling firewalls on more servers',
@@ -2220,12 +2327,18 @@ const TRANSLATIONS = {
     'toast.noVdcLoaded': 'Load a VDC first to view security posture',
     // Highlights
     'highlights.title': 'Highlights',
+    'highlights.security': 'Security',
     'highlights.firewall': 'Firewall Active',
     'highlights.flowLogs': 'Flow Logs',
     'highlights.secGroups': 'Security Groups',
+    'highlights.network': 'Network',
     'highlights.ipv6': 'IPv6 Enabled',
     'highlights.ipFailover': 'IP Failover',
     'highlights.crossConnect': 'Cross Connect',
+    'highlights.performance': 'Performance',
+    'highlights.multiQueue': 'NIC Multi-Queue',
+    'highlights.costOpt': 'Cost Optimization',
+    'highlights.idleVMs': 'Idle VMs (Stopped & Billed)',
     // Table
     'table.title': 'Resource Table',
     'table.searchPlaceholder': 'Search resources...',
@@ -2414,8 +2527,8 @@ const TRANSLATIONS = {
     'toolbar.flowlogsMenu': 'Flow-Logs',
     'toolbar.heatmap': 'Verkehrs-Heatmap (X)',
     // Security
-    'toolbar.security': 'Sicherheitsstatus (S)',
-    'security.title': 'Sicherheitsstatus',
+    'toolbar.security': 'VDC-Zustand (S)',
+    'security.title': 'VDC-Zustand',
     'security.firewall': 'Firewall-Abdeckung',
     'security.firewallGood': 'Ausgezeichnet — die meisten Server haben aktive Firewall-Regeln',
     'security.firewallWarn': 'Mäßig — erwägen Sie Firewalls auf mehr Servern zu aktivieren',
@@ -2438,12 +2551,18 @@ const TRANSLATIONS = {
     'shortcuts.security': 'Sicherheitsstatus',
     'toast.noVdcLoaded': 'Laden Sie zuerst ein VDC, um den Sicherheitsstatus anzuzeigen',
     'highlights.title': 'Hervorhebungen',
+    'highlights.security': 'Sicherheit',
     'highlights.firewall': 'Firewall aktiv',
     'highlights.flowLogs': 'Flow Logs',
     'highlights.secGroups': 'Sicherheitsgruppen',
+    'highlights.network': 'Netzwerk',
     'highlights.ipv6': 'IPv6 aktiviert',
     'highlights.ipFailover': 'IP-Failover',
     'highlights.crossConnect': 'Cross Connect',
+    'highlights.performance': 'Leistung',
+    'highlights.multiQueue': 'NIC Multi-Queue',
+    'highlights.costOpt': 'Kostenoptimierung',
+    'highlights.idleVMs': 'Inaktive VMs (Gestoppt & Abgerechnet)',
     'table.title': 'Ressourcentabelle',
     'table.searchPlaceholder': 'Ressourcen suchen...',
     'table.csv': 'CSV',
@@ -2624,8 +2743,8 @@ const TRANSLATIONS = {
     'toolbar.flowlogsMenu': 'Flow Logs',
     'toolbar.heatmap': 'Mapa de calor de tráfico (X)',
     // Security
-    'toolbar.security': 'Postura de seguridad (S)',
-    'security.title': 'Postura de Seguridad',
+    'toolbar.security': 'Estado del VDC (S)',
+    'security.title': 'Estado del VDC',
     'security.firewall': 'Cobertura de Firewall',
     'security.firewallGood': 'Excelente — la mayoría de los servidores tienen reglas de firewall activas',
     'security.firewallWarn': 'Moderada — considere activar firewalls en más servidores',
@@ -2648,12 +2767,18 @@ const TRANSLATIONS = {
     'shortcuts.security': 'Postura de seguridad',
     'toast.noVdcLoaded': 'Cargue primero un VDC para ver la postura de seguridad',
     'highlights.title': 'Resaltados',
+    'highlights.security': 'Seguridad',
     'highlights.firewall': 'Firewall activo',
     'highlights.flowLogs': 'Flow Logs',
     'highlights.secGroups': 'Grupos de seguridad',
+    'highlights.network': 'Red',
     'highlights.ipv6': 'IPv6 habilitado',
     'highlights.ipFailover': 'IP Failover',
     'highlights.crossConnect': 'Cross Connect',
+    'highlights.performance': 'Rendimiento',
+    'highlights.multiQueue': 'NIC Multi-Queue',
+    'highlights.costOpt': 'Optimización de costos',
+    'highlights.idleVMs': 'VMs inactivas (Detenidas y facturadas)',
     'table.title': 'Tabla de recursos',
     'table.searchPlaceholder': 'Buscar recursos...',
     'table.csv': 'CSV',
@@ -2834,8 +2959,8 @@ const TRANSLATIONS = {
     'toolbar.flowlogsMenu': 'Flow Logs',
     'toolbar.heatmap': 'Carte thermique du trafic (X)',
     // Security
-    'toolbar.security': 'Posture de sécurité (S)',
-    'security.title': 'Posture de Sécurité',
+    'toolbar.security': 'Santé du VDC (S)',
+    'security.title': 'Santé du VDC',
     'security.firewall': 'Couverture Pare-feu',
     'security.firewallGood': 'Excellent — la plupart des serveurs ont des règles pare-feu actives',
     'security.firewallWarn': 'Modérée — envisagez d\'activer les pare-feux sur plus de serveurs',
@@ -2858,12 +2983,18 @@ const TRANSLATIONS = {
     'shortcuts.security': 'Posture de sécurité',
     'toast.noVdcLoaded': 'Chargez d\'abord un VDC pour voir la posture de sécurité',
     'highlights.title': 'Mises en \u00e9vidence',
+    'highlights.security': 'Sécurité',
     'highlights.firewall': 'Pare-feu actif',
     'highlights.flowLogs': 'Flow Logs',
-    'highlights.secGroups': 'Groupes de s\u00e9curit\u00e9',
-    'highlights.ipv6': 'IPv6 activ\u00e9',
+    'highlights.secGroups': 'Groupes de sécurité',
+    'highlights.network': 'Réseau',
+    'highlights.ipv6': 'IPv6 activé',
     'highlights.ipFailover': 'IP Failover',
     'highlights.crossConnect': 'Cross Connect',
+    'highlights.performance': 'Performance',
+    'highlights.multiQueue': 'NIC Multi-Queue',
+    'highlights.costOpt': 'Optimisation des coûts',
+    'highlights.idleVMs': 'VMs inactives (Arrêtées & facturées)',
     'table.title': 'Tableau des ressources',
     'table.searchPlaceholder': 'Rechercher des ressources...',
     'table.csv': 'CSV',
@@ -3170,19 +3301,25 @@ function getSecurityPosture() {
   const servers = graphData.nodes.filter(n => n.type === 'server' || n.type === 'cube' || n.type === 'vcpu');
   const lans = graphData.nodes.filter(n => n.type === 'lan');
 
-  let fwActive = 0, flowLogsActive = 0, sgActive = 0;
+  let fwActive = 0, flowLogsActive = 0, sgActive = 0, multiQActive = 0;
+  let multiQEligible = 0;  // servers with ≥2 threads (eligible for MultiQ)
   servers.forEach(s => {
-    let hasFw = false, hasFL = false, hasSG = false;
+    let hasFw = false, hasFL = false, hasSG = false, hasMQ = false;
     if (s.data && s.data.nics) {
       s.data.nics.forEach(nic => {
         if (nic.firewall) hasFw = true;
         if (nic.flowLogsEnabled) hasFL = true;
+        if (nic.multiQueue) hasMQ = true;
       });
     }
     if (s.data && (s.data.securityGroupCount > 0 || (s.data.securityGroups && s.data.securityGroups.length > 0))) hasSG = true;
     if (hasFw) fwActive++;
     if (hasFL) flowLogsActive++;
     if (hasSG) sgActive++;
+    // MultiQ eligible: any server with ≥2 cores (≥2 threads)
+    const cores = s.data?.cores || 0;
+    if (cores >= 2) multiQEligible++;
+    if (hasMQ) multiQActive++;
   });
 
   let privateLans = 0, ipv6Lans = 0;
@@ -3199,7 +3336,96 @@ function getSecurityPosture() {
     secGroups: { count: sgActive, total: servers.length },
     privateLans: { count: privateLans, total: lans.length, natCount: natGateways.length },
     ipv6: { count: ipv6Lans, total: lans.length },
+    multiQueue: { count: multiQActive, total: servers.length, eligible: multiQEligible },
   };
+}
+
+/** Cached results from the last idle VM scan (populated by scanIdleVMs). */
+let _idleScanResults = null; // { candidates: [{node, reason, state, avgBytesIn, avgBytesOut}], totalServers, scannedAt }
+let _idleScanRunning = false;
+
+/** On-demand scan: fetches telemetry for ALL servers to find idle/cost-waste VMs.
+ *  Checks:
+ *    (1) vmState=SHUTOFF + metadata state=AVAILABLE → VM is powered off but still
+ *        provisioned & billed. Deallocating (setting to INACTIVE) would stop billing.
+ *    (2) vmState=RUNNING with near-zero network traffic (via telemetry) → may be unused.
+ *  Skips: metadata state=INACTIVE (already deallocated, not billed).
+ *  Uses instance_network_in_bytes + instance_network_out_bytes from IONOS Telemetry API.
+ *  @param {Function} onProgress - optional callback(scanned, total) for progress updates
+ *  @returns {Promise<{candidates, totalServers, scannedAt}>} */
+async function scanIdleVMs(onProgress) {
+  if (!graphData?.nodes) return { candidates: [], totalServers: 0, scannedAt: new Date() };
+  const servers = graphData.nodes.filter(n => n.type === 'server' || n.type === 'cube');
+  const candidates = [];
+  const IDLE_BYTES_PER_SEC = 100; // avg bytes/sec threshold — below this = idle
+
+  // Time range: last 1 hour, 5-minute steps (lighter than 60s steps)
+  const end = new Date();
+  const start = new Date(end.getTime() - 60 * 60 * 1000);
+  const timeParams = `&start=${start.toISOString()}&end=${end.toISOString()}&step=300`;
+
+  let scanned = 0;
+  const total = servers.length;
+
+  // Process servers in batches of 5 to avoid overwhelming the API
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < servers.length; i += BATCH_SIZE) {
+    const batch = servers.slice(i, i + BATCH_SIZE);
+    await Promise.all(batch.map(async (s) => {
+      const vmState = (s.data?.vmState || '').toUpperCase();
+      const resourceState = (s.data?.state || '').toUpperCase();
+      const rawId = s.id.replace(/^(srv|cube)-/, '');
+
+      if (resourceState === 'INACTIVE') {
+        // INACTIVE metadata state = deallocated — not billed, skip
+        scanned++;
+        if (onProgress) onProgress(scanned, total);
+        return;
+      }
+
+      if (vmState === 'SHUTOFF' && resourceState === 'AVAILABLE') {
+        // VM is powered off but resource is still provisioned (AVAILABLE) = billed
+        candidates.push({ node: s, reason: 'stopped-billed', state: vmState, resourceState, avgBytesIn: 0, avgBytesOut: 0 });
+        scanned++;
+        if (onProgress) onProgress(scanned, total);
+        return;
+      }
+
+      // For RUNNING VMs: fetch telemetry to check actual traffic
+      if (vmState === 'RUNNING') {
+        try {
+          const inQuery = `avg(irate(instance_network_in_bytes{uuid="${rawId}"}[5m]))`;
+          const outQuery = `avg(irate(instance_network_out_bytes{uuid="${rawId}"}[5m]))`;
+          const [inResp, outResp] = await Promise.all([
+            apiFetch(`${TELEMETRY_BASE}/query_range?query=${encodeURIComponent(inQuery)}${timeParams}`).catch(() => null),
+            apiFetch(`${TELEMETRY_BASE}/query_range?query=${encodeURIComponent(outQuery)}${timeParams}`).catch(() => null),
+          ]);
+
+          const inValues = inResp?.data?.result?.[0]?.values || [];
+          const outValues = outResp?.data?.result?.[0]?.values || [];
+
+          // Compute average bytes/sec over the period
+          const avgIn = inValues.length > 0
+            ? inValues.reduce((sum, [, v]) => sum + (parseFloat(v) || 0), 0) / inValues.length : 0;
+          const avgOut = outValues.length > 0
+            ? outValues.reduce((sum, [, v]) => sum + (parseFloat(v) || 0), 0) / outValues.length : 0;
+
+          if (avgIn <= IDLE_BYTES_PER_SEC && avgOut <= IDLE_BYTES_PER_SEC) {
+            candidates.push({ node: s, reason: 'zero-traffic', state: vmState, resourceState, avgBytesIn: avgIn, avgBytesOut: avgOut });
+          }
+        } catch (e) {
+          console.warn(`[IdleScan] Telemetry failed for ${s.name}:`, e.message);
+        }
+      }
+
+      scanned++;
+      if (onProgress) onProgress(scanned, total);
+    }));
+  }
+
+  const result = { candidates, totalServers: servers.length, scannedAt: new Date() };
+  _idleScanResults = result;
+  return result;
 }
 
 function metricLevel(pct, invert) {
@@ -3213,38 +3439,192 @@ function renderSecurityPosture() {
   const data = getSecurityPosture();
   if (!data) { container.innerHTML = '<p style="color:var(--text-muted);">' + t('toast.noDisplay') + '</p>'; return; }
 
-  const metrics = [
-    { key: 'firewall', label: t('security.firewall'), count: data.firewall.count, total: data.firewall.total, highlight: 'hlFirewall' },
-    { key: 'flowLogs', label: t('security.flowlogs'), count: data.flowLogs.count, total: data.flowLogs.total, highlight: 'hlFlowLogs' },
-    { key: 'secGroups', label: t('security.secgroups'), count: data.secGroups.count, total: data.secGroups.total, highlight: 'hlSecGroups' },
-    { key: 'privateLans', label: t('security.privateLans'), count: data.privateLans.count, total: data.privateLans.total, invert: false, natCount: data.privateLans.natCount },
-    { key: 'ipv6', label: t('security.ipv6'), count: data.ipv6.count, total: data.ipv6.total, highlight: 'hlIPv6' },
+  const categories = [
+    { title: 'Security', metrics: [
+      { key: 'firewall', label: t('security.firewall'), count: data.firewall.count, total: data.firewall.total, highlight: 'hlFirewall' },
+      { key: 'flowLogs', label: t('security.flowlogs'), count: data.flowLogs.count, total: data.flowLogs.total, highlight: 'hlFlowLogs' },
+      { key: 'secGroups', label: t('security.secgroups'), count: data.secGroups.count, total: data.secGroups.total, highlight: 'hlSecGroups' },
+    ]},
+    { title: 'Network', metrics: [
+      { key: 'privateLans', label: t('security.privateLans'), count: data.privateLans.count, total: data.privateLans.total, invert: false, natCount: data.privateLans.natCount },
+      { key: 'ipv6', label: t('security.ipv6'), count: data.ipv6.count, total: data.ipv6.total, highlight: 'hlIPv6' },
+    ]},
+    { title: 'Performance', metrics: [
+      { key: 'multiQueue', label: 'NIC Multi-Queue', count: data.multiQueue.count, total: data.multiQueue.total, highlight: 'hlMultiQ', eligible: data.multiQueue.eligible },
+    ]},
   ];
 
   container.innerHTML = '';
-  metrics.forEach(m => {
-    const pct = m.total > 0 ? Math.round((m.count / m.total) * 100) : 0;
-    const level = m.total === 0 ? 'good' : metricLevel(pct, m.invert);
+  categories.forEach(cat => {
+    // Category header
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin:6px 0 2px;padding-left:2px;';
+    if (cat === categories[0]) header.style.marginTop = '0';
+    header.textContent = cat.title;
+    container.appendChild(header);
+
+    cat.metrics.forEach(m => {
+      const pct = m.total > 0 ? Math.round((m.count / m.total) * 100) : 0;
+      const level = m.total === 0 ? 'good' : metricLevel(pct, m.invert);
+      const card = document.createElement('div');
+      card.className = 'security-metric metric-' + level;
+      card.innerHTML =
+        '<div class="metric-header">' +
+          '<span class="metric-label">' + m.label + '</span>' +
+          '<span class="metric-value ' + level + '">' + m.count + ' / ' + m.total + ' (' + pct + '%)</span>' +
+        '</div>' +
+        '<div class="metric-bar-container"><div class="metric-bar ' + level + '" style="width:' + pct + '%"></div></div>' +
+        '<div class="metric-desc">' + getMetricDesc(m.key, pct, level, m) + '</div>';
+      if (m.highlight) {
+        card.style.cursor = 'pointer';
+        card.onclick = function() {
+          const cb = document.getElementById(m.highlight);
+          if (cb) { cb.checked = true; applyHighlights(); }
+          closeSecurityOverlay();
+          toast(t('security.highlightEnabled', { name: m.label }), 'info');
+        };
+      }
+      container.appendChild(card);
+    });
+  });
+
+  // ── Cost Optimization: On-demand Idle VM Scan ──
+  if (graphData?.nodes?.some(n => n.type === 'server' || n.type === 'cube')) {
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin:6px 0 2px;padding-left:2px;';
+    header.textContent = 'Cost Optimization';
+    container.appendChild(header);
+
+    // Results container (shows previous results or placeholder)
+    const resultsDiv = document.createElement('div');
+    resultsDiv.id = 'idleScanResults';
+    container.appendChild(resultsDiv);
+
+    // Render previous scan results if available, otherwise show scan button
+    renderIdleScanUI(resultsDiv);
+  }
+}
+
+/** Render the idle VM scan UI — either a scan button or previous results. */
+function renderIdleScanUI(container) {
+  if (!container) container = document.getElementById('idleScanResults');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (_idleScanRunning) {
+    // Scan in progress — show progress
+    container.innerHTML =
+      '<div class="security-metric" style="text-align:center;padding:12px;">' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Scanning VMs via telemetry...</div>' +
+        '<div class="metric-bar-container" style="height:6px;"><div class="metric-bar warning" id="idleScanProgress" style="width:0%;transition:width 0.3s;"></div></div>' +
+        '<div style="font-size:9px;color:var(--text-muted);margin-top:4px;" id="idleScanStatus">0 / 0</div>' +
+      '</div>';
+    return;
+  }
+
+  if (_idleScanResults) {
+    // Show cached results
+    const r = _idleScanResults;
+    const count = r.candidates.length;
+    const pct = r.totalServers > 0 ? Math.round((count / r.totalServers) * 100) : 0;
+    const level = count === 0 ? 'good' : count <= 2 ? 'warning' : 'danger';
+
+    let desc;
+    if (count === 0) {
+      desc = 'All servers are actively used or already deallocated — no idle VMs found.';
+    } else {
+      const stopped = r.candidates.filter(c => c.reason === 'stopped-billed');
+      const zeroTraffic = r.candidates.filter(c => c.reason === 'zero-traffic');
+      const parts = [];
+      if (stopped.length) parts.push(`<b>${stopped.length}</b> powered off but still provisioned (SHUTOFF + AVAILABLE — deallocate to stop billing)`);
+      if (zeroTraffic.length) parts.push(`<b>${zeroTraffic.length}</b> running with near-zero network traffic`);
+      desc = parts.join('<br>');
+
+      // List the VMs
+      const names = r.candidates.slice(0, 6).map(c => {
+        const label = sanitizeName(c.node.name);
+        const tag = c.reason === 'stopped-billed' ? c.state
+          : `~${formatBytes(c.avgBytesIn + c.avgBytesOut)}/s`;
+        return `<span style="color:var(--text-secondary);">${label}</span> <span style="opacity:0.5;">(${tag})</span>`;
+      });
+      desc += '<div style="margin-top:4px;font-size:9px;line-height:1.6;">' + names.join(', ') +
+        (r.candidates.length > 6 ? `, +${r.candidates.length - 6} more` : '') + '</div>';
+    }
+
     const card = document.createElement('div');
     card.className = 'security-metric metric-' + level;
     card.innerHTML =
       '<div class="metric-header">' +
-        '<span class="metric-label">' + m.label + '</span>' +
-        '<span class="metric-value ' + level + '">' + m.count + ' / ' + m.total + ' (' + pct + '%)</span>' +
+        '<span class="metric-label">Idle VMs</span>' +
+        '<span class="metric-value ' + level + '">' + count + ' / ' + r.totalServers + ' (' + pct + '%)</span>' +
       '</div>' +
       '<div class="metric-bar-container"><div class="metric-bar ' + level + '" style="width:' + pct + '%"></div></div>' +
-      '<div class="metric-desc">' + getMetricDesc(m.key, pct, level, m) + '</div>';
-    if (m.highlight) {
+      '<div class="metric-desc">' + desc + '</div>';
+
+    if (count > 0) {
       card.style.cursor = 'pointer';
+      card.title = 'Click to highlight idle VMs on topology';
       card.onclick = function() {
-        const cb = document.getElementById(m.highlight);
+        const cb = document.getElementById('hlIdle');
         if (cb) { cb.checked = true; applyHighlights(); }
         closeSecurityOverlay();
-        toast(t('security.highlightEnabled', { name: m.label }), 'info');
+        toast('Idle VMs highlighted on topology', 'info');
       };
     }
     container.appendChild(card);
-  });
+
+    // Timestamp + rescan link
+    const timeAgo = Math.round((Date.now() - r.scannedAt.getTime()) / 60000);
+    const footer = document.createElement('div');
+    footer.style.cssText = 'font-size:9px;color:var(--text-muted);margin-top:4px;display:flex;justify-content:space-between;align-items:center;';
+    footer.innerHTML =
+      `<span>Scanned ${timeAgo < 1 ? 'just now' : timeAgo + 'm ago'}</span>` +
+      `<a href="#" style="color:var(--accent);text-decoration:none;font-weight:600;" onclick="event.preventDefault();startIdleScan();">Re-scan</a>`;
+    container.appendChild(footer);
+  } else {
+    // No results yet — show scan button
+    const card = document.createElement('div');
+    card.className = 'security-metric';
+    card.style.cssText = 'text-align:center;cursor:pointer;';
+    card.innerHTML =
+      '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">Scan all VMs using real-time telemetry to identify idle resources for potential cost savings.</div>' +
+      '<button onclick="event.stopPropagation();startIdleScan();" style="' +
+        'background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 16px;' +
+        'font-size:11px;font-weight:600;cursor:pointer;transition:opacity 0.2s;' +
+      '">Scan for Idle VMs</button>';
+    container.appendChild(card);
+  }
+}
+
+/** Trigger the idle VM scan and update the UI. */
+async function startIdleScan() {
+  if (_idleScanRunning) return;
+  _idleScanRunning = true;
+
+  // Update UI to show progress
+  const container = document.getElementById('idleScanResults');
+  renderIdleScanUI(container);
+
+  try {
+    await scanIdleVMs((scanned, total) => {
+      // Update progress bar
+      const bar = document.getElementById('idleScanProgress');
+      const status = document.getElementById('idleScanStatus');
+      if (bar) bar.style.width = Math.round((scanned / total) * 100) + '%';
+      if (status) status.textContent = `${scanned} / ${total} servers`;
+    });
+  } catch (e) {
+    console.warn('[IdleScan] Scan failed:', e);
+    toast('Idle VM scan failed: ' + e.message, 'error');
+  } finally {
+    _idleScanRunning = false;
+  }
+
+  // Render results
+  renderIdleScanUI(container);
+
+  // Update AI suggestions if idle VMs found
+  updateAiSuggestions();
 }
 
 function getMetricDesc(key, pct, level, metric) {
@@ -3262,6 +3642,12 @@ function getMetricDesc(key, pct, level, metric) {
     return desc;
   }
   if (key === 'ipv6') return level === 'good' ? t('security.ipv6Good') : t('security.ipv6Bad');
+  if (key === 'multiQueue') {
+    const eligible = metric?.eligible || 0;
+    if (pct === 100) return 'All servers have Multi-Queue enabled for optimal network throughput.';
+    if (eligible > metric.count) return `${eligible - metric.count} eligible server(s) (≥2 cores) could benefit from enabling NIC Multi-Queue for better I/O performance.`;
+    return 'Enable NIC Multi-Queue on multi-core servers to distribute traffic across CPU cores and reduce latency.';
+  }
   return '';
 }
 
@@ -4445,6 +4831,112 @@ function toggleMapBackground() {
   document.getElementById('mapToggleBtn')?.classList.toggle('active', mapVisible);
 }
 
+// ---- Support Contacts Map Overlay ----
+let supportContactMarkers = [];
+let supportContactsVisible = false;
+
+function toggleSupportContacts() {
+  if (supportContactsVisible) {
+    hideSupportContacts();
+  } else {
+    showSupportContacts();
+  }
+}
+
+function showSupportContacts() {
+  if (!bgMap) return;
+  supportContactsVisible = true;
+  document.getElementById('mapSupportBtn')?.classList.add('active');
+
+  // Clear existing VDC markers & available location markers so the map is clean
+  clearMapMarkers();
+  clearAvailableLocationMarkers();
+
+  // Hide billing panel, back button
+  document.getElementById('mapBillingPanel')?.classList.add('hidden');
+  document.getElementById('mapBackBtn')?.classList.remove('visible');
+  mapDrillRegion = null;
+
+  // Add a contact marker for each country
+  IONOS_CONTACTS.forEach(c => {
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="contact-marker">${c.flag}</div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+
+    const marker = L.marker([c.lat, c.lng], { icon }).addTo(bgMap);
+
+    // Build popup HTML
+    const popupHtml = `<div class="contact-popup">
+      <div class="cp-header">${c.flag} ${c.country}</div>
+      <div class="cp-section">
+        <div class="cp-label">Support</div>
+        <div class="cp-row"><span class="cp-icon">📞</span><a href="tel:${c.support.phone}">${c.support.phone}</a></div>
+        <div class="cp-row"><span class="cp-icon">✉</span><a href="mailto:${c.support.email}">${c.support.email}</a></div>
+      </div>
+      <div class="cp-section">
+        <div class="cp-label">Sales</div>
+        <div class="cp-row"><span class="cp-icon">📞</span><a href="tel:${c.sales.phone}">${c.sales.phone}</a></div>
+        <div class="cp-row"><span class="cp-icon">✉</span><a href="mailto:${c.sales.email}">${c.sales.email}</a></div>
+      </div>
+    </div>`;
+
+    marker.bindPopup(popupHtml, {
+      className: 'contact-map-popup',
+      maxWidth: 260,
+      closeButton: true,
+    });
+
+    // Show tooltip on hover with just the country name
+    marker.bindTooltip(`${c.flag} ${c.country}`, {
+      className: 'map-loc-tooltip',
+      direction: 'top',
+      offset: [0, -18],
+    });
+
+    supportContactMarkers.push(marker);
+  });
+
+  // Fit bounds to show all contact countries
+  const bounds = IONOS_CONTACTS.map(c => [c.lat, c.lng]);
+  bgMap.invalidateSize({ animate: false });
+  bgMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 4, animate: true });
+
+  // Clicking the map background (not a marker) dismisses support view
+  // Use setTimeout so the click that triggered show doesn't immediately dismiss
+  setTimeout(() => {
+    bgMap.on('click', _onMapClickWhileSupport);
+  }, 200);
+}
+
+function _onMapClickWhileSupport() {
+  if (!supportContactsVisible) return;
+  // If a popup is open, close it first — next click will dismiss
+  const anyOpen = supportContactMarkers.some(m => m.isPopupOpen());
+  if (anyOpen) {
+    bgMap.closePopup();
+    return;
+  }
+  hideSupportContacts();
+}
+
+function hideSupportContacts() {
+  supportContactsVisible = false;
+  document.getElementById('mapSupportBtn')?.classList.remove('active');
+
+  // Clean up listener
+  if (bgMap) bgMap.off('click', _onMapClickWhileSupport);
+
+  // Remove contact markers
+  supportContactMarkers.forEach(m => bgMap.removeLayer(m));
+  supportContactMarkers = [];
+
+  // Restore normal global map view
+  showMapOverview();
+}
+
 // ---- Global Map Overview ----
 let mapMarkers = [];
 let mapDrillRegion = null;  // tracks which region we're zoomed into
@@ -4552,9 +5044,21 @@ function showMapOverview() {
   clearMapMarkers();
   mapDrillRegion = null;
   document.getElementById('mapBackBtn').classList.remove('visible');
+  // Show support contacts button on global map
+  document.getElementById('mapSupportBtn')?.classList.add('visible');
+  // Clear any active support overlay
+  if (supportContactsVisible) {
+    supportContactMarkers.forEach(m => bgMap.removeLayer(m));
+    supportContactMarkers = [];
+    supportContactsVisible = false;
+    document.getElementById('mapSupportBtn')?.classList.remove('active');
+  }
   closeDetail();
   closeHighlightsOverlay();
   if (heatmapActive) clearHeatmap();
+
+  // Reset IP block panel to show all locations (back to global view)
+  if (ipBlockData) renderIPBlockPanel();
 
   // Switch to overview mode
   el.classList.remove('visible');
@@ -4641,6 +5145,9 @@ function drillIntoRegion(cluster) {
   if (!bgMap) return;
   mapDrillRegion = cluster.region;
 
+  // Hide support button when drilling into a region
+  document.getElementById('mapSupportBtn')?.classList.remove('visible');
+
   // Clear cluster markers and available location markers
   clearMapMarkers();
   clearAvailableLocationMarkers();
@@ -4686,6 +5193,9 @@ function drillIntoRegion(cluster) {
     // Show billing panel with per-VDC breakdown for this region
     updateMapBillingPanel(cluster.region);
   });
+
+  // Filter IP block panel to this region
+  if (ipBlockData) renderIPBlockPanel(cluster.region);
 }
 
 function hideMapOverview() {
@@ -4702,6 +5212,13 @@ function hideMapOverview() {
   // Clear markers and state
   clearMapMarkers();
   clearAvailableLocationMarkers();
+  // Clear support contacts if active
+  if (supportContactsVisible) {
+    supportContactMarkers.forEach(m => bgMap.removeLayer(m));
+    supportContactMarkers = [];
+    supportContactsVisible = false;
+  }
+  document.getElementById('mapSupportBtn')?.classList.remove('visible', 'active');
   mapDrillRegion = null;
   document.getElementById('mapBackBtn').classList.remove('visible');
   bgMap.closePopup();
@@ -4729,10 +5246,14 @@ function selectVdcFromMap(vdcId) {
   loadVDC();
 }
 
+const STOPPED_STATES = new Set(['SHUTOFF', 'SUSPENDED', 'INACTIVE']);
+
 function drawNode(g, d) {
   const cfg = NODE_TYPES[d.type] || NODE_TYPES.server;
   const r = cfg.radius;
   const c = cfg.color;
+  const status = (d.data?.vmState || d.data?.state || '').toUpperCase();
+  const isStopped = STOPPED_STATES.has(status);
 
   // Background shape
   if (d.type === 'lan') {
@@ -4749,24 +5270,24 @@ function drawNode(g, d) {
       .attr('stroke', c).attr('stroke-width', 2.5);
   } else {
     // Circle for everything else
-    g.append('circle')
+    const circle = g.append('circle')
       .attr('class', 'node-bg')
       .attr('r', r)
-      .attr('fill', c).attr('fill-opacity', 0.12)
+      .attr('fill', c).attr('fill-opacity', isStopped ? 0.06 : 0.12)
       .attr('stroke', c).attr('stroke-width', 2);
+    if (isStopped) circle.attr('stroke-dasharray', '5,3').attr('stroke-opacity', 0.6);
   }
 
-  // Draw icon inside
+  // Draw icon inside (gray for stopped, normal color otherwise)
   const iconGroup = g.append('g').attr('class', 'node-icon');
   const iconScale = d.type === 'lan' ? r * 0.55 : r * 0.48;
   const drawer = ICON_DRAW[d.type];
   if (drawer) {
-    drawer(iconGroup, iconScale, c);
+    drawer(iconGroup, iconScale, isStopped ? '#6b7280' : c);
   }
 
   // Status indicator dot
-  const status = d.data?.vmState || d.data?.state || '';
-  const statusColor = STATUS_COLORS[status.toUpperCase()] || STATUS_COLORS[status];
+  const statusColor = STATUS_COLORS[status] || STATUS_COLORS[status];
   if (statusColor) {
     g.append('circle')
       .attr('class', 'status-dot')
@@ -4774,6 +5295,15 @@ function drawNode(g, d) {
       .attr('r', 4)
       .attr('fill', statusColor)
       .attr('stroke', 'var(--bg-primary)').attr('stroke-width', 1.5);
+  }
+
+  // Stopped/deallocated: red diagonal slash through the node
+  if (isStopped && d.type !== 'lan') {
+    g.append('line')
+      .attr('x1', -r * 0.55).attr('y1', r * 0.55)
+      .attr('x2', r * 0.55).attr('y2', -r * 0.55)
+      .attr('stroke', '#ef4444').attr('stroke-width', 2.5)
+      .attr('stroke-linecap', 'round');
   }
 }
 
@@ -5585,7 +6115,7 @@ function resetView() {
   // Reset Compute view
   if (computeViewActive) toggleComputeView();
   // Uncheck all highlight checkboxes and clear glow rings
-  ['hlFirewall','hlFlowLogs','hlSecGroups','hlIPv6','hlFailover','hlPCC'].forEach(id => {
+  ['hlFirewall','hlFlowLogs','hlSecGroups','hlIPv6','hlFailover','hlPCC','hlMultiQ','hlIdle'].forEach(id => {
     const cb = document.getElementById(id);
     if (cb) cb.checked = false;
   });
@@ -5874,17 +6404,32 @@ function applyHighlights() {
     ipv6:      document.getElementById('hlIPv6')?.checked,
     failover:  document.getElementById('hlFailover')?.checked,
     pcc:       document.getElementById('hlPCC')?.checked,
+    multiq:    document.getElementById('hlMultiQ')?.checked,
+    idle:      document.getElementById('hlIdle')?.checked,
   };
   const anyActive = Object.values(checks).some(Boolean);
 
   // Highlight color map
   const HL_COLORS = {
     firewall: '#10b981', flowlogs: '#11C7E6', secgroups: '#FFAA00',
-    ipv6: '#3b82f6', failover: '#ef4444', pcc: '#ec4899',
+    ipv6: '#3b82f6', failover: '#ef4444', pcc: '#ec4899', multiq: '#8b5cf6',
+    idle: '#f59e0b',
   };
 
+  // Pre-compute idle VM set from last scan results
+  let idleVmIds = null;
+  if (checks.idle) {
+    if (!_idleScanResults) {
+      toast('Run an idle VM scan first (VDC Health → Cost Optimization)', 'info');
+      document.getElementById('hlIdle').checked = false;
+      checks.idle = false;
+    } else {
+      idleVmIds = new Set(_idleScanResults.candidates.map(c => c.node.id));
+    }
+  }
+
   // Only check node types that can actually match any active highlight
-  const serverChecks = checks.firewall || checks.flowlogs || checks.secgroups;
+  const serverChecks = checks.firewall || checks.flowlogs || checks.secgroups || checks.multiq || checks.idle;
   const lanChecks = checks.ipv6 || checks.failover || checks.pcc;
 
   d3.selectAll('.node').each(function(d) {
@@ -5908,10 +6453,12 @@ function applyHighlights() {
       const nics = d.data?.nics || [];
       if (checks.firewall && nics.some(n => n.firewall)) matched.push('firewall');
       if (checks.flowlogs && nics.some(n => n.flowLogsEnabled)) matched.push('flowlogs');
+      if (checks.multiq && nics.some(n => n.multiQueue)) matched.push('multiq');
       // Check both server-level and NIC-level security groups
       const hasSrvSG = (d.data?.securityGroupCount || 0) > 0;
       const hasNicSG = nics.some(n => n.securityGroupCount > 0);
       if (checks.secgroups && (hasSrvSG || hasNicSG)) matched.push('secgroups');
+      if (checks.idle && idleVmIds && idleVmIds.has(d.id)) matched.push('idle');
     } else {
       if (checks.ipv6 && d.data?.ipv6Cidr) matched.push('ipv6');
       if (checks.failover && d.data?.ipFailover?.length > 0) matched.push('failover');
@@ -6967,6 +7514,7 @@ function exportPDF() {
 
 // ── IP Block Panel ──
 let ipBlockData = null;
+let _ipPanelFilterLocation = null; // Track current IP panel filter to avoid race conditions
 async function loadIPBlocks() {
   try {
     const data = await fetchIPBlocks();
@@ -6977,11 +7525,13 @@ async function loadIPBlocks() {
     }
     ipBlockData = data.items;
     console.log(`[VDC-Viz] Loaded ${ipBlockData.length} IP block(s)`);
-    renderIPBlockPanel();
+    // Render with current filter (avoids race condition where unfiltered render overwrites a filtered VDC/location view)
+    renderIPBlockPanel(_ipPanelFilterLocation);
   } catch (e) { console.warn('[VDC-Viz] IP blocks fetch failed', e); }
 }
 
 function renderIPBlockPanel(filterLocation) {
+  _ipPanelFilterLocation = filterLocation || null; // Track current filter for async re-renders
   const panel = document.getElementById('ipBlockPanel');
   const section = document.getElementById('ipBlockSection');
   if (!ipBlockData || ipBlockData.length === 0) {
@@ -7010,9 +7560,13 @@ function renderIPBlockPanel(filterLocation) {
   let locations;
   if (filterLocation) {
     const baseLoc = filterLocation.split('/').slice(0, 2).join('/');
+    console.log(`[VDC-Viz] IP panel filter: filterLocation="${filterLocation}" baseLoc="${baseLoc}" available=[${[...byLoc.keys()].join(', ')}]`);
     locations = [...byLoc.keys()].filter(k => k === filterLocation || k === baseLoc || k.startsWith(baseLoc + '/'));
-    // If no blocks match the filter, show all locations with a note
-    if (locations.length === 0) locations = [...byLoc.keys()].sort();
+    // If no blocks match the filter, show empty state (not all locations)
+    if (locations.length === 0) {
+      panel.innerHTML = `<div style="color:var(--text-muted);font-size:12px;padding:4px 0;">No IP blocks in ${filterLocation}</div>`;
+      return;
+    }
   } else {
     locations = [...byLoc.keys()].sort();
   }
@@ -7595,26 +8149,29 @@ async function connect(isSwitching = false) {
   if (window._stopFeatureCarousel) window._stopFeatureCarousel();
 
   try {
-    // 1. Fetch Contracts first if not already switching (non-critical — app works without it)
-    if (!isSwitching) {
-        try {
-          const contracts = await fetchContracts();
-          userContracts = contracts;
-          if (contracts.length > 0) {
-              if (!currentContract) currentContract = contracts[0].properties.contractNumber;
-              showUserInfo({ ...(currentUser || {}), contracts });
-          }
-        } catch (e) {
-          console.warn('[VDC-Viz] Contracts fetch failed, continuing without:', e.message);
-          toast('Contract info unavailable — continuing with default', 'warning');
-        }
+    // 1. Fetch Contracts + Datacenters in parallel for faster connect
+    //    Contracts are non-critical (app works without them); datacenters are essential.
+    const contractsPromise = !isSwitching
+      ? fetchContracts().catch(e => { console.warn('[VDC-Viz] Contracts fetch failed:', e.message); return []; })
+      : Promise.resolve([]);
+
+    const datacentersPromise = fetchDatacenters();
+
+    // Await both in parallel
+    const [contracts, dcs] = await Promise.all([contractsPromise, datacentersPromise]);
+
+    // Process contracts
+    if (contracts.length > 0) {
+      userContracts = contracts;
+      if (!currentContract) currentContract = contracts[0].properties.contractNumber;
+      showUserInfo({ ...(currentUser || {}), contracts });
     }
 
     completeConnectLoadingStep('auth');
     setConnectLoadingStep('datacenters');
 
-    // 2. Fetch Datacenters (will now use X-Contract header if currentContract is set)
-    datacenters = await fetchDatacenters();
+    // Process datacenters
+    datacenters = dcs;
     if (datacenters.length === 0) {
       toast(t('toast.noDataCenters'), 'warning');
       hideConnectLoading();
@@ -7671,57 +8228,45 @@ async function connect(isSwitching = false) {
     completeConnectLoadingStep('map');
     setConnectLoadingStep('billing');
 
-    // Start billing data fetch early (needs contract number + token, both available now)
-    loadBillingData();
-
     setViewMode('map');
 
-    // Background: fetch dynamic locations from API to enrich city labels
+    // Fire all remaining data fetches in parallel (none block each other)
+    // Billing, IP blocks, DNS, dynamic locations, and user info all start simultaneously
+
+    loadBillingData();
     loadDynamicLocations();
+    loadIPBlocks();
 
-    // Extract user info: decode JWT for uuid + contract, then fetch user by ID for email
-    const jwt = decodeJwtPayload(apiToken);
-    console.log('[VDC-Viz] JWT payload:', jwt);
-    const userInfo = { email: '', firstName: '', lastName: '', contractNumber: '' };
-
-    if (jwt) {
-      // IONOS JWT structure: fields are nested under jwt.identity {}
-      const identity = jwt.identity || {};
-      const jwtUuid = identity.uuid || '';
-      userInfo.contractNumber = String(identity.contractNumber || '') || '';
-      console.log('[VDC-Viz] JWT identity.uuid:', jwtUuid, '| contractNumber:', userInfo.contractNumber);
-
-      // Fetch user email by direct /um/users/{uuid} call
-      if (jwtUuid) {
-        try {
+    // User info: decode JWT + fetch user details (non-blocking — updates UI when ready)
+    (async () => {
+      try {
+        const jwt = decodeJwtPayload(apiToken);
+        if (!jwt) return;
+        const identity = jwt.identity || {};
+        const jwtUuid = identity.uuid || '';
+        const userInfo = { email: '', firstName: '', lastName: '', contractNumber: String(identity.contractNumber || '') };
+        if (jwtUuid) {
           const user = await safeFetch(`${API_BASES.cloud}/um/users/${jwtUuid}`);
           if (user?.properties) {
             userInfo.email = user.properties.email || '';
             userInfo.firstName = user.properties.firstname || '';
             userInfo.lastName = user.properties.lastname || '';
-            console.log('[VDC-Viz] User found by id:', userInfo.email);
           }
-        } catch (e) { console.warn('[VDC-Viz] User-by-id fetch failed:', e.message); }
-      }
-    }
+        }
+        if (userInfo.email || userInfo.contractNumber) {
+          userInfo.contracts = userContracts;
+          currentUser = userInfo;
+          showUserInfo(currentUser);
+        }
+      } catch (e) { console.warn('[VDC-Viz] User info fetch failed:', e.message); }
+    })();
 
-    if (userInfo.email || userInfo.contractNumber) {
-      userInfo.contracts = userContracts;
-      currentUser = userInfo;
-      showUserInfo(currentUser);
-    } else {
-      console.log('[VDC-Viz] No user info available');
-    }
-
-    // Fetch IP blocks and DNS/CDN in background (non-blocking)
-    // Note: loadBillingData() already started earlier for faster panel display
+    // DNS gates the loading screen dismissal (last visible step)
     completeConnectLoadingStep('billing');
     setConnectLoadingStep('dns');
-    loadIPBlocks();
     loadDNSData().then(() => {
       completeConnectLoadingStep('dns');
       setConnectLoadingStep('ready');
-      // Brief pause then mark ready and hide
       setTimeout(() => {
         completeConnectLoadingStep('ready');
         hideConnectLoading();
@@ -7766,6 +8311,8 @@ function disconnect() {
   _billingUtilization = null;
   _billingByServer = new Map();
   _billingByVdc = new Map();
+  _idleScanResults = null;
+  _idleScanRunning = false;
 
   // Clear AI state
   if (aiAbortController) { aiAbortController.abort(); aiAbortController = null; }
@@ -7869,6 +8416,9 @@ async function loadVDC() {
   currentDC = datacenters.find(dc => dc.id === dcId);
   const dcLocation = currentDC?.properties?.location || '';
 
+  // Show map background early so it's visible behind the semi-transparent loading overlay
+  updateMapBackground(dcLocation);
+
   try {
     const [dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sData, nfsClusters, vpnGateways, kafkaClusters] = await Promise.all([
       fetchDCDetails(dcId),
@@ -7891,40 +8441,40 @@ async function loadVDC() {
       return;
     }
 
-    // Ensure all servers have NIC data - fallback to per-server fetch if depth didn't include them
+    // NIC fallback + K8s node pools run in parallel (they're independent)
     completeVdcLoadingStep('servers');
     setVdcLoadingStep('nics');
     const servers = dcData?.entities?.servers?.items || [];
     console.log(`[VDC-Viz] Found ${servers.length} server(s) in DC response`);
-    let nicFallbackCount = 0;
-    await Promise.all(servers.map(async (srv) => {
-      const nics = srv.entities?.nics?.items || [];
-      const hasNicProps = nics.length > 0 && nics[0].properties;
-      console.log(`[VDC-Viz] Server "${srv.properties?.name || srv.id}": ${nics.length} NIC(s), properties present: ${!!hasNicProps}`);
-      if (nics.length === 0 || !hasNicProps) {
-        // NICs missing or lacking properties - fetch them directly
-        const nicData = await fetchServerNICs(dcId, srv.id);
-        if (nicData && nicData.items && nicData.items.length > 0) {
-          if (!srv.entities) srv.entities = {};
-          srv.entities.nics = nicData;
-          nicFallbackCount++;
-          console.log(`[VDC-Viz]   -> Fetched ${nicData.items.length} NIC(s) for server "${srv.properties?.name || srv.id}"`);
-        }
-      }
-    }));
-    if (nicFallbackCount > 0) console.log(`[VDC-Viz] Used NIC fallback fetch for ${nicFallbackCount} server(s)`);
 
-    completeVdcLoadingStep('nics');
-    setVdcLoadingStep('k8s');
     const k8sNodePools = [];
-    const k8sClusters = k8sData?.items || [];
-    await Promise.all(k8sClusters.map(async (cluster) => {
-      const pools = await fetchK8sNodePools(cluster.id);
-      (pools?.items || []).forEach(pool => {
-        k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
-      });
-    }));
+    let nicFallbackCount = 0;
 
+    await Promise.all([
+      // NIC fallback: ensure all servers have NIC data
+      Promise.all(servers.map(async (srv) => {
+        const nics = srv.entities?.nics?.items || [];
+        const hasNicProps = nics.length > 0 && nics[0].properties;
+        if (nics.length === 0 || !hasNicProps) {
+          const nicData = await fetchServerNICs(dcId, srv.id);
+          if (nicData?.items?.length > 0) {
+            if (!srv.entities) srv.entities = {};
+            srv.entities.nics = nicData;
+            nicFallbackCount++;
+          }
+        }
+      })),
+      // K8s node pools: fetch pools for each K8s cluster
+      Promise.all((k8sData?.items || []).map(async (cluster) => {
+        const pools = await fetchK8sNodePools(cluster.id);
+        (pools?.items || []).forEach(pool => {
+          k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
+        });
+      })),
+    ]);
+
+    if (nicFallbackCount > 0) console.log(`[VDC-Viz] Used NIC fallback fetch for ${nicFallbackCount} server(s)`);
+    completeVdcLoadingStep('nics');
     completeVdcLoadingStep('k8s');
     setVdcLoadingStep('graph');
     const data = buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sNodePools, nfsClusters || {}, vpnGateways, kafkaClusters);
@@ -7970,7 +8520,7 @@ function setViewMode(mode) {
 
   // Toggle map overview vs topology
   if (mode === 'map') {
-    showMapOverview();
+    showMapOverview(); // also resets IP panel to all locations
   } else {
     hideMapOverview();
     // Ensure billing panel is hidden when leaving map view
@@ -7989,21 +8539,39 @@ function toggleVdc(vdcIdx) {
   }
   const isCollapsed = collapsedVdcs.has(vdcIdx);
 
+  // Helper: should a multi-VDC element be visible?
+  // Elements spanning multiple VDCs (like PCC nodes / cross-connect links) stay visible
+  // as long as at least one of their VDCs is expanded.
+  const shouldHideMultiVdc = (idxSet) => {
+    for (const idx of idxSet) {
+      if (!collapsedVdcs.has(idx)) return false; // at least one VDC is expanded
+    }
+    return true; // all connected VDCs collapsed
+  };
+
   // Toggle node visibility
   d3.selectAll('.node').each(function(d) {
-    if (d._vdcIdx === vdcIdx) {
+    if (d._vdcIdxSet) {
+      // Multi-VDC node (shared PCC): only hide when ALL its VDCs are collapsed
+      d3.select(this).style('display', shouldHideMultiVdc(d._vdcIdxSet) ? 'none' : '');
+    } else if (d._vdcIdx === vdcIdx) {
       d3.select(this).style('display', isCollapsed ? 'none' : '');
     }
   });
   // Toggle link visibility
   d3.selectAll('.link').each(function(d) {
-    if (d._vdcIdx === vdcIdx) {
+    if (d._vdcIdxSet) {
+      // Cross-connect link spanning multiple VDCs
+      d3.select(this).style('display', shouldHideMultiVdc(d._vdcIdxSet) ? 'none' : '');
+    } else if (d._vdcIdx === vdcIdx) {
       d3.select(this).style('display', isCollapsed ? 'none' : '');
     }
   });
   // Toggle link labels
   d3.selectAll('.link-labels text, .link-labels rect').each(function(d) {
-    if (d && d._vdcIdx === vdcIdx) {
+    if (d && d._vdcIdxSet) {
+      d3.select(this).style('display', shouldHideMultiVdc(d._vdcIdxSet) ? 'none' : '');
+    } else if (d && d._vdcIdx === vdcIdx) {
       d3.select(this).style('display', isCollapsed ? 'none' : '');
     }
   });
@@ -8043,6 +8611,9 @@ async function loadLocation() {
   showLoading(t('loading.loadingVdcs', {count: dcsInLoc.length, location: locationLabel(loc).trim()}));
   setVdcLoadingStep('servers');
 
+  // Show map background early so it's visible behind the semi-transparent loading overlay
+  updateMapBackground(dcsInLoc[0]?.properties?.location || loc);
+
   try {
     // Fetch global/shared services ONCE (these are the same regardless of VDC)
     setLoadingText(t('loading.fetchingShared'));
@@ -8072,26 +8643,29 @@ async function loadLocation() {
 
       // Resolve NICs
       const servers = dcData?.entities?.servers?.items || [];
-      await Promise.all(servers.map(async (srv) => {
-        const nics = srv.entities?.nics?.items || [];
-        if (nics.length === 0 || !(nics[0]?.properties)) {
-          const nicData = await fetchServerNICs(dcId, srv.id);
-          if (nicData?.items?.length > 0) {
-            if (!srv.entities) srv.entities = {};
-            srv.entities.nics = nicData;
-          }
-        }
-      }));
-
-      // K8s node pools
+      // NIC fallback + K8s node pools in parallel
       const k8sNodePools = [];
       const k8sClusters = k8sData?.items || [];
-      await Promise.all(k8sClusters.map(async (cluster) => {
-        const pools = await fetchK8sNodePools(cluster.id);
-        (pools?.items || []).forEach(pool => {
-          k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
-        });
-      }));
+      await Promise.all([
+        // NIC fallback: ensure all servers have NIC data
+        Promise.all(servers.map(async (srv) => {
+          const nics = srv.entities?.nics?.items || [];
+          if (nics.length === 0 || !(nics[0]?.properties)) {
+            const nicData = await fetchServerNICs(dcId, srv.id);
+            if (nicData?.items?.length > 0) {
+              if (!srv.entities) srv.entities = {};
+              srv.entities.nics = nicData;
+            }
+          }
+        })),
+        // K8s node pools
+        Promise.all(k8sClusters.map(async (cluster) => {
+          const pools = await fetchK8sNodePools(cluster.id);
+          (pools?.items || []).forEach(pool => {
+            k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
+          });
+        })),
+      ]);
 
       return {
         dc,
@@ -8147,6 +8721,7 @@ async function loadLocation() {
 
       const canonical = pccNodes[0]; // keep first as the shared node
       canonical._vdcName = 'Shared';  // mark as cross-VDC
+      canonical._vdcIdxSet = new Set(pccNodes.map(n => n._vdcIdx)); // all VDC indices this PCC spans
       // Collect all VDC names this PCC spans
       const vdcNames = [...new Set(pccNodes.map(n => n._vdcName))];
       canonical.name = `PCC: ${vdcNames.join(' ↔ ')}`;
@@ -8167,6 +8742,16 @@ async function loadLocation() {
           if (l.target === dup.id) l.target = canonical.id;
         });
       }
+      // Mark all cross-connect links touching this PCC with the full set of VDC indices
+      mergedLinks.forEach(l => {
+        const src = typeof l.source === 'object' ? l.source.id : l.source;
+        const tgt = typeof l.target === 'object' ? l.target.id : l.target;
+        if (src === canonical.id || tgt === canonical.id) {
+          if (l.linkType === 'cross-connect' || l.type === 'cross-connect') {
+            l._vdcIdxSet = canonical._vdcIdxSet;
+          }
+        }
+      });
     });
 
     // Batch-remove duplicate PCC nodes in a single pass
@@ -8232,6 +8817,8 @@ function showLoading(text) {
   const overlay = document.getElementById('loadingOverlay');
   overlay.classList.add('active');
   overlay.classList.remove('fade-out');
+  // Hide onboarding card so it doesn't show through semi-transparent overlay
+  document.getElementById('emptyState').style.display = 'none';
   // Reset all checklist items
   overlay.querySelectorAll('.connect-loading-item').forEach(i => i.classList.remove('active', 'done'));
   const fill = document.getElementById('vdcLoadingProgressFill');
@@ -8344,6 +8931,9 @@ document.getElementById('tokenInput').addEventListener('keydown', (e) => {
   }
   bgMap.setMaxBounds([[15, -140], [72, 45]]);
   bgMap.setMinZoom(2);
+
+  // Show support contacts button on pre-login map too
+  document.getElementById('mapSupportBtn')?.classList.add('visible');
 })();
 
 // ============================== FEATURE CAROUSEL ==============================
@@ -8392,6 +8982,8 @@ document.getElementById('tokenInput').addEventListener('keydown', (e) => {
 function showConnectLoading() {
   const overlay = document.getElementById('connectLoadingOverlay');
   if (overlay) { overlay.classList.add('active'); overlay.classList.remove('fade-out'); }
+  // Hide onboarding card so it doesn't show through semi-transparent overlay
+  document.getElementById('emptyState').style.display = 'none';
 }
 function setConnectLoadingStep(stepName) {
   const items = document.querySelectorAll('.connect-loading-item');
@@ -10442,8 +11034,10 @@ function updateAiSuggestions() {
     suggestions.push({ label: 'Rejected flows', prompt: 'Analyze the rejected flows. Are there patterns suggesting attacks, misconfigurations, or missing firewall rules?' });
   }
 
-  // Billing suggestions
-  if (hasBilling) {
+  // Billing / cost suggestions
+  if (_idleScanResults && _idleScanResults.candidates.length > 0) {
+    suggestions.push({ label: 'Cost savings', prompt: 'I have idle VMs detected by the telemetry scan. Review my infrastructure for cost optimization opportunities — which VMs should I deallocate, and what potential savings are there?' });
+  } else if (hasBilling) {
     suggestions.push({ label: 'Cost optimization', prompt: 'Review my data transfer and billing data. Which servers consume the most bandwidth? Are there cost optimization opportunities?' });
   }
 
@@ -10698,7 +11292,8 @@ function buildAiContext() {
         const fwCount = nics.filter(n => n.firewall).length;
         const flCount = nics.filter(n => n.flowLogsEnabled).length;
         const hasSG = (d.securityGroupCount || 0) > 0 || nics.some(n => (n.securityGroupCount || 0) > 0);
-        parts.push(`  ${sanitizeName(s.name)} — ${d.cores || '?'}C/${((d.ram || 0) / 1024).toFixed(0)}GB, ${d.vmState || '?'}, ${ips.length} IPs${fwCount > 0 ? ', FW on' : ', FW off'}${flCount > 0 ? ', FL on' : ''}${hasSG ? ', SG on' : ''}`);
+        const hasMQ = nics.some(n => n.multiQueue);
+        parts.push(`  ${sanitizeName(s.name)} — ${d.cores || '?'}C/${((d.ram || 0) / 1024).toFixed(0)}GB, ${d.vmState || '?'}, ${ips.length} IPs${fwCount > 0 ? ', FW on' : ', FW off'}${flCount > 0 ? ', FL on' : ''}${hasSG ? ', SG on' : ''}${hasMQ ? ', MultiQ on' : ''}`);
       });
       if (servers.length > 15) parts.push(`  ...and ${servers.length - 15} more`);
     }
@@ -10746,17 +11341,21 @@ function buildAiContext() {
   if (graphData?.nodes?.length > 0) {
     const servers = graphData.nodes.filter(n => n.type === 'server' || n.type === 'cube');
     if (servers.length > 0) {
-      let fwEnabled = 0, flEnabled = 0, sgEnabled = 0;
+      let fwEnabled = 0, flEnabled = 0, sgEnabled = 0, mqEnabled = 0, mqEligible = 0;
       const sgDetails = [];
+      const mqMissing = [];  // servers eligible for MultiQ but not enabled
       servers.forEach(s => {
         const nics = s.data?.nics || [];
         if (nics.some(n => n.firewall)) fwEnabled++;
         if (nics.some(n => n.flowLogsEnabled)) flEnabled++;
+        const hasMQ = nics.some(n => n.multiQueue);
+        if (hasMQ) mqEnabled++;
+        const cores = s.data?.cores || 0;
+        if (cores >= 2) { mqEligible++; if (!hasMQ) mqMissing.push(sanitizeName(s.name)); }
         const hasSrvSG = (s.data?.securityGroupCount || 0) > 0;
         const hasNicSG = nics.some(n => (n.securityGroupCount || 0) > 0);
         if (hasSrvSG || hasNicSG) {
           sgEnabled++;
-          // Collect SG names for this server
           const sgIds = new Set();
           (s.data?.securityGroupIds || []).forEach(id => sgIds.add(id));
           nics.forEach(n => (n.securityGroupIds || []).forEach(id => sgIds.add(id)));
@@ -10772,7 +11371,28 @@ function buildAiContext() {
         parts.push('Security Group Assignments:');
         sgDetails.forEach(d => parts.push(`  ${d}`));
       }
+      parts.push(`\n[${loadedVdcName}] Network Performance: NIC Multi-Queue enabled on ${mqEnabled}/${servers.length} servers (${mqEligible} eligible with ≥2 cores)`);
+      if (mqMissing.length > 0) {
+        parts.push(`Servers eligible for MultiQ but not enabled: ${mqMissing.join(', ')}`);
+      }
     }
+  }
+
+  // ── Cost optimization: idle VMs (from last scan) ──
+  if (_idleScanResults && _idleScanResults.candidates.length > 0) {
+    const r = _idleScanResults;
+    parts.push(`\n[${loadedVdcName}] Cost Optimization — Idle VMs (${r.candidates.length}/${r.totalServers} servers, scanned via telemetry):`);
+    const stopped = r.candidates.filter(c => c.reason === 'stopped-billed');
+    const zeroTraffic = r.candidates.filter(c => c.reason === 'zero-traffic');
+    if (stopped.length) parts.push(`${stopped.length} VMs powered off but still provisioned (vmState=SHUTOFF, state=AVAILABLE). Deallocating (state→INACTIVE) would stop billing.`);
+    if (zeroTraffic.length) parts.push(`${zeroTraffic.length} VMs running with near-zero network traffic (< 100 B/s avg over last hour) — may be unused.`);
+    r.candidates.forEach(c => {
+      const d = c.node.data || {};
+      const traffic = c.reason === 'zero-traffic'
+        ? `, avg traffic: ${formatBytes(c.avgBytesIn)}/s in, ${formatBytes(c.avgBytesOut)}/s out`
+        : '';
+      parts.push(`  ${sanitizeName(c.node.name)} — ${d.cores || '?'}C/${((d.ram || 0) / 1024).toFixed(0)}GB, vmState: ${c.state}, state: ${c.resourceState || 'N/A'}${traffic}`);
+    });
   }
 
   // ── Billing / data transfer ──
@@ -10950,7 +11570,7 @@ async function sendAiMessage(presetPrompt) {
           { role: 'user', content: userMsg },
         ],
         temperature: 0.3,
-        max_tokens: 1024,
+        max_tokens: 4096,
       }),
     });
 

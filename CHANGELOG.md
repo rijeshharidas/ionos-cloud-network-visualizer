@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-02-28
+
+### Added (1.10.0)
+
+- **On-Demand Idle VM Scan** — New "Scan for Idle VMs" button in VDC Health panel that batch-fetches real-time telemetry (Prometheus `irate()` queries for `instance_network_in_bytes` / `instance_network_out_bytes`) for all servers. Identifies two categories: stopped-but-billed VMs (vmState=SHUTOFF, metadata state=AVAILABLE) and running VMs with near-zero traffic (avg < 100 B/s). Progress bar UI during scan with cached results for highlights and AI context.
+- **Idle VM Highlight** — New "Idle VMs (Stopped & Billed)" checkbox in Highlights overlay under a "Cost Optimization" group. Highlights idle VMs with amber rings on the topology. Requires a scan to be run first (toast prompt if toggled without scan data).
+- **Support Contacts on Global Map** — Pill-shaped "Contact" button (bottom-right of map) that overlays flag-emoji Leaflet markers for 9 countries (Germany, Austria, France, Spain, Italy, UK, US, Canada, Mexico) with themed popups showing support and sales phone numbers and email addresses. Visible on both pre-login and post-login maps; auto-hides when drilling into a region or viewing VDC topology.
+- **NIC Multi-Queue Highlight** — New highlight checkbox for NICs with multi-queue enabled
+- i18n keys for idle VM / cost optimization features across all 4 locales (EN, DE, ES, FR)
+
+### Changed (1.10.0)
+
+- **Performance: Parallelized connect() flow** — Contracts and datacenters now fetched simultaneously via `Promise.all` instead of sequentially, saving the duration of the faster request
+- **Performance: Non-blocking user info fetch** — JWT decode and `/um/users/` API call no longer blocks billing, DNS, and IP loading; runs as fire-and-forget async IIFE that updates the UI when ready
+- **Performance: Parallelized loadVDC() flow** — NIC fallback resolution and K8s node pool fetching now run in parallel instead of two sequential stages
+- **Performance: Parallelized loadLocation() flow** — Same NIC + K8s parallelization applied within each VDC in the multi-VDC region view
+- AI assistant `max_tokens` increased from 1024 to 4096 to prevent response truncation on longer outputs (e.g., Terraform generation)
+- IONOS API state handling corrected: `INACTIVE` metadata state = deallocated (not billed), removed non-existent `DEALLOCATED` state. Only vmState=SHUTOFF with metadata state=AVAILABLE is flagged as a cost candidate.
+- Idle VM scan results included in AI context with detailed per-VM info (vmState, resourceState, traffic data)
+- AI suggestions updated to reference idle VM scan results when available
+
+### Fixed (1.10.0)
+
+- **Cross-connect visibility in region view** — Cross-connect lines and shared PCC nodes now stay visible when only one of the connected VDCs is collapsed. Previously, collapsing the VDC whose `_vdcIdx` matched the link would hide the cross-connect even though the other VDC was still expanded. Fixed by tracking `_vdcIdxSet` (all VDC indices an element spans) and only hiding when ALL connected VDCs are collapsed.
+- Idle VM detection incorrectly flagging INACTIVE (deallocated/not-billed) VMs as cost candidates — now requires both vmState=SHUTOFF AND metadata state=AVAILABLE
+
 ## [1.9.1] - 2026-02-24
 
 ### Added (1.9.1)
