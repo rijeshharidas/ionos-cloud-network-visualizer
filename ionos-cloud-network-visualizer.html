@@ -11,11 +11,25 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<!-- P2-13: defer non-critical scripts — don't block first paint -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <style>
+  /* ── Z-index scale ──
+     Layer 0:   Map background, SVG base
+     Layer 1-3: SVG graph elements, overlays on canvas
+     Layer 10:  Toolbar, legend, minor UI chrome
+     Layer 15:  Search section, canvas controls
+     Layer 20:  Sidebar toggle, expand button
+     Layer 50:  AI panel, detail panel, edge tabs
+     Layer 51:  AI edge tab (above panel)
+     Layer 100: Dropdowns, context menus, tooltips
+     Layer 200: Loading overlays (connect, VDC)
+     Layer 300: Full-screen modals (shortcuts, table view)
+     Layer 1200: Toast notifications (always topmost)
+  */
   :root {
     --bg-primary: #001B41;
     --bg-primary-rgb: 0, 27, 65;
@@ -137,8 +151,11 @@
   .sidebar-header .header-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     flex-shrink: 0;
+    margin-left: auto;
+    align-self: flex-start;
+    margin-top: -2px;
   }
 
   .sidebar-section {
@@ -208,7 +225,20 @@
   .view-mode-group { display: flex; gap: 4px; margin-bottom: 8px; }
   .view-mode-group .view-mode-btn { flex: 1; }
   .vdc-label-bg { fill: var(--bg-secondary); fill-opacity: 0.7; rx: 6; }
+  .k8s-badge { pointer-events: none; }
   .vdc-label-text { fill: var(--text-primary); font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; }
+  .vdc-tooltip { position: absolute; background: var(--bg-secondary); border: 1px solid var(--accent); border-radius: 10px; padding: 14px 18px; font-size: 12px; z-index: 160; box-shadow: 0 6px 24px rgba(0,0,0,0.4); min-width: 260px; max-width: 420px; display: none; pointer-events: auto; font-family: 'Inter', sans-serif; line-height: 1.4; }
+  .vdc-tooltip.visible { display: block; }
+  .vdc-tooltip .vtt-name { font-weight: 700; font-size: 14px; margin-bottom: 8px; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .vdc-tooltip .vtt-row { display: grid; grid-template-columns: 80px 1fr; gap: 4px 10px; font-size: 11px; padding: 2px 0; }
+  .vdc-tooltip .vtt-label { color: var(--text-muted); text-align: right; }
+  .vdc-tooltip .vtt-value { color: var(--text-primary); }
+  .vdc-tooltip .vtt-value.mono { font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; font-size: 10.5px; letter-spacing: -0.2px; user-select: all; cursor: pointer; }
+  .vdc-tooltip .vtt-value.mono:hover { color: var(--accent); }
+  .vdc-tooltip .vtt-sep { height: 1px; background: var(--border); margin: 6px 0; }
+  .vdc-tooltip .vtt-desc { color: var(--text-secondary); font-size: 11px; font-style: italic; margin-top: 4px; }
+  .vdc-tooltip .vtt-copied { position: absolute; top: 6px; right: 12px; font-size: 10px; color: var(--accent); opacity: 0; transition: opacity 0.3s; }
+  .vdc-tooltip .vtt-copied.show { opacity: 1; }
   .vdc-toggle { cursor: pointer; fill: var(--text-muted); font-size: 14px; font-family: 'Inter', sans-serif; }
   .vdc-toggle:hover { fill: var(--accent); }
   .vdc-boundary-collapsed { stroke-opacity: 0.25 !important; }
@@ -501,13 +531,13 @@
   .feature-carousel-dot.active { opacity: 1; background: var(--accent); transform: scale(1.3); }
 
   /* ---- Post-connect Loading Screen ---- */
-  .connect-loading-overlay { position: absolute; inset: 0; background: rgba(var(--bg-primary-rgb), 0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 200; opacity: 0; transition: opacity 0.4s; }
+  .connect-loading-overlay { position: absolute; inset: 0; background: rgba(var(--bg-primary-rgb), 0.88); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 200; opacity: 0; transition: opacity 0.4s; /* P0-02: backdrop-filter removed — blur forced re-composite of Leaflet tiles on every frame (+8-15ms/frame during load) */ }
   .connect-loading-overlay.active { display: flex; opacity: 1; }
   .connect-loading-overlay.fade-out { opacity: 0; }
   .connect-loading-title { font-size: 16px; font-weight: 600; color: var(--text-primary); text-shadow: 0 1px 8px rgba(var(--bg-primary-rgb), 0.6); }
   .connect-loading-subtitle { font-size: 12px; color: var(--text-muted); margin-top: -12px; text-shadow: 0 1px 6px rgba(var(--bg-primary-rgb), 0.5); }
   .connect-loading-checklist { display: flex; flex-direction: column; gap: 10px; min-width: 300px; }
-  .connect-loading-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(var(--bg-primary-rgb), 0.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid var(--border); transition: all 0.4s; }
+  .connect-loading-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(var(--bg-primary-rgb), 0.92); border: 1px solid var(--border); transition: all 0.4s; }
   .connect-loading-item.active { border-color: var(--accent); background: rgba(var(--bg-primary-rgb), 0.75); }
   .connect-loading-item.done { border-color: var(--success); background: rgba(var(--bg-primary-rgb), 0.75); }
   .connect-loading-item-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; background: var(--bg-tertiary); color: var(--text-muted); transition: all 0.3s; }
@@ -552,7 +582,7 @@
   /* ---- Collapsible Sidebar ---- */
   .sidebar-toggle { position: absolute; top: 16px; right: -14px; width: 28px; height: 28px; border-radius: 50%; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 20; font-size: 12px; transition: all 0.2s; }
   .sidebar-toggle:hover { color: var(--text-primary); background: var(--bg-tertiary); }
-  .sidebar { position: relative; transition: width 0.3s ease; }
+  .sidebar { position: relative; transition: transform 0.3s ease, width 0.3s ease; will-change: transform; }
   .sidebar.collapsed { width: 0; min-width: 0; overflow: hidden; border-right: none; }
   .sidebar.collapsed .sidebar-toggle { display: none; }
 
@@ -626,8 +656,8 @@
   /* ---- Loading ---- */
   .loading-overlay {
     position: absolute; inset: 0;
-    background: rgba(var(--bg-primary-rgb), 0.55);
-    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    background: rgba(var(--bg-primary-rgb), 0.88);
+    /* P0-02: backdrop-filter removed — saves 8-15ms/frame during tile loading */
     display: none; align-items: center; justify-content: center;
     flex-direction: column; gap: 20px; z-index: 200;
     opacity: 0; transition: opacity 0.4s;
@@ -849,7 +879,9 @@
     stroke-opacity: 0.75;
     stroke-dasharray: 8, 5;
     animation: trafficFlow 0.8s linear infinite;
-    filter: drop-shadow(0 0 3px currentColor);
+    /* P0-01: drop-shadow removed — SVG filter forced per-frame CPU rasterization
+       on every active link (~100 links × 60fps = 6000 filter ops/sec, +12-18ms/frame).
+       Dash animation alone provides sufficient visual feedback. */
   }
   @keyframes trafficFlow {
     to { stroke-dashoffset: -26; }
@@ -1019,12 +1051,13 @@
   .ip-view-active .link-label { opacity: 0 !important; }
   .ip-view-active .link-label-bg { opacity: 0 !important; }
   html[data-theme="light"] .ip-view-active .node-ip-label {
-    fill: #0369a1 !important;
-    stroke: rgba(255,255,255,0.6); stroke-width: 3px;
+    fill: #1e293b !important;
+    stroke: #ffffff; stroke-width: 4px; stroke-linejoin: round; paint-order: stroke;
+    text-shadow: 0 0 4px rgba(255,255,255,0.9);
   }
-  html[data-theme="light"] .ip-view-active .node-ip-label .ip-line-addr { fill: #0369a1; }
-  html[data-theme="light"] .ip-view-active .node-ip-label .ip-line-dns { fill: #0284c7; }
-  html[data-theme="light"] .ip-view-active .node-ip-label .ip-line-cdn { fill: #0891b2; }
+  html[data-theme="light"] .ip-view-active .node-ip-label .ip-line-addr { fill: #0f172a; font-weight: 800; }
+  html[data-theme="light"] .ip-view-active .node-ip-label .ip-line-dns { fill: #334155; }
+  html[data-theme="light"] .ip-view-active .node-ip-label .ip-line-cdn { fill: #475569; }
 
   /* ---- Compute View ---- */
   /* Dim non-compute nodes — visible but de-emphasised */
@@ -1071,15 +1104,15 @@
   /* ---- Language Dropdown ---- */
   .locale-dropdown-wrapper { position: relative; display: inline-flex; margin-left: auto; flex-shrink: 0; align-self: center; }
   .locale-toggle {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 8px; height: 28px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 6px; height: 22px; border-radius: 5px; font-size: 10px; font-weight: 600;
     cursor: pointer; background: rgba(17,199,230,0.1); color: var(--text-secondary);
     border: 1px solid rgba(17,199,230,0.2); transition: all 0.15s ease; line-height: 1;
     box-sizing: border-box;
   }
   .locale-toggle:hover { background: rgba(17,199,230,0.18); color: var(--text-primary); }
-  .locale-toggle .locale-flag { font-size: 14px; line-height: 1; }
-  .locale-toggle .locale-caret { font-size: 8px; opacity: 0.6; }
+  .locale-toggle .locale-flag { font-size: 12px; line-height: 1; }
+  .locale-toggle .locale-caret { font-size: 7px; opacity: 0.6; }
   .locale-menu {
     position: absolute; top: calc(100% + 4px); right: 0; min-width: 140px;
     background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px;
@@ -1103,7 +1136,7 @@
   /* ---- Theme Toggle ---- */
   .theme-toggle {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px; border-radius: 6px; font-size: 16px; line-height: 1;
+    width: 22px; height: 22px; border-radius: 5px; font-size: 13px; line-height: 1;
     cursor: pointer; background: rgba(17,199,230,0.1); color: var(--text-secondary);
     border: 1px solid rgba(17,199,230,0.2); transition: all 0.15s ease; flex-shrink: 0;
   }
@@ -1354,8 +1387,9 @@
 
   /* Flow log highlight states on graph */
   .node.hl-dimmed { opacity: 0.15 !important; transition: opacity 0.3s; }
-  .node.hl-matched { opacity: 1 !important; filter: drop-shadow(0 0 8px rgba(17,199,230,0.6)); transition: opacity 0.3s, filter 0.3s; }
-  .node.hl-path { opacity: 0.85 !important; filter: drop-shadow(0 0 4px rgba(17,199,230,0.3)); transition: opacity 0.3s, filter 0.3s; }
+  /* P2-11: drop-shadow removed — SVG filter forces CPU rasterization; outline via stroke in JS */
+  .node.hl-matched { opacity: 1 !important; transition: opacity 0.3s; }
+  .node.hl-path { opacity: 0.85 !important; transition: opacity 0.3s; }
 
   /* ---- Traffic Heatmap ---- */
   /* Heatmap legend (floating panel on map) */
@@ -1424,6 +1458,29 @@
   }
   .fl-page-controls button:hover { background: var(--bg-hover); }
   .fl-page-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ---- Responsive breakpoints ---- */
+  @media (max-width: 1024px) {
+    :root { --sidebar-width: 260px; --detail-width: 320px; }
+    .node-label { font-size: 9px; }
+    .toolbar-group { gap: 2px; }
+    .toolbar button { font-size: 10px; padding: 4px 6px; }
+  }
+  @media (max-width: 768px) {
+    :root { --sidebar-width: 220px; --detail-width: 280px; }
+    .sidebar { position: absolute; z-index: 50; height: 100%; }
+    .detail-panel { width: var(--detail-width); }
+    .toolbar { flex-wrap: wrap; gap: 4px; padding: 4px 8px; }
+    .toolbar .toolbar-group { flex-wrap: wrap; }
+    .flowlog-overlay .flowlog-panel { width: 95vw; height: 85vh; left: 2.5vw; top: 7.5vh; }
+  }
+  @media (max-width: 480px) {
+    :root { --sidebar-width: 100vw; --detail-width: 100vw; }
+    .sidebar { position: absolute; z-index: 50; width: 100vw; }
+    .detail-panel { width: 100vw; right: 0; }
+    .toolbar { padding: 4px; }
+    .toolbar button span { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -1543,7 +1600,7 @@
 <div class="main-area" id="mainArea">
   <div id="mapBackground"></div>
   <button class="map-back-btn" id="mapBackBtn" onclick="showMapOverview()" data-i18n="map.allRegions">&#x2190; All Regions</button>
-  <button class="map-support-btn" id="mapSupportBtn" onclick="toggleSupportContacts()" title="IONOS Support & Sales Contacts">
+  <button class="map-support-btn" id="mapSupportBtn" onclick="toggleSupportContacts()" title="IONOS Support & Sales Contacts" aria-label="Show IONOS support and sales contacts on map" aria-pressed="false">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94m-1 7.98v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.11 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
     Contact
   </button>
@@ -1936,6 +1993,7 @@
 
 <!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
+<div class="vdc-tooltip" id="vdcTooltip"></div>
 
 <!-- Heatmap Legend -->
 <div class="heatmap-legend hidden" id="heatmapLegend">
@@ -2337,6 +2395,8 @@ const TRANSLATIONS = {
     'highlights.crossConnect': 'Cross Connect',
     'highlights.performance': 'Performance',
     'highlights.multiQueue': 'NIC Multi-Queue',
+    'contacts.support': 'Support',
+    'contacts.sales': 'Sales',
     'highlights.costOpt': 'Cost Optimization',
     'highlights.idleVMs': 'Idle VMs (Stopped & Billed)',
     // Table
@@ -2561,6 +2621,8 @@ const TRANSLATIONS = {
     'highlights.crossConnect': 'Cross Connect',
     'highlights.performance': 'Leistung',
     'highlights.multiQueue': 'NIC Multi-Queue',
+    'contacts.support': 'Support',
+    'contacts.sales': 'Vertrieb',
     'highlights.costOpt': 'Kostenoptimierung',
     'highlights.idleVMs': 'Inaktive VMs (Gestoppt & Abgerechnet)',
     'table.title': 'Ressourcentabelle',
@@ -2777,6 +2839,8 @@ const TRANSLATIONS = {
     'highlights.crossConnect': 'Cross Connect',
     'highlights.performance': 'Rendimiento',
     'highlights.multiQueue': 'NIC Multi-Queue',
+    'contacts.support': 'Soporte',
+    'contacts.sales': 'Ventas',
     'highlights.costOpt': 'Optimización de costos',
     'highlights.idleVMs': 'VMs inactivas (Detenidas y facturadas)',
     'table.title': 'Tabla de recursos',
@@ -2993,6 +3057,8 @@ const TRANSLATIONS = {
     'highlights.crossConnect': 'Cross Connect',
     'highlights.performance': 'Performance',
     'highlights.multiQueue': 'NIC Multi-Queue',
+    'contacts.support': 'Support',
+    'contacts.sales': 'Ventes',
     'highlights.costOpt': 'Optimisation des coûts',
     'highlights.idleVMs': 'VMs inactives (Arrêtées & facturées)',
     'table.title': 'Tableau des ressources',
@@ -3357,7 +3423,7 @@ async function scanIdleVMs(onProgress) {
   if (!graphData?.nodes) return { candidates: [], totalServers: 0, scannedAt: new Date() };
   const servers = graphData.nodes.filter(n => n.type === 'server' || n.type === 'cube');
   const candidates = [];
-  const IDLE_BYTES_PER_SEC = 100; // avg bytes/sec threshold — below this = idle
+  const IDLE_BYTES_PER_SEC = window._idleThresholdBytesPerSec || 100; // avg bytes/sec threshold — configurable via _idleThresholdBytesPerSec
 
   // Time range: last 1 hour, 5-minute steps (lighter than 60s steps)
   const end = new Date();
@@ -3365,7 +3431,9 @@ async function scanIdleVMs(onProgress) {
   const timeParams = `&start=${start.toISOString()}&end=${end.toISOString()}&step=300`;
 
   let scanned = 0;
+  let telemetryFailures = 0;
   const total = servers.length;
+  if (total === 0) return { candidates: [], totalServers: 0, scannedAt: new Date() };
 
   // Process servers in batches of 5 to avoid overwhelming the API
   const BATCH_SIZE = 5;
@@ -3393,6 +3461,12 @@ async function scanIdleVMs(onProgress) {
 
       // For RUNNING VMs: fetch telemetry to check actual traffic
       if (vmState === 'RUNNING') {
+        // Validate UUID format before building Prometheus query
+        if (!UUID_RE.test(rawId)) {
+          scanned++;
+          if (onProgress) onProgress(scanned, total);
+          return;
+        }
         try {
           const inQuery = `avg(irate(instance_network_in_bytes{uuid="${rawId}"}[5m]))`;
           const outQuery = `avg(irate(instance_network_out_bytes{uuid="${rawId}"}[5m]))`;
@@ -3414,6 +3488,7 @@ async function scanIdleVMs(onProgress) {
             candidates.push({ node: s, reason: 'zero-traffic', state: vmState, resourceState, avgBytesIn: avgIn, avgBytesOut: avgOut });
           }
         } catch (e) {
+          telemetryFailures++;
           console.warn(`[IdleScan] Telemetry failed for ${s.name}:`, e.message);
         }
       }
@@ -3423,7 +3498,10 @@ async function scanIdleVMs(onProgress) {
     }));
   }
 
-  const result = { candidates, totalServers: servers.length, scannedAt: new Date() };
+  if (telemetryFailures > 0) {
+    toast(`Idle VM scan: ${telemetryFailures}/${total} telemetry queries failed — results may be incomplete`, 'warning');
+  }
+  const result = { candidates, totalServers: servers.length, telemetryFailures, scannedAt: new Date() };
   _idleScanResults = result;
   return result;
 }
@@ -3542,8 +3620,8 @@ function renderIdleScanUI(container) {
 
       // List the VMs
       const names = r.candidates.slice(0, 6).map(c => {
-        const label = sanitizeName(c.node.name);
-        const tag = c.reason === 'stopped-billed' ? c.state
+        const label = escapeHtml(c.node.name);
+        const tag = c.reason === 'stopped-billed' ? escapeHtml(c.state)
           : `~${formatBytes(c.avgBytesIn + c.avgBytesOut)}/s`;
         return `<span style="color:var(--text-secondary);">${label}</span> <span style="opacity:0.5;">(${tag})</span>`;
       });
@@ -3588,7 +3666,7 @@ function renderIdleScanUI(container) {
     card.style.cssText = 'text-align:center;cursor:pointer;';
     card.innerHTML =
       '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">Scan all VMs using real-time telemetry to identify idle resources for potential cost savings.</div>' +
-      '<button onclick="event.stopPropagation();startIdleScan();" style="' +
+      '<button id="idleScanBtn" onclick="event.stopPropagation();startIdleScan();" style="' +
         'background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 16px;' +
         'font-size:11px;font-weight:600;cursor:pointer;transition:opacity 0.2s;' +
       '">Scan for Idle VMs</button>';
@@ -3601,6 +3679,10 @@ async function startIdleScan() {
   if (_idleScanRunning) return;
   _idleScanRunning = true;
 
+  // Disable scan button immediately
+  const scanBtn = document.getElementById('idleScanBtn');
+  if (scanBtn) { scanBtn.disabled = true; scanBtn.style.opacity = '0.5'; }
+
   // Update UI to show progress
   const container = document.getElementById('idleScanResults');
   renderIdleScanUI(container);
@@ -3610,7 +3692,7 @@ async function startIdleScan() {
       // Update progress bar
       const bar = document.getElementById('idleScanProgress');
       const status = document.getElementById('idleScanStatus');
-      if (bar) bar.style.width = Math.round((scanned / total) * 100) + '%';
+      if (bar) bar.style.width = (total > 0 ? Math.round((scanned / total) * 100) : 0) + '%';
       if (status) status.textContent = `${scanned} / ${total} servers`;
     });
   } catch (e) {
@@ -4048,6 +4130,10 @@ const SIM_CONFIG = {
 let apiToken = '';
 let currentContract = '';
 let userContracts = [];
+let _k8sManagedIds = new Map(); // resourceId → { resourceType, value } from labels API
+/* P3: Hoist UUID regex to module scope — avoids recompilation per call */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 let datacenters = [];
 let currentDC = null;
 let graphData = { nodes: [], links: [] };
@@ -4082,6 +4168,13 @@ async function apiFetch(url, { signal } = {}) {
   const resp = await fetch(fetchUrl, opts);
   if (!resp.ok) {
     if (resp.status === 404) return null;
+    // Detect expired/invalid token
+    if (resp.status === 401) {
+      if (!window._tokenExpiredWarned) {
+        window._tokenExpiredWarned = true;
+        toast('API token expired or invalid — please reconnect with a fresh token', 'error');
+      }
+    }
     const text = await resp.text().catch(() => '');
     const err = new Error(`API ${resp.status}: ${text.substring(0, 200)}`);
     err.status = resp.status;
@@ -4126,6 +4219,18 @@ async function safeFetch(url, opts) {
   }
 }
 
+
+// P2-05: Simple TTL memoization cache for global API endpoints (Postgres, Mongo, K8s, etc.)
+// Prevents redundant re-fetches when switching between VDCs in the same session.
+const _apiMemoCache = new Map(); // url → { data, ts }
+async function memoizedFetch(url, ttlMs = 60000) {
+  const cached = _apiMemoCache.get(url);
+  if (cached && Date.now() - cached.ts < ttlMs) return cached.data;
+  const data = await safeFetch(url);
+  _apiMemoCache.set(url, { data, ts: Date.now() });
+  return data;
+}
+function clearMemoCache() { _apiMemoCache.clear(); }
 
 // ============================ FETCH CONTRACTS =============================
 
@@ -4227,26 +4332,26 @@ async function fetchNLBs(dcId) {
 }
 
 async function fetchPostgresClusters() {
-  return await safeFetch(`${API_BASES.dbaas_pg}/clusters`);
+  return await memoizedFetch(`${API_BASES.dbaas_pg}/clusters`);
 }
 
 async function fetchMongoClusters() {
-  return await safeFetch(`${API_BASES.dbaas_mongo}/clusters`);
+  return await memoizedFetch(`${API_BASES.dbaas_mongo}/clusters`);
 }
 
 async function fetchMySQLClusters() {
-  return await safeFetch(`${API_BASES.dbaas_mysql}/clusters`);
+  return await memoizedFetch(`${API_BASES.dbaas_mysql}/clusters`);
 }
 
 async function fetchMariaDBClusters(location) {
   if (!location) { console.warn('[VDC-Viz] No location for MariaDB fetch'); return null; }
   const loc = location.replace('/', '-');
   const base = API_BASES.dbaas_mariadb(loc);
-  return await safeFetch(`${base}/clusters`);
+  return await memoizedFetch(`${base}/clusters`);
 }
 
 async function fetchK8sClusters() {
-  return await safeFetch(`${API_BASES.k8s}/k8s?depth=0`);
+  return await memoizedFetch(`${API_BASES.k8s}/k8s?depth=0`);
 }
 
 async function fetchK8sNodePools(clusterId) {
@@ -4280,6 +4385,21 @@ async function fetchVPNGateways(location) {
 async function fetchKafkaClusters(location) {
   const loc = location.replace('/', '-');
   return safeFetch(`https://kafka.${loc}.ionos.com/clusters`);
+}
+
+async function fetchK8sLabels() {
+  const data = await safeFetch(`${API_BASES.cloud}/labels?depth=2&filter.key=managedexternally`);
+  const map = new Map();
+  if (data?.items) {
+    data.items.forEach(item => {
+      const p = item.properties || {};
+      if (p.value === 'k8s' && p.resourceId) {
+        map.set(p.resourceId, { resourceType: p.resourceType, value: p.value });
+      }
+    });
+  }
+  console.log(`[VDC-Viz] K8s-managed labels: ${map.size} resources tagged`);
+  return map;
 }
 
 async function fetchIPBlocks() {
@@ -4521,8 +4641,8 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         const cId = cluster.id;
         const name = cluster.properties?.displayName || `PG ${cId}`;
         const nodeId = `pg-${cId}`;
-        const existingNode = nodes.find(n => n.id === nodeId);
-        if (!existingNode) {
+        /* P2-12: use nodeMap O(1) lookup instead of .find() O(n) */
+        if (!nodeMap.has(nodeId)) {
           addNode(nodeId, 'postgres', name, {
             version: cluster.properties?.postgresVersion,
             instances: cluster.properties?.instances,
@@ -4534,7 +4654,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
           });
         }
         if (conn.cidr) {
-          const n = nodes.find(n => n.id === nodeId);
+          const n = nodeMap.get(nodeId);
           if (n && !n.data.connectionIps.includes(conn.cidr)) n.data.connectionIps.push(conn.cidr);
         }
         const lanNodeId = lanLookup(lanMap, conn.lanId);
@@ -4554,8 +4674,8 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         const cId = cluster.id;
         const name = cluster.properties?.displayName || `Mongo ${cId}`;
         const nodeId = `mongo-${cId}`;
-        const existingNode = nodes.find(n => n.id === nodeId);
-        if (!existingNode) {
+        /* P2-12: use nodeMap O(1) lookup instead of .find() O(n) */
+        if (!nodeMap.has(nodeId)) {
           addNode(nodeId, 'mongodb', name, {
             version: cluster.properties?.mongoDBVersion,
             instances: cluster.properties?.instances,
@@ -4565,7 +4685,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
           });
         }
         if (conn.cidr) {
-          const n = nodes.find(n => n.id === nodeId);
+          const n = nodeMap.get(nodeId);
           if (n && !n.data.connectionIps.includes(conn.cidr)) n.data.connectionIps.push(conn.cidr);
         }
         const lanNodeId = lanLookup(lanMap, conn.lanId);
@@ -4585,8 +4705,8 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         const cId = cluster.id;
         const name = cluster.properties?.displayName || `MySQL ${cId}`;
         const nodeId = `mysql-${cId}`;
-        const existingNode = nodes.find(n => n.id === nodeId);
-        if (!existingNode) {
+        /* P2-12: use nodeMap O(1) lookup instead of .find() O(n) */
+        if (!nodeMap.has(nodeId)) {
           addNode(nodeId, 'mysql', name, {
             version: cluster.properties?.mysqlVersion,
             instances: cluster.properties?.instances,
@@ -4595,7 +4715,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
           });
         }
         if (conn.cidr) {
-          const n = nodes.find(n => n.id === nodeId);
+          const n = nodeMap.get(nodeId);
           if (n && !n.data.connectionIps.includes(conn.cidr)) n.data.connectionIps.push(conn.cidr);
         }
         const lanNodeId = lanLookup(lanMap, conn.lanId);
@@ -4615,8 +4735,8 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         const cId = cluster.id;
         const name = cluster.properties?.displayName || cluster.properties?.name || `MariaDB ${cId}`;
         const nodeId = `mariadb-${cId}`;
-        const existingNode = nodes.find(n => n.id === nodeId);
-        if (!existingNode) {
+        /* P2-12: use nodeMap O(1) lookup instead of .find() O(n) */
+        if (!nodeMap.has(nodeId)) {
           addNode(nodeId, 'mariadb', name, {
             version: cluster.properties?.mariadbVersion,
             instances: cluster.properties?.instances,
@@ -4628,7 +4748,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
           });
         }
         if (conn.cidr) {
-          const n = nodes.find(n => n.id === nodeId);
+          const n = nodeMap.get(nodeId);
           if (n && !n.data.connectionIps.includes(conn.cidr)) n.data.connectionIps.push(conn.cidr);
         }
         const lanNodeId = lanLookup(lanMap, conn.lanId);
@@ -4673,8 +4793,8 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         const cId = cluster.id;
         const name = cluster.properties?.name || cluster.name || `NFS ${cId}`;
         const nodeId = `nfs-${cId}`;
-        const existingNode = nodes.find(n => n.id === nodeId);
-        if (!existingNode) {
+        /* P2-12: use nodeMap O(1) lookup instead of .find() O(n) */
+        if (!nodeMap.has(nodeId)) {
           addNode(nodeId, 'nfs', name, {
             size: cluster.properties?.size,
             connections: clusterConns,
@@ -4685,7 +4805,7 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
         const nfsLanId = conn.lan || conn.lanId;
         const nfsIp = conn.ipAddress || conn.ip || '';
         if (nfsIp) {
-          const n = nodes.find(n => n.id === nodeId);
+          const n = nodeMap.get(nodeId);
           if (n && !n.data.connectionIps.includes(nfsIp)) n.data.connectionIps.push(nfsIp);
         }
         const lanNodeId = lanLookup(lanMap, nfsLanId);
@@ -4749,6 +4869,29 @@ function buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysql
       }
     });
   });
+
+  // ── Tag K8s-managed resources ──
+  if (_k8sManagedIds.size > 0) {
+    let tagged = 0;
+    nodes.forEach(n => {
+      let rawId = null;
+      if (n.type === 'server' || n.type === 'cube') {
+        rawId = n.id.replace(/^(srv|cube)-/, '');
+      } else if (n.type === 'lan') {
+        const lanId = n.id.replace(/^lan-/, '');
+        rawId = dcId + '+' + lanId;           // Labels API uses dcId+lanNumber
+      } else if (n.type === 'nat') {
+        rawId = n.id.replace(/^nat-/, '');
+      } else if (n.type === 'pcc') {
+        rawId = n.id.replace(/^pcc-/, '');
+      }
+      if (rawId && _k8sManagedIds.has(rawId)) {
+        n._k8sManaged = true;
+        tagged++;
+      }
+    });
+    if (tagged > 0) console.log(`[VDC-Viz] K8s-managed badge applied to ${tagged} node(s)`);
+  }
 
   return { nodes, links };
 }
@@ -4834,6 +4977,7 @@ function toggleMapBackground() {
 // ---- Support Contacts Map Overlay ----
 let supportContactMarkers = [];
 let supportContactsVisible = false;
+let _supportClickTimeout = null;
 
 function toggleSupportContacts() {
   if (supportContactsVisible) {
@@ -4844,9 +4988,10 @@ function toggleSupportContacts() {
 }
 
 function showSupportContacts() {
-  if (!bgMap) return;
+  if (!bgMap) { toast(t('toast.noDisplay'), 'warning'); return; }
   supportContactsVisible = true;
-  document.getElementById('mapSupportBtn')?.classList.add('active');
+  const btn = document.getElementById('mapSupportBtn');
+  if (btn) { btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true'); }
 
   // Clear existing VDC markers & available location markers so the map is clean
   clearMapMarkers();
@@ -4869,19 +5014,19 @@ function showSupportContacts() {
     const marker = L.marker([c.lat, c.lng], { icon }).addTo(bgMap);
 
     // Build popup HTML
-    const popupHtml = `<div class="contact-popup">
-      <div class="cp-header">${c.flag} ${c.country}</div>
+    const popupHtml = `<address class="contact-popup" role="region" aria-label="${escapeHtml(c.country)} IONOS Contacts">
+      <div class="cp-header">${c.flag} ${escapeHtml(c.country)}</div>
       <div class="cp-section">
-        <div class="cp-label">Support</div>
-        <div class="cp-row"><span class="cp-icon">📞</span><a href="tel:${c.support.phone}">${c.support.phone}</a></div>
-        <div class="cp-row"><span class="cp-icon">✉</span><a href="mailto:${c.support.email}">${c.support.email}</a></div>
+        <div class="cp-label">${t('contacts.support') || 'Support'}</div>
+        <div class="cp-row"><span class="cp-icon" aria-hidden="true">📞</span><a href="tel:${escapeHtml(c.support.phone)}">${escapeHtml(c.support.phone)}</a></div>
+        <div class="cp-row"><span class="cp-icon" aria-hidden="true">✉</span><a href="mailto:${escapeHtml(c.support.email)}">${escapeHtml(c.support.email)}</a></div>
       </div>
       <div class="cp-section">
-        <div class="cp-label">Sales</div>
-        <div class="cp-row"><span class="cp-icon">📞</span><a href="tel:${c.sales.phone}">${c.sales.phone}</a></div>
-        <div class="cp-row"><span class="cp-icon">✉</span><a href="mailto:${c.sales.email}">${c.sales.email}</a></div>
+        <div class="cp-label">${t('contacts.sales') || 'Sales'}</div>
+        <div class="cp-row"><span class="cp-icon" aria-hidden="true">📞</span><a href="tel:${escapeHtml(c.sales.phone)}">${escapeHtml(c.sales.phone)}</a></div>
+        <div class="cp-row"><span class="cp-icon" aria-hidden="true">✉</span><a href="mailto:${escapeHtml(c.sales.email)}">${escapeHtml(c.sales.email)}</a></div>
       </div>
-    </div>`;
+    </address>`;
 
     marker.bindPopup(popupHtml, {
       className: 'contact-map-popup',
@@ -4906,8 +5051,11 @@ function showSupportContacts() {
 
   // Clicking the map background (not a marker) dismisses support view
   // Use setTimeout so the click that triggered show doesn't immediately dismiss
-  setTimeout(() => {
+  if (_supportClickTimeout) clearTimeout(_supportClickTimeout);
+  bgMap.off('click', _onMapClickWhileSupport); // remove any existing listener first
+  _supportClickTimeout = setTimeout(() => {
     bgMap.on('click', _onMapClickWhileSupport);
+    _supportClickTimeout = null;
   }, 200);
 }
 
@@ -4924,13 +5072,15 @@ function _onMapClickWhileSupport() {
 
 function hideSupportContacts() {
   supportContactsVisible = false;
-  document.getElementById('mapSupportBtn')?.classList.remove('active');
+  const btn = document.getElementById('mapSupportBtn');
+  if (btn) { btn.classList.remove('active'); btn.setAttribute('aria-pressed', 'false'); }
 
-  // Clean up listener
+  // Clean up pending timeout and listener
+  if (_supportClickTimeout) { clearTimeout(_supportClickTimeout); _supportClickTimeout = null; }
   if (bgMap) bgMap.off('click', _onMapClickWhileSupport);
 
-  // Remove contact markers
-  supportContactMarkers.forEach(m => bgMap.removeLayer(m));
+  // Remove contact markers (unbind popups/tooltips to avoid DOM leaks)
+  supportContactMarkers.forEach(m => { m.unbindPopup(); m.unbindTooltip(); if (bgMap) bgMap.removeLayer(m); });
   supportContactMarkers = [];
 
   // Restore normal global map view
@@ -5207,7 +5357,7 @@ function hideMapOverview() {
   const el = document.getElementById('mapBackground');
 
   // Stop any running D3 simulation to free CPU
-  if (simulation) { simulation.stop(); }
+  if (simulation) { simulation.stop(); simulation.on('tick', null).on('end', null); }
 
   // Clear markers and state
   clearMapMarkers();
@@ -5305,6 +5455,47 @@ function drawNode(g, d) {
       .attr('stroke', '#ef4444').attr('stroke-width', 2.5)
       .attr('stroke-linecap', 'round');
   }
+
+  // K8s-managed badge: official helm wheel at bottom-right
+  if (d._k8sManaged) {
+    const bSize = 9;  // badge radius
+    const bx = r * 0.55, by = r * 0.55;
+    const badge = g.append('g')
+      .attr('class', 'k8s-badge')
+      .attr('transform', `translate(${bx},${by})`);
+
+    // Heptagon background (official K8s blue #326CE5)
+    const heptPts = [];
+    for (let i = 0; i < 7; i++) {
+      const a = (Math.PI * 2 / 7) * i - Math.PI / 2;
+      heptPts.push([bSize * Math.cos(a), bSize * Math.sin(a)]);
+    }
+    badge.append('polygon')
+      .attr('points', heptPts.map(p => p.join(',')).join(' '))
+      .attr('fill', '#326CE5')
+      .attr('stroke', 'var(--bg-primary)').attr('stroke-width', 1.5);
+
+    // White helm wheel (simplified 7-spoke ship's wheel)
+    const wR = bSize * 0.55;  // wheel outer radius
+    const hubR = bSize * 0.18; // hub radius
+    // Hub circle
+    badge.append('circle')
+      .attr('r', hubR).attr('fill', 'none')
+      .attr('stroke', '#fff').attr('stroke-width', 1.2);
+    // Outer ring
+    badge.append('circle')
+      .attr('r', wR).attr('fill', 'none')
+      .attr('stroke', '#fff').attr('stroke-width', 1.2);
+    // 7 spokes
+    for (let i = 0; i < 7; i++) {
+      const a = (Math.PI * 2 / 7) * i - Math.PI / 2;
+      badge.append('line')
+        .attr('x1', hubR * Math.cos(a)).attr('y1', hubR * Math.sin(a))
+        .attr('x2', wR * Math.cos(a)).attr('y2', wR * Math.sin(a))
+        .attr('stroke', '#fff').attr('stroke-width', 1.2)
+        .attr('stroke-linecap', 'round');
+    }
+  }
 }
 
 function renderGraph(data) {
@@ -5328,6 +5519,9 @@ function renderGraph(data) {
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('toolbar').style.display = '';
 
+  // Pre-compute node lookup map (used by link colors, animation, and adjacency)
+  const nodeByIdMap = new Map(data.nodes.map(n => [n.id, n]));
+
   // Links (drawn first, behind nodes)
   const linkGroup = svgGroup.append('g').attr('class', 'links');
   const link = linkGroup.selectAll('.link')
@@ -5337,28 +5531,26 @@ function renderGraph(data) {
     .attr('stroke', d => {
       const lt = LINK_TYPES[d.linkType];
       if (lt) return lt.color;
-      const srcNode = typeof d.source === 'object' ? d.source : data.nodes.find(n => n.id === d.source);
+      // D3 force link resolves IDs to objects; use nodeByIdMap as fallback
+      const srcNode = typeof d.source === 'object' ? d.source : nodeByIdMap.get(d.source);
       return NODE_TYPES[srcNode?.type]?.color || '#475569';
     })
     .attr('stroke-dasharray', d => LINK_TYPES[d.linkType]?.dash || '0');
 
-  // Animate links where both endpoints are in an active/available state
+  // Pre-compute traffic-flow flag on link data (avoids per-link DOM iteration)
   const ACTIVE_STATES = new Set(['AVAILABLE', 'RUNNING', 'ACTIVE']);
   const INFRA_TYPES = new Set(['internet', 'lan', 'pcc', 'nat', 'alb', 'nlb', 'vpn_wg', 'vpn_ipsec', 'nfs', 'postgres', 'mongodb', 'mysql', 'mariadb', 'k8s_np', 'kafka']);
-  const nodeByIdMap = new Map(data.nodes.map(n => [n.id, n]));
-  link.each(function(d) {
+  data.links.forEach(d => {
     const sId = typeof d.source === 'object' ? d.source.id : d.source;
     const tId = typeof d.target === 'object' ? d.target.id : d.target;
     const sNode = nodeByIdMap.get(sId);
     const tNode = nodeByIdMap.get(tId);
     const sState = (sNode?.data?.state || sNode?.data?.vmState || '').toUpperCase();
     const tState = (tNode?.data?.state || tNode?.data?.vmState || '').toUpperCase();
-    const sActive = INFRA_TYPES.has(sNode?.type) || ACTIVE_STATES.has(sState);
-    const tActive = INFRA_TYPES.has(tNode?.type) || ACTIVE_STATES.has(tState);
-    if (sActive && tActive) {
-      d3.select(this).classed('traffic-flow', true);
-    }
+    d._trafficFlow = (INFRA_TYPES.has(sNode?.type) || ACTIVE_STATES.has(sState)) &&
+                     (INFRA_TYPES.has(tNode?.type) || ACTIVE_STATES.has(tState));
   });
+  link.classed('traffic-flow', d => d._trafficFlow);
 
   // Link label backgrounds (for readability)
   const linkLabelGroup = svgGroup.append('g').attr('class', 'link-labels');
@@ -5384,6 +5576,9 @@ function renderGraph(data) {
     .join('g')
     .attr('class', 'node')
     .attr('data-ntype', d => d.type)
+    .attr('tabindex', 0)
+    .attr('role', 'button')
+    .attr('aria-label', d => `${NODE_TYPES[d.type]?.label || d.type}: ${d.name}`)
     .call(d3.drag()
       .on('start', dragStarted)
       .on('drag', dragged)
@@ -5391,7 +5586,6 @@ function renderGraph(data) {
     )
     .on('click', (event, d) => { event.stopPropagation(); showDetail(d); highlightNode(d); })
     .on('mouseenter', (event, d) => showTooltip(event, d))
-    .on('mousemove', (event) => moveTooltip(event))
     .on('mouseleave', () => hideTooltip());
 
   // Draw each node (shape + icon)
@@ -5488,7 +5682,12 @@ function renderGraph(data) {
       const labelW = vdc.name.length * 8 + 40;
       const labelBg = vdcG.append('rect')
         .attr('class', 'vdc-label-bg')
-        .attr('width', labelW).attr('height', 24);
+        .attr('width', labelW).attr('height', 24)
+        .style('cursor', 'pointer')
+        .style('pointer-events', 'all')
+        .on('mouseenter', (event) => showVdcTooltip(event, vdc))
+        .on('mousemove', (event) => moveVdcTooltip(event))
+        .on('mouseleave', () => hideVdcTooltip());
 
       const toggleText = vdcG.append('text')
         .attr('class', 'vdc-toggle')
@@ -5499,7 +5698,10 @@ function renderGraph(data) {
         .attr('class', 'vdc-label-text')
         .text(vdc.name)
         .style('cursor', 'pointer')
-        .on('click', (event) => { event.stopPropagation(); toggleVdc(vdc.index); });
+        .on('click', (event) => { event.stopPropagation(); toggleVdc(vdc.index); })
+        .on('mouseenter', (event) => showVdcTooltip(event, vdc))
+        .on('mousemove', (event) => moveVdcTooltip(event))
+        .on('mouseleave', () => hideVdcTooltip());
 
       const collapsedLabel = vdcG.append('text')
         .attr('class', 'vdc-collapsed-label')
@@ -5583,8 +5785,10 @@ function renderGraph(data) {
   components.forEach((comp, ci) => {
     const band = compBands[ci];
     if (!band) return;
+    /* P2-12: use _nodeMap for O(1) lookup in layout */
+    const nm = data._nodeMap || new Map(data.nodes.map(n => [n.id, n]));
     const compLanIds = comp.filter(id => {
-      const nd = data.nodes.find(n => n.id === id);
+      const nd = nm.get(id);
       return nd?.type === 'lan';
     });
 
@@ -5647,16 +5851,15 @@ function renderGraph(data) {
   });
 
   // ── Pre-build adjacency map for O(1) access (nodeByIdMap created above) ──
-  // Adjacency map: nodeId → [connected node objects]
+  // Adjacency map: nodeId → [connected node IDs] (stores IDs, not objects, to save memory)
   const adjacencyMap = new Map();
   data.nodes.forEach(n => adjacencyMap.set(n.id, []));
   data.links.forEach(l => {
     const sId = typeof l.source === 'object' ? l.source.id : l.source;
     const tId = typeof l.target === 'object' ? l.target.id : l.target;
-    const sNode = nodeByIdMap.get(sId), tNode = nodeByIdMap.get(tId);
-    if (sNode && tNode) {
-      adjacencyMap.get(sId).push(tNode);
-      adjacencyMap.get(tId).push(sNode);
+    if (adjacencyMap.has(sId) && adjacencyMap.has(tId)) {
+      adjacencyMap.get(sId).push(tId);
+      adjacencyMap.get(tId).push(sId);
     }
   });
   // Store on graphData for use by highlight/detail functions
@@ -5722,7 +5925,9 @@ function renderGraph(data) {
   });
 
   // Force simulation — stop previous to prevent memory leak
-  if (simulation) { simulation.stop(); simulation = null; }
+  if (simulation) { simulation.stop(); simulation.on('tick', null).on('end', null); simulation = null; }
+  _heatmapTickCount = 0;
+  _boundaryTickCount = 0;
   simulation = d3.forceSimulation(data.nodes)
     .force('link', d3.forceLink(data.links).id(d => d.id).distance(d => {
       const s = typeof d.source === 'object' ? d.source : nodeByIdMap.get(d.source);
@@ -5801,11 +6006,13 @@ function renderGraph(data) {
 
       node.attr('transform', d => `translate(${d.x},${d.y})`);
 
-      // Update heatmap halo positions if active
-      if (heatmapActive) updateHeatmapHalos();
+      // Update heatmap halo positions if active (throttled to every 3rd tick)
+      if (heatmapActive && (simulation.alpha() > 0.05 ? ++_heatmapTickCount % 3 === 0 : true)) updateHeatmapHalos();
 
-      // Update VDC boundary positions every tick so they're visible immediately
-      vdcBoundaryEls.forEach(({ vdc, boundaryRect, labelBg, toggleText, nameText, collapsedLabel, _cachedNodes }) => {
+      // P2-01: Update VDC boundary positions (throttled: every other tick during hot simulation)
+      _boundaryTickCount++;
+      if (simulation.alpha() > 0.1 && _boundaryTickCount % 2 !== 0) { /* skip during hot phase */ }
+      else vdcBoundaryEls.forEach(({ vdc, boundaryRect, labelBg, toggleText, nameText, collapsedLabel, _cachedNodes }) => {
         // Use cached node refs (pre-resolved once) instead of filtering every tick
         const vdcNodes = _cachedNodes;
         if (!vdcNodes || vdcNodes.length === 0) return;
@@ -5845,6 +6052,21 @@ function renderGraph(data) {
 
     });
 
+  // SVG-level mousemove for tooltip positioning (single handler instead of per-node)
+  svg.on('mousemove', (event) => moveTooltip(event));
+
+  // P1-01: SVG-level keydown delegation (1 handler instead of N per-node listeners)
+  svg.on('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      const g = event.target.closest('.node');
+      if (g) {
+        event.preventDefault(); event.stopPropagation();
+        const d = d3.select(g).datum();
+        if (d) { showDetail(d); highlightNode(d); }
+      }
+    }
+  });
+
   // Click background to deselect
   svg.on('click', () => { clearHighlight(); closeDetail(); clearFlowHighlight(); if (heatmapActive) clearHeatmap(); });
 
@@ -5868,22 +6090,22 @@ function highlightNode(d) {
   // Build connected set using O(1) adjacency map
   const connectedIds = new Set([d.id]);
   if (graphData._adj) {
-    (graphData._adj.get(d.id) || []).forEach(n => connectedIds.add(n.id));
+    (graphData._adj.get(d.id) || []).forEach(id => connectedIds.add(id));
   }
-  d3.selectAll('.node')
-    .classed('highlighted', n => n.id === d.id)
-    .classed('dimmed', n => !connectedIds.has(n.id));
-  d3.selectAll('.link')
-    .classed('highlighted', l => {
-      const sid = typeof l.source === 'object' ? l.source.id : l.source;
-      const tid = typeof l.target === 'object' ? l.target.id : l.target;
-      return sid === d.id || tid === d.id;
-    })
-    .classed('dimmed', l => {
-      const sid = typeof l.source === 'object' ? l.source.id : l.source;
-      const tid = typeof l.target === 'object' ? l.target.id : l.target;
-      return sid !== d.id && tid !== d.id;
-    });
+  // P1-02: Single-pass class toggling (was 2 passes per selection with redundant ID extraction)
+  d3.selectAll('.node').each(function(n) {
+    const cl = this.classList;
+    cl.toggle('highlighted', n.id === d.id);
+    cl.toggle('dimmed', !connectedIds.has(n.id));
+  });
+  d3.selectAll('.link').each(function(l) {
+    const sid = typeof l.source === 'object' ? l.source.id : l.source;
+    const tid = typeof l.target === 'object' ? l.target.id : l.target;
+    const connected = sid === d.id || tid === d.id;
+    const cl = this.classList;
+    cl.toggle('highlighted', connected);
+    cl.toggle('dimmed', !connected);
+  });
 }
 
 function clearHighlight() {
@@ -5966,6 +6188,7 @@ function showDetail(d) {
       <button class="detail-close" onclick="closeDetail()">&times;</button>
     </div>
     <span class="detail-badge" style="background:${cfg.color}33;color:${cfg.color}">${cfg.label || d.type}</span>
+    ${d._k8sManaged ? '<span class="detail-badge" style="background:#326CE533;color:#326CE5;margin-left:6px;">&#x2388; K8s Managed</span>' : ''}
   `;
 
   const props = buildDetailProps(d);
@@ -6247,8 +6470,10 @@ function buildDetailProps(d) {
 }
 
 function getConnectedNodes(d) {
-  // O(1) adjacency lookup instead of scanning all links
-  if (graphData._adj) return graphData._adj.get(d.id) || [];
+  // O(1) adjacency lookup — _adj stores IDs, resolve to objects via _nodeMap
+  if (graphData._adj && graphData._nodeMap) {
+    return (graphData._adj.get(d.id) || []).map(id => graphData._nodeMap.get(id)).filter(Boolean);
+  }
   return [];
 }
 
@@ -6283,7 +6508,7 @@ function showTooltip(event, d) {
 
   tt.innerHTML = `
     <div class="tt-title">${escapeHtml(d.name)}</div>
-    <div class="tt-type">${cfg.label || d.type}</div>
+    <div class="tt-type">${cfg.label || d.type}${d._k8sManaged ? ' <span style="color:#326CE5;font-weight:600;">&#x2388; K8s</span>' : ''}</div>
     ${detail ? `<div class="tt-detail">${escapeHtml(detail)}</div>` : ''}
     ${nicInfo ? `<div class="tt-nic">${nicInfo}</div>` : ''}
   `;
@@ -6298,6 +6523,77 @@ function moveTooltip(event) {
 }
 
 function hideTooltip() { document.getElementById('tooltip').classList.remove('visible'); }
+
+// ── VDC boundary tooltip (interactive — supports click-to-copy) ──
+let _vdcTtHideTimer = null;
+
+function showVdcTooltip(event, vdc) {
+  clearTimeout(_vdcTtHideTimer);
+  const tt = document.getElementById('vdcTooltip');
+  const dc = vdc.dc;
+  if (!dc) { tt.classList.remove('visible'); return; }
+  const props = dc.properties || {};
+  const meta = dc.metadata || {};
+  const nodeCount = vdc.nodeIds ? vdc.nodeIds.size : 0;
+  const loc = props.location || '';
+  const desc = props.description || '';
+  const created = meta.createdDate ? new Date(meta.createdDate).toLocaleDateString() : '';
+  const state = meta.state || '';
+
+  let html = `<div class="vtt-copied" id="vttCopied">Copied!</div>`;
+  html += `<div class="vtt-name">${escapeHtml(props.name || dc.id)}</div>`;
+  html += `<div class="vtt-row"><span class="vtt-label">UUID</span><span class="vtt-value mono" data-copy="${escapeHtml(dc.id)}" title="Click to copy">${escapeHtml(dc.id)}</span></div>`;
+  html += `<div class="vtt-row"><span class="vtt-label">Location</span><span class="vtt-value">${escapeHtml(loc)}</span></div>`;
+  if (desc) html += `<div class="vtt-row"><span class="vtt-label">Description</span><span class="vtt-value">${escapeHtml(desc)}</span></div>`;
+  if (state) html += `<div class="vtt-row"><span class="vtt-label">State</span><span class="vtt-value">${escapeHtml(state)}</span></div>`;
+  if (created) html += `<div class="vtt-row"><span class="vtt-label">Created</span><span class="vtt-value">${escapeHtml(created)}</span></div>`;
+  if (nodeCount > 0) {
+    html += `<div class="vtt-sep"></div>`;
+    const typeMap = {};
+    if (graphData?.nodes) {
+      graphData.nodes.forEach(n => {
+        if (vdc.nodeIds.has(n.id)) typeMap[n.type] = (typeMap[n.type] || 0) + 1;
+      });
+    }
+    const pairs = Object.entries(typeMap).sort((a, b) => b[1] - a[1]);
+    const summary = pairs.map(([t, c]) => `${c}\u00A0${NODE_TYPES[t]?.label || t}`).join(', ');
+    html += `<div class="vtt-row"><span class="vtt-label">Resources</span><span class="vtt-value">${nodeCount} total</span></div>`;
+    html += `<div class="vtt-row"><span class="vtt-label"></span><span class="vtt-value" style="color:var(--text-secondary)">${summary}</span></div>`;
+  }
+  tt.innerHTML = html;
+  tt.classList.add('visible');
+  tt.style.left = (event.clientX + 14) + 'px';
+  tt.style.top = (event.clientY + 14) + 'px';
+
+  // Wire click-to-copy on UUID
+  tt.querySelectorAll('[data-copy]').forEach(el => {
+    el.onclick = () => {
+      navigator.clipboard.writeText(el.dataset.copy).then(() => {
+        const badge = document.getElementById('vttCopied');
+        if (badge) { badge.classList.add('show'); setTimeout(() => badge.classList.remove('show'), 1200); }
+      });
+    };
+  });
+
+  // Keep tooltip open when hovering into it
+  tt.onmouseenter = () => clearTimeout(_vdcTtHideTimer);
+  tt.onmouseleave = () => scheduleVdcTtHide();
+}
+
+function moveVdcTooltip(event) {
+  const tt = document.getElementById('vdcTooltip');
+  tt.style.left = (event.clientX + 14) + 'px';
+  tt.style.top = (event.clientY + 14) + 'px';
+}
+
+function scheduleVdcTtHide() {
+  clearTimeout(_vdcTtHideTimer);
+  _vdcTtHideTimer = setTimeout(() => {
+    document.getElementById('vdcTooltip').classList.remove('visible');
+  }, 250);
+}
+
+function hideVdcTooltip() { scheduleVdcTtHide(); }
 
 // ============================== STATS & LEGEND ==============================
 function updateStats(data) {
@@ -7616,6 +7912,9 @@ let forwardDnsMap = null;      // Map: IP string → [{ zoneName, recordName }]
 let cdnDomainSet = null;       // Set of domain names with CDN distribution
 let dnsRecordCounts = null;    // Map: zoneId → record count
 
+/** Phase 1 (fast): Fetch zone list + reverse DNS + CDN distributions in parallel.
+ *  This completes the loading screen "DNS" step.
+ *  Phase 2 (deferred): Fetch per-zone records in the background after loading screen closes. */
 async function loadDNSData() {
   if (dnsZones) return; // Already loaded (global data, fetch once)
   try {
@@ -7654,34 +7953,61 @@ async function loadDNSData() {
       console.log(`[VDC-Viz] CDN distributions: ${cdnDomainSet.size} domain(s) protected`);
     }
 
-    // Fetch records for each zone → build forward DNS map (IP → domains)
-    forwardDnsMap = new Map();
-    dnsRecordCounts = new Map();
-    await Promise.all(dnsZones.map(async (zone) => {
-      const records = await fetchDNSRecords(zone.id);
-      const items = records?.items || [];
-      const zoneName = zone.properties?.zoneName || zone.id;
-      dnsRecordCounts.set(zone.id, items.length);
-
-      items.forEach(rec => {
-        const rType = rec.properties?.type;
-        const content = rec.properties?.content || '';
-        if ((rType === 'A' || rType === 'AAAA') && content) {
-          const recName = rec.properties?.name || '';
-          const fqdn = recName ? `${recName}.${zoneName}` : zoneName;
-          if (!forwardDnsMap.has(content)) forwardDnsMap.set(content, []);
-          forwardDnsMap.get(content).push({ zoneName, fqdn });
-        }
-      });
-    }));
-
-    console.log(`[VDC-Viz] Forward DNS map: ${forwardDnsMap.size} IP(s) with DNS records`);
-
+    // Render DNS panel immediately with zone list (records load in background)
     renderDNSPanel();
-    enrichIPLabels();
+
+    // Phase 2: Fetch per-zone records in background (non-blocking)
+    // Uses concurrency limiter to avoid overwhelming the DNS API
+    loadDNSRecordsBackground();
   } catch (e) {
     console.warn('[VDC-Viz] DNS/CDN data fetch failed:', e.message);
   }
+}
+
+/** Background fetch of per-zone DNS records with concurrency limiting.
+ *  Builds forwardDnsMap + dnsRecordCounts incrementally, re-renders panel on completion. */
+async function loadDNSRecordsBackground() {
+  if (!dnsZones || dnsZones.length === 0) return;
+  forwardDnsMap = new Map();
+  dnsRecordCounts = new Map();
+
+  const CONCURRENCY = 5; // max parallel zone-record fetches
+  const queue = [...dnsZones];
+  let completed = 0;
+
+  async function worker() {
+    while (queue.length > 0) {
+      const zone = queue.shift();
+      try {
+        const records = await fetchDNSRecords(zone.id);
+        const items = records?.items || [];
+        const zoneName = zone.properties?.zoneName || zone.id;
+        dnsRecordCounts.set(zone.id, items.length);
+
+        items.forEach(rec => {
+          const rType = rec.properties?.type;
+          const content = rec.properties?.content || '';
+          if ((rType === 'A' || rType === 'AAAA') && content) {
+            const recName = rec.properties?.name || '';
+            const fqdn = recName ? `${recName}.${zoneName}` : zoneName;
+            if (!forwardDnsMap.has(content)) forwardDnsMap.set(content, []);
+            forwardDnsMap.get(content).push({ zoneName, fqdn });
+          }
+        });
+      } catch (e) {
+        console.warn(`[VDC-Viz] DNS records fetch failed for zone ${zone.id}:`, e.message);
+      }
+      completed++;
+    }
+  }
+
+  // Launch concurrent workers
+  const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, () => worker());
+  await Promise.all(workers);
+
+  console.log(`[VDC-Viz] Forward DNS map: ${forwardDnsMap.size} IP(s) with DNS records (${completed} zones)`);
+  renderDNSPanel(); // Re-render with record counts
+  enrichIPLabels(); // Enrich IP labels with DNS data
 }
 
 function renderDNSPanel() {
@@ -8258,7 +8584,10 @@ async function connect(isSwitching = false) {
           currentUser = userInfo;
           showUserInfo(currentUser);
         }
-      } catch (e) { console.warn('[VDC-Viz] User info fetch failed:', e.message); }
+      } catch (e) {
+      console.warn('[VDC-Viz] User info fetch failed:', e.message);
+      toast('Could not load account info — some features may be limited', 'warning');
+    }
     })();
 
     // DNS gates the loading screen dismissal (last visible step)
@@ -8297,6 +8626,8 @@ async function connect(isSwitching = false) {
 
 function disconnect() {
   // Clear token and API state
+  window._tokenExpiredWarned = false;
+  clearMemoCache();
   apiToken = '';
   currentUser = null;
   userContracts = [];
@@ -8311,8 +8642,17 @@ function disconnect() {
   _billingUtilization = null;
   _billingByServer = new Map();
   _billingByVdc = new Map();
+  _k8sManagedIds = new Map();
   _idleScanResults = null;
   _idleScanRunning = false;
+
+  // Clear pending timers
+  if (searchTimeout) { clearTimeout(searchTimeout); searchTimeout = null; }
+  if (tableFilterTimeout) { clearTimeout(tableFilterTimeout); tableFilterTimeout = null; }
+  if (_supportClickTimeout) { clearTimeout(_supportClickTimeout); _supportClickTimeout = null; }
+
+  // Stop D3 simulation and clean up handlers
+  if (simulation) { simulation.stop(); simulation.on('tick', null).on('end', null); simulation = null; }
 
   // Clear AI state
   if (aiAbortController) { aiAbortController.abort(); aiAbortController = null; }
@@ -8392,8 +8732,11 @@ function disconnect() {
   const dnsPanel = document.getElementById('dnsPanel');
   if (dnsPanel) dnsPanel.style.display = 'none';
 
-  // Clear map cluster bubbles
+  // Clear map cluster bubbles, tile layer reference, and ResizeObserver
   if (typeof clearMapMarkers === 'function') clearMapMarkers();
+  if (bgTileLayer && bgMap) { bgMap.removeLayer(bgTileLayer); bgTileLayer = null; }
+  const mainArea = document.getElementById('mainArea');
+  if (mainArea?._mapResizeObserver) { mainArea._mapResizeObserver.disconnect(); mainArea._mapResizeObserver = null; }
 
   toast(t('toast.disconnected'), 'info');
 }
@@ -8406,6 +8749,12 @@ async function loadVDC() {
   closeAiPanelInstant();
   closeDetail();
   closeHighlightsOverlay();
+
+  // Clear stale idle VM scan data and billing data from previous VDC
+  _idleScanResults = null;
+  _idleScanRunning = false;
+  _billingByServer = new Map();
+  _billingByVdc = new Map();
 
   // Cancel any in-flight requests from previous VDC load
   if (currentAbortController) currentAbortController.abort();
@@ -8420,20 +8769,108 @@ async function loadVDC() {
   updateMapBackground(dcLocation);
 
   try {
-    const [dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sData, nfsClusters, vpnGateways, kafkaClusters] = await Promise.all([
-      fetchDCDetails(dcId),
-      fetchNatGateways(dcId),
-      fetchALBs(dcId),
-      fetchNLBs(dcId),
-      fetchPostgresClusters(),
-      fetchMongoClusters(),
-      fetchMySQLClusters(),
-      fetchMariaDBClusters(dcLocation),
-      fetchK8sClusters(),
-      fetchNFSClusters(dcLocation),
-      fetchVPNGateways(dcLocation),
-      fetchKafkaClusters(dcLocation),
+    const t0 = performance.now();
+
+    // ─── Tier 1: DC-scoped calls (servers, LANs, NICs, LBs, NAT GWs) ───
+    // These depend on dcId and are the core of the graph.
+    // ─── Tier 2: Global/regional managed services ───
+    // These return ALL clusters (not DC-specific) — filter happens in buildGraph.
+    // Both tiers fire in parallel, but we handle them with separate promises
+    // so NIC fallback + K8s pools can start as soon as their dependency resolves,
+    // NOT after all 12 calls finish.
+
+    // Start all fetches simultaneously
+    const dcDetailsProm = fetchDCDetails(dcId);
+    const natGWsProm = fetchNatGateways(dcId);
+    const albsProm = fetchALBs(dcId);
+    const nlbsProm = fetchNLBs(dcId);
+    const pgProm = fetchPostgresClusters();
+    const mongoProm = fetchMongoClusters();
+    const mysqlProm = fetchMySQLClusters();
+    const mariaProm = fetchMariaDBClusters(dcLocation);
+    const k8sProm = fetchK8sClusters();
+    const nfsProm = fetchNFSClusters(dcLocation);
+    const vpnProm = fetchVPNGateways(dcLocation);
+    const kafkaProm = fetchKafkaClusters(dcLocation);
+    const k8sLabelsProm = fetchK8sLabels();
+
+    // ─── As soon as DC details arrive, start NIC fallback in parallel ───
+    // This overlaps NIC fetches with the slower managed-service calls
+    const k8sNodePools = [];
+    let nicFallbackCount = 0;
+
+    const nicAndK8sWork = (async () => {
+      // Wait for DC details (the heaviest single call)
+      const dcData = await dcDetailsProm;
+      if (!dcData) return null; // will be caught below
+
+      const t1 = performance.now();
+      console.log(`[VDC-Viz][Perf] DC details arrived in ${(t1 - t0).toFixed(0)}ms`);
+      completeVdcLoadingStep('servers');
+      setVdcLoadingStep('nics');
+
+      const servers = dcData?.entities?.servers?.items || [];
+      console.log(`[VDC-Viz] Found ${servers.length} server(s) in DC response`);
+
+      // NIC fallback + K8s node pools run in parallel with each other AND with managed-service fetches
+      await Promise.all([
+        // NIC fallback: ensure all servers have NIC data
+        Promise.all(servers.map(async (srv) => {
+          try {
+            const nics = srv.entities?.nics?.items || [];
+            const hasNicProps = nics.length > 0 && nics[0].properties;
+            if (nics.length === 0 || !hasNicProps) {
+              const nicData = await fetchServerNICs(dcId, srv.id);
+              if (nicData?.items?.length > 0) {
+                if (!srv.entities) srv.entities = {};
+                srv.entities.nics = nicData;
+                nicFallbackCount++;
+              }
+            }
+          } catch (e) { console.warn(`[VDC-Viz] NIC fetch failed for ${srv.id}:`, e.message); }
+        })),
+        // K8s node pools: await K8s cluster list then fetch pools
+        (async () => {
+          const k8sData = await k8sProm;
+          for (const cluster of (k8sData?.items || [])) {
+            try {
+              const pools = await fetchK8sNodePools(cluster.id);
+              (pools?.items || []).forEach(pool => {
+                k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
+              });
+            } catch (e) { console.warn(`[VDC-Viz] K8s pools fetch failed for ${cluster.id}:`, e.message); }
+          }
+        })(),
+      ]);
+
+      if (nicFallbackCount > 0) console.log(`[VDC-Viz] Used NIC fallback fetch for ${nicFallbackCount} server(s)`);
+      const t2 = performance.now();
+      console.log(`[VDC-Viz][Perf] NIC fallback + K8s pools done in ${(t2 - t1).toFixed(0)}ms`);
+      completeVdcLoadingStep('nics');
+      completeVdcLoadingStep('k8s');
+      return dcData;
+    })();
+
+    // ─── Await everything: nicAndK8sWork runs in parallel with managed-service fetches ───
+    const [dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, _k8sIgnored, nfsClusters, vpnGateways, kafkaClusters, k8sLabels] = await Promise.all([
+      nicAndK8sWork,       // resolves to dcData, also completes NIC+K8s work
+      natGWsProm,
+      albsProm,
+      nlbsProm,
+      pgProm,
+      mongoProm,
+      mysqlProm,
+      mariaProm,
+      k8sProm,             // already consumed inside nicAndK8sWork, but await it here for error propagation
+      nfsProm,
+      vpnProm,
+      kafkaProm,
+      k8sLabelsProm,
     ]);
+    _k8sManagedIds = k8sLabels || new Map();
+
+    const t3 = performance.now();
+    console.log(`[VDC-Viz][Perf] All API calls resolved in ${(t3 - t0).toFixed(0)}ms`);
 
     // If core DC data fetch failed, abort gracefully
     if (!dcData) {
@@ -8441,41 +8878,6 @@ async function loadVDC() {
       return;
     }
 
-    // NIC fallback + K8s node pools run in parallel (they're independent)
-    completeVdcLoadingStep('servers');
-    setVdcLoadingStep('nics');
-    const servers = dcData?.entities?.servers?.items || [];
-    console.log(`[VDC-Viz] Found ${servers.length} server(s) in DC response`);
-
-    const k8sNodePools = [];
-    let nicFallbackCount = 0;
-
-    await Promise.all([
-      // NIC fallback: ensure all servers have NIC data
-      Promise.all(servers.map(async (srv) => {
-        const nics = srv.entities?.nics?.items || [];
-        const hasNicProps = nics.length > 0 && nics[0].properties;
-        if (nics.length === 0 || !hasNicProps) {
-          const nicData = await fetchServerNICs(dcId, srv.id);
-          if (nicData?.items?.length > 0) {
-            if (!srv.entities) srv.entities = {};
-            srv.entities.nics = nicData;
-            nicFallbackCount++;
-          }
-        }
-      })),
-      // K8s node pools: fetch pools for each K8s cluster
-      Promise.all((k8sData?.items || []).map(async (cluster) => {
-        const pools = await fetchK8sNodePools(cluster.id);
-        (pools?.items || []).forEach(pool => {
-          k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
-        });
-      })),
-    ]);
-
-    if (nicFallbackCount > 0) console.log(`[VDC-Viz] Used NIC fallback fetch for ${nicFallbackCount} server(s)`);
-    completeVdcLoadingStep('nics');
-    completeVdcLoadingStep('k8s');
     setVdcLoadingStep('graph');
     const data = buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sNodePools, nfsClusters || {}, vpnGateways, kafkaClusters);
 
@@ -8485,9 +8887,14 @@ async function loadVDC() {
 
     // Attach VDC boundary info so the name label renders on the canvas
     const vdcName = currentDC?.properties?.name || dcId;
-    data._vdcBoundaries = [{ name: vdcName, nodeIds: new Set(data.nodes.map(n => n.id)), index: 0 }];
+    data._vdcBoundaries = [{ name: vdcName, nodeIds: new Set(data.nodes.map(n => n.id)), index: 0, dc: currentDC }];
 
+    const t4 = performance.now();
+    console.log(`[VDC-Viz][Perf] buildGraph() took ${(t4 - t3).toFixed(0)}ms — ${data.nodes.length} nodes, ${data.links.length} links`);
     renderGraph(data);
+    const t5 = performance.now();
+    console.log(`[VDC-Viz][Perf] renderGraph() took ${(t5 - t4).toFixed(0)}ms`);
+    console.log(`[VDC-Viz][Perf] Total VDC load: ${(t5 - t0).toFixed(0)}ms`);
     setTimeout(() => zoomFit(), 1500);
     toast(t('toast.loadedResources', {count: data.nodes.length}), 'success');
     updateAiButtonVisibility();
@@ -8543,37 +8950,29 @@ function toggleVdc(vdcIdx) {
   // Elements spanning multiple VDCs (like PCC nodes / cross-connect links) stay visible
   // as long as at least one of their VDCs is expanded.
   const shouldHideMultiVdc = (idxSet) => {
+    if (!idxSet || idxSet.size === 0) return false; // empty Set → always visible (safe default)
     for (const idx of idxSet) {
       if (!collapsedVdcs.has(idx)) return false; // at least one VDC is expanded
     }
     return true; // all connected VDCs collapsed
   };
 
-  // Toggle node visibility
-  d3.selectAll('.node').each(function(d) {
-    if (d._vdcIdxSet) {
-      // Multi-VDC node (shared PCC): only hide when ALL its VDCs are collapsed
-      d3.select(this).style('display', shouldHideMultiVdc(d._vdcIdxSet) ? 'none' : '');
-    } else if (d._vdcIdx === vdcIdx) {
-      d3.select(this).style('display', isCollapsed ? 'none' : '');
-    }
-  });
-  // Toggle link visibility
-  d3.selectAll('.link').each(function(d) {
-    if (d._vdcIdxSet) {
-      // Cross-connect link spanning multiple VDCs
-      d3.select(this).style('display', shouldHideMultiVdc(d._vdcIdxSet) ? 'none' : '');
-    } else if (d._vdcIdx === vdcIdx) {
-      d3.select(this).style('display', isCollapsed ? 'none' : '');
-    }
-  });
-  // Toggle link labels
-  d3.selectAll('.link-labels text, .link-labels rect').each(function(d) {
-    if (d && d._vdcIdxSet) {
-      d3.select(this).style('display', shouldHideMultiVdc(d._vdcIdxSet) ? 'none' : '');
-    } else if (d && d._vdcIdx === vdcIdx) {
-      d3.select(this).style('display', isCollapsed ? 'none' : '');
-    }
+  // P1-03: Single-pass visibility toggle (was 3 separate d3.selectAll sweeps)
+  // Batch all display writes in one requestAnimationFrame to avoid layout thrashing
+  requestAnimationFrame(() => {
+    if (!svgGroup) return;
+    svgGroup.selectAll('.node, .link, .link-label, .link-label-bg').each(function(d) {
+      if (!d) return;
+      let hide;
+      if (d._vdcIdxSet) {
+        hide = shouldHideMultiVdc(d._vdcIdxSet);
+      } else if (d._vdcIdx === vdcIdx) {
+        hide = isCollapsed;
+      } else {
+        return; // not in this VDC, skip
+      }
+      this.style.display = hide ? 'none' : '';
+    });
   });
 
   // Update VDC boundary appearance
@@ -8584,7 +8983,7 @@ function toggleVdc(vdcIdx) {
     boundaryGroup.selectAll('.vdc-inner-content').style('display', isCollapsed ? 'none' : '');
     const collapsedLabel = boundaryGroup.select('.vdc-collapsed-label');
     if (isCollapsed) {
-      const nodeCount = graphData.nodes.filter(n => n._vdcIdx === vdcIdx).length;
+      const nodeCount = graphData.nodes.filter(n => n._vdcIdx === vdcIdx || (n._vdcIdxSet && n._vdcIdxSet.has(vdcIdx))).length;
       collapsedLabel.text(`${nodeCount} resources (collapsed)`).style('display', '');
     } else {
       collapsedLabel.style('display', 'none');
@@ -8615,25 +9014,29 @@ async function loadLocation() {
   updateMapBackground(dcsInLoc[0]?.properties?.location || loc);
 
   try {
-    // Fetch global/shared services ONCE (these are the same regardless of VDC)
+    const t0 = performance.now();
+
+    // Start global/shared services AND per-VDC fetches ALL at once (no serial phases)
     setLoadingText(t('loading.fetchingShared'));
     const dcLocation = dcsInLoc[0]?.properties?.location || '';
-    const [pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sData, nfsClusters, vpnGateways, kafkaClusters] = await Promise.all([
-      fetchPostgresClusters(),
-      fetchMongoClusters(),
-      fetchMySQLClusters(),
-      fetchMariaDBClusters(dcLocation),
-      fetchK8sClusters(),
-      fetchNFSClusters(dcLocation),
-      fetchVPNGateways(dcLocation),
-      fetchKafkaClusters(dcLocation),
-    ]);
 
-    // Fetch per-VDC data in parallel (only DC-specific APIs)
-    const allVdcData = await Promise.all(dcsInLoc.map(async (dc, idx) => {
+    // Fire global fetches
+    const pgProm = fetchPostgresClusters();
+    const mongoProm = fetchMongoClusters();
+    const mysqlProm = fetchMySQLClusters();
+    const mariaProm = fetchMariaDBClusters(dcLocation);
+    const k8sProm = fetchK8sClusters();
+    const nfsProm = fetchNFSClusters(dcLocation);
+    const vpnProm = fetchVPNGateways(dcLocation);
+    const kafkaProm = fetchKafkaClusters(dcLocation);
+    const k8sLabelsProm = fetchK8sLabels();
+
+    // Fire per-VDC DC-specific fetches in parallel with global fetches
+    const perVdcPromises = dcsInLoc.map(async (dc, idx) => {
       setLoadingText(`Loading VDC ${idx + 1}/${dcsInLoc.length}: ${dc.properties?.name || dc.id}`);
       const dcId = dc.id;
 
+      // DC details + DC-scoped services all in parallel
       const [dcData, natGWs, albs, nlbs] = await Promise.all([
         fetchDCDetails(dcId),
         fetchNatGateways(dcId),
@@ -8641,14 +9044,10 @@ async function loadLocation() {
         fetchNLBs(dcId),
       ]);
 
-      // Resolve NICs
+      // NIC fallback starts as soon as dcData arrives (overlaps with global services)
       const servers = dcData?.entities?.servers?.items || [];
-      // NIC fallback + K8s node pools in parallel
-      const k8sNodePools = [];
-      const k8sClusters = k8sData?.items || [];
-      await Promise.all([
-        // NIC fallback: ensure all servers have NIC data
-        Promise.all(servers.map(async (srv) => {
+      await Promise.all(servers.map(async (srv) => {
+        try {
           const nics = srv.entities?.nics?.items || [];
           if (nics.length === 0 || !(nics[0]?.properties)) {
             const nicData = await fetchServerNICs(dcId, srv.id);
@@ -8657,20 +9056,37 @@ async function loadLocation() {
               srv.entities.nics = nicData;
             }
           }
-        })),
-        // K8s node pools
-        Promise.all(k8sClusters.map(async (cluster) => {
-          const pools = await fetchK8sNodePools(cluster.id);
-          (pools?.items || []).forEach(pool => {
-            k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
-          });
-        })),
-      ]);
+        } catch (e) { console.warn(`[VDC-Viz] NIC fetch failed for ${srv.id}:`, e.message); }
+      }));
 
-      return {
-        dc,
-        graph: buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sNodePools, nfsClusters || {}, vpnGateways, kafkaClusters),
-      };
+      return { dc, dcData, natGWs, albs, nlbs };
+    });
+
+    // Await EVERYTHING in parallel: global services + per-VDC work
+    const [pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sData, nfsClusters, vpnGateways, kafkaClusters, k8sLabels, ...perVdcResults] = await Promise.all([
+      pgProm, mongoProm, mysqlProm, mariaProm, k8sProm, nfsProm, vpnProm, kafkaProm, k8sLabelsProm,
+      ...perVdcPromises,
+    ]);
+    _k8sManagedIds = k8sLabels || new Map();
+
+    const t1 = performance.now();
+    console.log(`[VDC-Viz][Perf] All location API calls resolved in ${(t1 - t0).toFixed(0)}ms`);
+
+    // K8s node pools (depends on k8sData)
+    const k8sNodePools = [];
+    await Promise.all((k8sData?.items || []).map(async (cluster) => {
+      try {
+        const pools = await fetchK8sNodePools(cluster.id);
+        (pools?.items || []).forEach(pool => {
+          k8sNodePools.push({ clusterId: cluster.id, clusterName: cluster.properties?.name || cluster.id, pool });
+        });
+      } catch (e) { console.warn(`[VDC-Viz] K8s pools fetch failed for ${cluster.id}:`, e.message); }
+    }));
+
+    // Build graphs for each VDC
+    const allVdcData = perVdcResults.map(({ dc, dcData, natGWs, albs, nlbs }) => ({
+      dc,
+      graph: buildGraph(dcData, natGWs, albs, nlbs, pgClusters, mongoClusters, mysqlClusters, mariadbClusters, k8sNodePools, nfsClusters || {}, vpnGateways, kafkaClusters),
     }));
 
     // Merge all VDC graphs into one, prefixing node/link IDs to avoid collisions
@@ -8700,7 +9116,7 @@ async function loadLocation() {
         mergedLinks.push({ ...l, source: prefix + sId, target: prefix + tId, _vdcIdx: vi });
       });
 
-      vdcBoundaries.push({ name: vdcName, nodeIds, index: vi });
+      vdcBoundaries.push({ name: vdcName, nodeIds, index: vi, dc });
     });
 
     // ── Cross-VDC PCC bridging: merge PCC nodes sharing the same pccId ──
@@ -8721,7 +9137,7 @@ async function loadLocation() {
 
       const canonical = pccNodes[0]; // keep first as the shared node
       canonical._vdcName = 'Shared';  // mark as cross-VDC
-      canonical._vdcIdxSet = new Set(pccNodes.map(n => n._vdcIdx)); // all VDC indices this PCC spans
+      canonical._vdcIdxSet = Object.freeze(new Set(pccNodes.map(n => n._vdcIdx))); // all VDC indices this PCC spans (frozen)
       // Collect all VDC names this PCC spans
       const vdcNames = [...new Set(pccNodes.map(n => n._vdcName))];
       canonical.name = `PCC: ${vdcNames.join(' ↔ ')}`;
@@ -8742,14 +9158,13 @@ async function loadLocation() {
           if (l.target === dup.id) l.target = canonical.id;
         });
       }
-      // Mark all cross-connect links touching this PCC with the full set of VDC indices
+      // Mark ALL links touching this shared PCC with the full set of VDC indices
+      // (not just cross-connect type — gateway/managed links to PCC must also stay visible)
       mergedLinks.forEach(l => {
         const src = typeof l.source === 'object' ? l.source.id : l.source;
         const tgt = typeof l.target === 'object' ? l.target.id : l.target;
         if (src === canonical.id || tgt === canonical.id) {
-          if (l.linkType === 'cross-connect' || l.type === 'cross-connect') {
-            l._vdcIdxSet = canonical._vdcIdxSet;
-          }
+          l._vdcIdxSet = canonical._vdcIdxSet;
         }
       });
     });
@@ -9029,8 +9444,11 @@ updateLocaleButtons();
 
 // ============================== TRAFFIC HEATMAP ==============================
 let heatmapActive = false;
+let _heatmapTickCount = 0;
+let _boundaryTickCount = 0;
 let heatmapMode = 'volume'; // 'volume' or 'security'
 let heatmapHaloGroup = null; // SVG group for halo elements
+let _cachedHaloSelection = null; // P2-02: cached D3 selection of halo circles
 
 function toggleHeatmap() {
   if (heatmapActive) {
@@ -9200,7 +9618,8 @@ function applyHeatmap() {
     heatmapHaloGroup = svgGroup.insert('g', '.nodes').attr('class', 'heatmap-halos');
   }
 
-  // Clear previous halos
+  // Clear previous halos + invalidate cached selection (P2-02)
+  _cachedHaloSelection = null;
   if (heatmapHaloGroup) heatmapHaloGroup.selectAll('*').remove();
 
   // Apply node halos
@@ -9362,7 +9781,9 @@ function updateHeatmapHalos() {
   if (!heatmapActive || !heatmapHaloGroup || !graphData) return;
   // Use pre-built nodeMap (O(1) lookup) instead of .find() (O(n)) per halo
   const nodeMap = graphData._nodeMap || new Map(graphData.nodes.map(n => [n.id, n]));
-  heatmapHaloGroup.selectAll('.hm-node-halo').each(function() {
+  /* P2-02: cache halo selection — avoid re-querying DOM every simulation tick */
+  if (!_cachedHaloSelection) _cachedHaloSelection = heatmapHaloGroup.selectAll('.hm-node-halo');
+  _cachedHaloSelection.each(function() {
     const el = d3.select(this);
     const node = nodeMap.get(el.attr('data-node-id'));
     if (node) {
@@ -9375,7 +9796,8 @@ function clearHeatmap() {
   heatmapActive = false;
   document.getElementById('heatmapLegend')?.classList.add('hidden');
 
-  // Remove halos
+  // Remove halos + invalidate cached selection (P2-02)
+  _cachedHaloSelection = null;
   if (heatmapHaloGroup) {
     heatmapHaloGroup.selectAll('*').remove();
   }
@@ -11249,15 +11671,15 @@ function buildAiContext() {
     const vdcList = datacenters.map(dc => {
       const name = sanitizeName(dc.properties?.name) || dc.id;
       const loc = dc.properties?.location || '';
-      return `${name} (${loc})`;
+      return `${name} [UUID: ${dc.id}] (${loc})`;
     });
     parts.push(`[Contract-wide] Virtual Data Centers (${datacenters.length}): ${vdcList.join(', ')}`);
     if (currentDC) {
-      parts.push(`Currently loaded VDC: ${loadedVdcName}`);
+      parts.push(`Currently loaded VDC: ${loadedVdcName} [UUID: ${currentDC.id}, Location: ${currentDC.properties?.location || 'unknown'}]`);
     }
   } else if (currentDC) {
     // Fallback: only the currently loaded VDC
-    parts.push(`Current VDC: ${loadedVdcName}`);
+    parts.push(`Current VDC: ${loadedVdcName} [UUID: ${currentDC.id}]`);
   }
 
   // ── Topology summary ──
@@ -11293,7 +11715,9 @@ function buildAiContext() {
         const flCount = nics.filter(n => n.flowLogsEnabled).length;
         const hasSG = (d.securityGroupCount || 0) > 0 || nics.some(n => (n.securityGroupCount || 0) > 0);
         const hasMQ = nics.some(n => n.multiQueue);
-        parts.push(`  ${sanitizeName(s.name)} — ${d.cores || '?'}C/${((d.ram || 0) / 1024).toFixed(0)}GB, ${d.vmState || '?'}, ${ips.length} IPs${fwCount > 0 ? ', FW on' : ', FW off'}${flCount > 0 ? ', FL on' : ''}${hasSG ? ', SG on' : ''}${hasMQ ? ', MultiQ on' : ''}`);
+        const rawId = s.id.replace(/^(srv|cube)-/, '');
+        const k8sTag = s._k8sManaged ? ', K8s-managed' : '';
+        parts.push(`  ${sanitizeName(s.name)} [${rawId}] — ${d.cores || '?'}C/${((d.ram || 0) / 1024).toFixed(0)}GB, ${d.vmState || '?'}, ${ips.length} IPs${fwCount > 0 ? ', FW on' : ', FW off'}${flCount > 0 ? ', FL on' : ''}${hasSG ? ', SG on' : ''}${hasMQ ? ', MultiQ on' : ''}${k8sTag}`);
       });
       if (servers.length > 15) parts.push(`  ...and ${servers.length - 15} more`);
     }
@@ -11307,7 +11731,9 @@ function buildAiContext() {
       lans.forEach(l => {
         const d = l.data || {};
         const connCount = graphData.links?.filter(lk => lk.source?.id === l.id || lk.target?.id === l.id || lk.source === l.id || lk.target === l.id).length || 0;
-        parts.push(`  ${sanitizeName(l.name)} — ${d.isPublic ? 'Public' : 'Private'}${d.cidr ? ', ' + d.cidr : ''}, ${connCount} connections`);
+        const lanId = d.lanId || l.id.replace(/^lan-/, '');
+        const k8sLanTag = l._k8sManaged ? ', K8s-managed' : '';
+        parts.push(`  ${sanitizeName(l.name)} [LAN ${lanId}] — ${d.isPublic ? 'Public' : 'Private'}${d.cidr ? ', ' + d.cidr : ''}, ${connCount} connections${k8sLanTag}`);
       });
     }
   }
@@ -11319,7 +11745,8 @@ function buildAiContext() {
       parts.push(`\n[${loadedVdcName}] Database/Streaming Services:`);
       dbs.forEach(d => {
         const info = d.data || {};
-        parts.push(`  ${NODE_TYPES[d.type]?.label || d.type}: ${sanitizeName(d.name)} — v${info.version || '?'}, ${info.instances || '?'} instance(s)`);
+        const dbRawId = d.id.replace(/^(pg|mongo|mysql|mariadb|kafka)-/, '');
+        parts.push(`  ${NODE_TYPES[d.type]?.label || d.type}: ${sanitizeName(d.name)} [${dbRawId}] — v${info.version || '?'}, ${info.instances || '?'} instance(s)`);
       });
     }
   }
@@ -11332,7 +11759,9 @@ function buildAiContext() {
       infra.forEach(i => {
         const d = i.data || {};
         const ips = d.ips?.join(', ') || d.publicIps?.join(', ') || '';
-        parts.push(`  ${NODE_TYPES[i.type]?.label || i.type}: ${sanitizeName(i.name)}${ips ? ' (' + ips + ')' : ''}`);
+        const infraRawId = i.id.replace(/^(alb|nlb|nat|vpn-wg|vpn-ipsec|nfs|pcc|k8s)-/, '');
+        const k8sInfraTag = i._k8sManaged ? ', K8s-managed' : '';
+        parts.push(`  ${NODE_TYPES[i.type]?.label || i.type}: ${sanitizeName(i.name)} [${infraRawId}]${ips ? ' (' + ips + ')' : ''}${k8sInfraTag}`);
       });
     }
   }

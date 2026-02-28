@@ -61,7 +61,7 @@ Choose from **Llama 3.1 8B**, **Mistral Small 24B**, or **Llama 3.3 70B** via th
 
 🗺️ **Global Map View** — An interactive geographic map displays all IONOS data center locations worldwide on first load, color-coded by cloud type (Public, Private, or both) with hover tooltips. After connecting, your active regions appear as cluster bubbles with country flags and VDC counts while available locations remain visible as faded markers. Click a region to drill down, then click a VDC to visualize its topology.
 
-🔗 **Managed Service Visibility** — Databases (PostgreSQL, MongoDB, MySQL, MariaDB), VPN Gateways, NFS shares, Load Balancers, Kubernetes clusters, and Kafka clusters are all rendered on the topology graph, connected to the LANs they belong to. No more jumping between DCD panels.
+🔗 **Managed Service Visibility** — Databases (PostgreSQL, MongoDB, MySQL, MariaDB), VPN Gateways, NFS shares, Load Balancers, Kubernetes clusters, and Kafka clusters are all rendered on the topology graph, connected to the LANs they belong to. No more jumping between DCD panels. Resources belonging to Managed Kubernetes node pools are automatically identified via the IONOS Labels API and marked with an official K8s helm wheel badge.
 
 🌐 **Regional Cross-Connect View** — Load all VDCs within a region onto a single canvas to see Private Cross Connect links between data centers. VDCs in the same metro are treated as one region since they can be interconnected.
 
@@ -268,6 +268,7 @@ Your API token never leaves your machine.
 | Data Transfer (Utilization) | `/billing/{contract}/utilization` | Per Contract |
 | Telemetry | `api.ionos.com/telemetry/api/v1` | Centralized |
 | AI Model Hub | `openai.inference.de-txl.ionos.com/v1` | Centralized |
+| Labels | `/cloudapi/v6/labels` | Centralized |
 | Locations | `/cloudapi/v6/locations` | Centralized |
 | User Management | `/cloudapi/v6/um` | Centralized |
 | IONOS Cloud Docs (MCP) | `docs.ionos.com/cloud/~gitbook/mcp` | Centralized |

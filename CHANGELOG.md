@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-02-28
+
+### Added (1.11.0)
+
+- **Kubernetes Managed Resource Badges** — Resources that belong to a Managed Kubernetes node pool (servers, LANs, NAT gateways, PCCs) are automatically identified via the IONOS Labels API (`/cloudapi/v6/labels?depth=2&filter.key=managedexternally`) and marked with an official K8s helm wheel badge (blue heptagon + white 7-spoke wheel) at the bottom-right of the node. K8s-managed status is also shown in the hover tooltip (`⎈ K8s` tag), the detail side panel (blue "⎈ K8s Managed" badge), and the AI assistant context.
+- **VDC Name Tooltip** — Hovering over the VDC boundary name label shows an interactive tooltip with UUID (click-to-copy), location, description, state, creation date, and resource count summary. Tooltip supports mouse-over interaction with delayed hide.
+- **AI Context: Resource UUIDs** — The AI Cloud Assistant now includes UUIDs for VDCs, servers, LANs, databases, and infrastructure nodes in its context, enabling it to answer questions like "what is the UUID of this VDC?"
+
+### Changed (1.11.0)
+
+- **Performance: Overlapping NIC fallback with managed services** — Restructured `loadVDC()` so NIC fallback resolution starts as soon as DC details arrive, overlapping with still-pending managed service API calls (previously serialized behind all 12 calls)
+- **Performance: Same overlap applied to `loadLocation()`** — Region view benefits from the same parallelization
+- **Performance: Removed `drop-shadow` from highlight classes** (P2-11) — SVG `filter: drop-shadow()` forces CPU rasterization per frame; highlight styling now uses stroke-only approach
+- **Performance: O(1) `nodeMap` lookups replace `.find()` scans** (P2-12) — 10 instances of `nodes.find(n => n.id === nodeId)` in DBaaS sections and layout engine replaced with `nodeMap.has()`/`nodeMap.get()`
+- **Performance: Non-critical scripts deferred** (P2-13) — `defer` attribute added to xlsx, pako, jspdf, jspdf-autotable script tags to avoid blocking first paint
+- **Performance: Cached heatmap halo D3 selection** (P2-02) — `heatmapHaloGroup.selectAll()` result cached to avoid DOM re-query every simulation tick
+- **Performance: UUID regex hoisted to module scope** (P3) — Compiled once instead of per-call
+- Performance timing instrumentation added to `loadVDC()` (DC details, NIC fallback, total API, buildGraph, renderGraph)
+- Theme toggle and language selector controls reduced from 28px to 22px with smaller fonts, shifted upward for a more compact header
+- Light mode IP labels changed from blue text to dark slate (`#0f172a`) with solid white 4px stroke halo for readability
+
+### Fixed (1.11.0)
+
+- IP address labels unreadable in light mode — blue text was invisible against light blue node fills
+- VDC tooltip UUID wrapping awkwardly — widened to 420px with CSS grid layout and monospace font
+
 ## [1.10.0] - 2026-02-28
 
 ### Added (1.10.0)
