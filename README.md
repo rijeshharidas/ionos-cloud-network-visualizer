@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Python-3.6%2B-3776AB?logo=python&logoColor=white" alt="Python 3.6+">
   <img src="https://img.shields.io/badge/D3.js-v7-F9A03C?logo=d3dotjs&logoColor=white" alt="D3.js v7">
   <img src="https://img.shields.io/badge/Leaflet-1.9.4-199900?logo=leaflet&logoColor=white" alt="Leaflet 1.9.4">
-  <img src="https://img.shields.io/badge/Dependencies-None-brightgreen" alt="No Dependencies">
+  <img src="https://img.shields.io/badge/Zero%20Build%20Step-brightgreen" alt="Zero Build Step">
   <img src="https://img.shields.io/badge/IONOS%20Cloud-Visualizer-003D8F" alt="IONOS Cloud">
 </p>
 
@@ -33,37 +33,6 @@
 
 ---
 
-## AI Cloud Assistant
-
-> *"Which servers have no firewall enabled?"* · *"Give me a cost optimization report"* · *"Summarize rejected traffic"*
-
-Ask your infrastructure anything. The built-in AI Cloud Assistant connects to the **IONOS AI Model Hub** and understands your full cloud context — topology, servers, LANs, databases, security posture, billing, and flow logs. It adapts its analysis based on what's loaded: connect a VDC for infrastructure Q&A, load flow logs for traffic analysis, or use billing data for cost insights.
-
-The assistant has two modes, accessible via tabs in the AI panel:
-
-**Assist** — Analyze your existing infrastructure:
-
-- **Security assessment** — identify servers without firewalls, unprotected NICs, missing security groups
-- **Cost optimization** — on-demand idle VM scan using real-time telemetry to find stopped-but-billed VMs and running servers with near-zero traffic
-- **Traffic analysis** — top talkers, rejected flows, suspicious port scanning, protocol breakdown
-- **Infrastructure overview** — resource inventory, compute capacity, database health, network layout
-- **IONOS Documentation search** — toggle the Docs button to search the official IONOS Cloud documentation (via MCP) and receive answers grounded in up-to-date product docs
-- **Terraform export** — generate production-ready HCL for your entire VDC topology
-
-**Design** — Build new architectures from scratch:
-
-- Describe infrastructure in natural language (*"Design a 3-tier web app with ALB, 2 web servers, PostgreSQL, and a NAT gateway"*)
-- The AI generates a visual topology rendered as a **draft** on the canvas over an interactive map backdrop centered on Frankfurt
-- Iterate via chat (*"Add a NAT gateway"*, *"Make servers 8 cores"*, *"Add a MongoDB database"*)
-- 10 architecture templates available as quick-start suggestions (3-tier web app, K8s cluster, Microservices, VPN gateway, CI/CD pipeline, and more)
-- Auto-switches to Llama 3.3 70B for better JSON generation quality
-- Load balancers render as parent nodes with connected servers fanned out below
-- When satisfied, generate Terraform to provision your design
-
-Choose from **Llama 3.1 8B**, **Mistral Small 24B**, or **Llama 3.3 70B** via the IONOS AI Model Hub. Press `A` to open.
-
----
-
 ### Global Map & VDC Drill-Down
 
 [![Global Map and VDC topology drill-down](docs/visualizer.gif)](docs/visualizer.gif)
@@ -72,47 +41,188 @@ Choose from **Llama 3.1 8B**, **Mistral Small 24B**, or **Llama 3.3 70B** via th
 
 [![Cross-connect visualization in regional mode](docs/cross-connect.gif)](docs/cross-connect.gif)
 
+## AI Cloud Assistant
+
+> *"Which servers have no firewall enabled?"* · *"Design a 3-tier web app"* · *"Export my VDC as Terraform"*
+
+The built-in AI Cloud Assistant connects to the **IONOS AI Model Hub** and understands your full cloud context — topology, servers, LANs, databases, security posture, billing, and flow logs. Choose from **Llama 3.1 8B**, **Mistral Small 24B**, or **Llama 3.3 70B**. Press `A` to open.
+
+The assistant has two modes, accessible via tabs:
+
+**Assist** — Analyze your existing infrastructure. Ask about security posture, cost optimization, traffic patterns, resource inventory, or generate Terraform. Toggle the **Docs** button to ground answers in the official IONOS Cloud documentation via MCP.
+
+**Design** — Build new architectures from natural language. Describe what you need, and the AI generates a visual draft topology on the canvas. Iterate via chat until satisfied, then export as Terraform. Quick-start templates are available for common patterns like 3-tier web apps, Kubernetes clusters, microservices, CI/CD pipelines, and more.
+
 ## Key Capabilities
 
-🗺️ **Global Map View** — An interactive geographic map displays all IONOS data center locations worldwide on first load, color-coded by cloud type (Public, Private, or both) with hover tooltips. After connecting, your active regions appear as cluster bubbles with country flags and VDC counts while available locations remain visible as faded markers. Click a region to drill down, then click a VDC to visualize its topology.
+### Visualization
 
-🔗 **Managed Service Visibility** — Databases (PostgreSQL, MongoDB, MySQL, MariaDB), VPN Gateways, NFS shares, Load Balancers, Kubernetes clusters, and Kafka clusters are all rendered on the topology graph, connected to the LANs they belong to. No more jumping between DCD panels. Resources belonging to Managed Kubernetes node pools are automatically identified via the IONOS Labels API and marked with an official K8s helm wheel badge.
+<table>
+<tr>
+<td width="33%">
 
-🌐 **Regional Cross-Connect View** — Load all VDCs within a region onto a single canvas to see Private Cross Connect links between data centers. VDCs in the same metro are treated as one region since they can be interconnected.
+🗺️ **Global Map View**<br>
+Interactive geographic map of all IONOS data center locations, color-coded by cloud type (Public, Private, or both). After connecting, active regions appear as animated cluster bubbles showing VDC counts — click any region to drill down into its data centers. Press `G` to return to the global view at any time.
 
-💰 **Idle VM Scanner** — On-demand cost optimization scan that batch-queries real-time telemetry (Prometheus) for every server. Identifies stopped-but-billed VMs (SHUTOFF but still provisioned) and running VMs with near-zero network traffic (< 100 B/s). Results appear in the VDC Health panel, highlight on the topology, and feed into the AI assistant for optimization recommendations.
+</td>
+<td width="33%">
 
-📞 **Support Contacts Map** — Click the "Contact" button on the global map to overlay IONOS support and sales phone numbers / email addresses for 9 countries. Flag-emoji markers with themed popups — useful for quickly finding the right regional contact.
+🔗 **Managed Services**<br>
+All managed resources — databases (PostgreSQL, MongoDB, MySQL, MariaDB), VPN gateways, NFS shares, load balancers, Kubernetes clusters, and Kafka — are rendered directly on the topology graph, connected to their respective LANs. Kubernetes-managed resources are visually distinguished with a helm wheel badge for easy identification.
 
-📡 **IP & DNS View** — Toggle IP address labels across the entire topology, enriched with reverse DNS hostnames and forward DNS record names. Public IP block allocations (IPv4 and IPv6) and DNS zones are shown in dedicated sidebar panels. Zones with CDN distributions are flagged with a CDN badge; zones without CDN show a muted "No CDN" indicator.
+</td>
+<td width="33%">
 
-🖥️ **Compute View** — Toggle compute details across all server and cube nodes showing VM type, CPU cores, RAM, and CPU family. Color-coded by VM type: cyan for dedicated-core (Enterprise), purple for vCPU, orange for Cube, and rose for GPU instances. Press `C` to toggle.
+🌐 **Cross-Connect View**<br>
+Load all VDCs within a metro region onto a single unified canvas to visualize Private Cross Connect links spanning multiple data centers. VDCs sharing the same metro location are automatically grouped, making it easy to see how your infrastructure is interconnected across facilities.
 
-🛡️ **Highlights** — Filter by Firewall Active, Flow Logs, Security Groups, IPv6 Enabled, IP Failover, Cross Connect, NIC Multi-Queue, and Idle VMs (cost optimization). Matching nodes glow with highlight rings while everything else fades — compliance audits made visual.
+</td>
+</tr>
+<tr>
+<td>
 
-📜 **Flow Log Explorer** — Drag-and-drop IONOS flow log files (`.log` or `.log.gz`) into the explorer panel to analyze traffic records. Filter by source/destination IP, port range, protocol, action (ACCEPT/REJECT), and NIC interface. Click any row to trace the source→destination path on the topology graph using BFS path-finding with highlighted intermediate nodes. Hover rows for live preview. Enriched columns show IP-to-resource tags, well-known port labels, threat/scan badges, and server names alongside NIC UUIDs. Right-click any row for copy and filter actions. Export filtered results as CSV. Press `W` to open.
+🖥️ **Compute View**<br>
+Toggle an overlay showing compute specifications for every server — VM type, CPU cores, RAM, and CPU family. Each server type is color-coded for quick scanning: cyan for dedicated-core, purple for vCPU, orange for Cube, and rose for GPU instances. Press `C` to toggle.
 
-🔥 **Traffic Heatmap** — Visualize traffic patterns as color-coded halos around nodes. Toggle between Volume mode (bytes transferred), Security mode (rejected packet ratio), and Transfer mode (billing data). Nodes glow from cool blue to hot red based on traffic intensity, with a gradient legend and aggregate statistics. Press `X` to activate with flow logs, or `B` for Data Transfer heatmap.
+</td>
+<td>
 
-📊 **Live Metrics** — Select a server to see 1-hour network throughput and packet count time-series charts directly in the detail panel.
+📡 **IP & DNS View**<br>
+Toggle IP address labels on every NIC, enriched with reverse DNS hostnames and forward DNS records where available. The sidebar displays public IP blocks, DNS zones, and CDN distributions tied to your infrastructure. Press `I` to toggle.
 
-📈 **Data Transfer** — Per-VDC and per-server network data transfer from the IONOS Billing API. The Global Map shows a floating panel with region-wise In/Out totals (overview) or per-VDC breakdown (drill-down). Server detail panels include a 30-day daily transfer chart (D3.js grouped bar chart). A dedicated Data Transfer Heatmap mode (`B` key) visualizes per-server transfer volumes on the topology.
+</td>
+<td>
 
-🔍 **Canvas Search** — Type-ahead search across all resources with instant highlighting on the canvas. Focus with `Ctrl+F`.
+🛡️ **Highlights**<br>
+Apply visual filters to the topology based on specific attributes: firewall status, flow log coverage, security groups, IPv6, IP failover, cross connect, NIC multi-queue, and idle VMs. Matching nodes glow brightly while non-matching resources fade into the background. Press `H` to open.
 
-🏢 **Reseller / Multi-Contract Support** — Accounts with multiple contracts (reseller masters) see a contract dropdown after login. Selecting a contract switches the entire view to that contract's resources. The selected contract is passed via the standard `X-Contract-Number` header on every API call.
+</td>
+</tr>
+</table>
 
-📋 **Resource Table View** — Press `T` to open a full-screen searchable, sortable table of all resources. Type filter pills let you isolate specific resource types, column headers sort by name/type/state, and a text search filters across all columns. Click any row to zoom to that node on the graph. Export the filtered view as CSV directly from the table.
+### Analysis & Monitoring
 
-🛡️ **Security Posture** — Press `S` for a one-glance security summary of your VDC: Firewall Active, Flow Logs, Security Groups, Private LANs, and IPv6 coverage — each with a color-coded progress bar. Click any metric to highlight matching nodes on the graph.
+<table>
+<tr>
+<td width="33%">
 
-🌗 **Dark & Light Theme** — Toggle between dark and light mode with automatic system-preference detection. The Leaflet map tiles swap between Carto `dark_all` and `light_all` automatically. Your preference is persisted in `localStorage`.
+📜 **Flow Log Explorer**<br>
+Drag and drop IONOS flow log files onto the canvas to analyze traffic records in a full-featured table. Filter by source/destination IP, port, protocol, and accept/reject action. Click any row to visually trace the traffic path on the topology. Export filtered results as CSV. Press `W` to open.
 
-🌐 **Internationalization (i18n)** — Full UI translated into English, German, Spanish, and French (164 keys). Switch languages from the flag dropdown in the sidebar header. Locale is persisted in `localStorage`.
+</td>
+<td width="33%">
 
-⭐ **VDC Favorites** — Pin frequently used VDCs with the star button next to the dropdown. Pinned VDCs sort to the top with a separator. Favorites persist in `localStorage` across sessions.
+🔥 **Traffic Heatmap**<br>
+Overlay color-coded halos around nodes to visualize traffic patterns at a glance. Switch between three modes: volume (total bytes), security (rejected packet ratio), and billing (data transfer cost). Colors range from cool blue (low) to hot red (high). Press `X` for flow log heatmap, `B` for data transfer.
 
-📤 **Export** — A unified export dropdown consolidates all formats in one place: PNG and SVG for diagrams, JSON/CSV/XLSX for data, and PDF for shareable reports. The XLSX workbook includes three sheets (Resources, Connections, Summary). The PDF report renders the topology diagram on page one with a styled resource inventory table on subsequent pages.
+</td>
+<td width="33%">
+
+💰 **Idle VM Scanner**<br>
+Run an on-demand scan that queries real-time Prometheus telemetry for every server in the current VDC. Identifies stopped-but-billed VMs and running servers with near-zero network traffic — potential cost savings. Results are automatically fed into the AI assistant for optimization recommendations.
+
+</td>
+</tr>
+<tr>
+<td>
+
+🛡️ **Security Posture**<br>
+Get an at-a-glance security summary of your entire VDC with color-coded progress bars covering firewall coverage, flow log monitoring, security group usage, private LAN adoption, and IPv6 readiness. Click any metric bar to instantly highlight the matching (or non-compliant) nodes on the topology. Press `S` to open.
+
+</td>
+<td>
+
+📊 **Live Metrics**<br>
+Select any server to view real-time 1-hour time-series charts for network throughput (bytes/sec) and packet counts directly in the detail panel. Data is streamed from the IONOS Telemetry API and refreshes on each server selection, giving you instant visibility into current network activity.
+
+</td>
+<td>
+
+📈 **Data Transfer**<br>
+View per-VDC and per-server network transfer data pulled from the IONOS Billing API. Server detail panels include a 30-day daily transfer chart, while the global map displays a region-wise breakdown of data transfer across your entire infrastructure. A dedicated heatmap mode (`B`) colors nodes by transfer volume.
+
+</td>
+</tr>
+</table>
+
+### AI & Export
+
+<table>
+<tr>
+<td width="33%">
+
+🤖 **AI Assist**<br>
+Ask natural-language questions about your infrastructure — security posture, cost optimization, traffic patterns, resource inventory, and more. The AI understands your full topology context and can generate production-ready Terraform code. Toggle the Docs button to ground responses in official IONOS Cloud documentation via MCP.
+
+</td>
+<td width="33%">
+
+✏️ **AI Design**<br>
+Describe the architecture you need in plain English, and the AI generates a visual draft topology rendered on the canvas over an interactive map. Iterate on the design through follow-up messages — add resources, change configurations, restructure components — then export the final result as Terraform. Quick-start templates included for common patterns.
+
+</td>
+<td width="33%">
+
+📤 **Export**<br>
+Export your topology in multiple formats from a single dropdown: PNG and SVG for visual diagrams, JSON and CSV for raw data, an XLSX workbook with three sheets (Resources, Connections, Summary), and a comprehensive PDF report combining the topology diagram with a full resource inventory table.
+
+</td>
+</tr>
+</table>
+
+### Customization
+
+<table>
+<tr>
+<td width="25%">
+
+🌗 **Themes**<br>
+Switch between dark and light mode with automatic system-preference detection. Map tiles, topology colors, and all UI elements adapt seamlessly to your chosen theme.
+
+</td>
+<td width="25%">
+
+🌐 **i18n**<br>
+Full UI localization in English, German, Spanish, and French. Switch languages from the sidebar flag dropdown — all labels, tooltips, and messages update instantly.
+
+</td>
+<td width="25%">
+
+⭐ **Favorites**<br>
+Pin your most frequently accessed VDCs to the top of the dropdown selector with the star button, so you can jump to them instantly without scrolling through long lists.
+
+</td>
+<td width="25%">
+
+🏢 **Multi-Contract**<br>
+Reseller and multi-contract accounts see a contract dropdown to switch between contracts on the fly, each with its own set of data centers and resources.
+
+</td>
+</tr>
+<tr>
+<td>
+
+🔍 **Canvas Search**<br>
+Type-ahead search across all resources on the topology with instant highlighting. Matching nodes are brought into focus while the rest dims, making it easy to locate specific servers, LANs, or services. Press `Ctrl+F` to focus.
+
+</td>
+<td>
+
+📋 **Resource Table**<br>
+Open a full-screen searchable, sortable table listing every resource in the current VDC. Filter by resource type using quick-filter pills, sort any column, and export the entire table as CSV for reporting or analysis. Press `T` to open.
+
+</td>
+<td>
+
+📞 **Support Contacts**<br>
+IONOS support and sales phone numbers and email addresses for 9 countries, overlaid as interactive markers on the global map. Click any marker to see local contact details for that region.
+
+</td>
+<td>
+
+</td>
+</tr>
+</table>
 
 ## Quick Start
 
@@ -122,15 +232,14 @@ cd ionos-cloud-network-visualizer
 python3 serve.py
 ```
 
-The server automatically opens your browser at `http://localhost:8080` (with automatic fallback to the next available port if 8080 is in use).
-
 **No npm, no build step, no pip install required** — just Python and a browser.
 
 1. Enter your IONOS Cloud API token
 2. The Global Map loads automatically — explore your regions
 3. Click into any VDC to visualize its full network topology
 
-### Docker
+<details>
+<summary><strong>Docker</strong></summary>
 
 ```bash
 docker build -t ionos-cloud-visualizer .
@@ -139,98 +248,66 @@ docker run -p 8080:8080 ionos-cloud-visualizer
 
 Then open `http://localhost:8080` in your browser. No Python installation needed — just Docker.
 
+</details>
+
 <details>
-<summary><strong>Installing Python</strong> (click to expand — skip if you already have Python 3.6+)</summary>
+<summary><strong>Installing Python</strong> (skip if you already have Python 3.6+)</summary>
 
 ### macOS
 
-Python 3 comes pre-installed on recent macOS versions. Open **Terminal** (search "Terminal" in Spotlight) and check:
+Python 3 comes pre-installed on recent macOS versions. Check with `python3 --version`.
 
-```bash
-python3 --version
-```
-
-If the command is not found, install Python using one of these methods:
-
-**Option A — Official installer (recommended for non-developers):**
-Download from <https://www.python.org/downloads/> and run the `.pkg` installer.
-
-**Option B — Homebrew:**
-
-```bash
-brew install python
-```
+If missing, download from <https://www.python.org/downloads/> or run `brew install python`.
 
 ### Windows
 
-**Option A — Official installer (recommended):**
+1. Download from <https://www.python.org/downloads/>
+2. Run the installer — **check "Add python.exe to PATH"**
+3. Use `python serve.py` (not `python3`) on Windows
 
-1. Go to <https://www.python.org/downloads/>
-2. Click **"Download Python 3.x.x"**
-3. Run the installer — **check "Add python.exe to PATH"** at the bottom of the first screen
-4. Click "Install Now"
-5. Open **Command Prompt** or **PowerShell** and verify:
-
-```cmd
-python --version
-```
-
-> **Note:** On Windows, use `python` instead of `python3`:
->
-> ```cmd
-> python serve.py
-> ```
-
-**Option B — Microsoft Store:**
-Search "Python" in the Microsoft Store and install the latest version.
+Alternatively, search "Python" in the Microsoft Store.
 
 ### Linux (Ubuntu / Debian)
 
-Python 3 is usually pre-installed. Check with:
-
-```bash
-python3 --version
-```
-
-If missing:
-
-```bash
-sudo apt update && sudo apt install python3
-```
-
-### Verifying Your Installation
-
-After installation, confirm Python is available:
-
-```bash
-python3 --version   # macOS / Linux
-python --version    # Windows
-```
-
-You should see `Python 3.x.x`. Any version from 3.6 onward works.
+Usually pre-installed. If missing: `sudo apt update && sudo apt install python3`
 
 </details>
 
-## Prerequisites
+<details>
+<summary><strong>Prerequisites</strong></summary>
 
 | Requirement | Details |
 |-------------|---------|
-| **Python 3.6+** | Standard library only — no pip dependencies needed (not required if using Docker) |
+| **Python 3.6+** | Standard library only — no pip dependencies (not required if using Docker) |
 | **Modern browser** | Chrome, Firefox, Safari, or Edge |
 | **IONOS Cloud API Token** | Generate at [dcd.ionos.com](https://dcd.ionos.com) under **Management > Token Manager** |
-| **Docker** *(optional)* | Required only if running via `docker build` / `docker run` instead of Python directly |
+| **Docker** *(optional)* | Only if running via Docker instead of Python directly |
+
+</details>
+
+<details>
+<summary><strong>Configuration</strong></summary>
+
+```bash
+python3 serve.py [options]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--port PORT` | `8080` | Server port (auto-increments if unavailable) |
+| `--no-browser` | `false` | Don't auto-open the browser |
+
+</details>
 
 ## View Modes
 
 | Mode | Description | Use Case |
 |------|-------------|----------|
-| 🗺️ **Global Map** | Interactive Leaflet.js map showing all IONOS DC locations with cloud type tooltips (Public / Private / Both). Active regions display as cluster bubbles with VDC counts; available locations appear as faded markers. Press `G` to return. | Navigate multi-region infrastructure |
-| 🖥️ **Single VDC** | Full force-directed topology graph for one data center: servers, LANs, NICs, managed services, gateways, and load balancers. | Inspect a specific data center |
+| 🗺️ **Global Map** | Interactive map showing all IONOS DC locations with cloud type tooltips. Active regions display as cluster bubbles. Press `G`. | Navigate multi-region infrastructure |
+| 🖥️ **Single VDC** | Full force-directed topology for one data center: servers, LANs, NICs, managed services, gateways, and load balancers. | Inspect a specific data center |
 | 📍 **By Location** | All VDCs in a metro region on one canvas with Private Cross Connect links visible. | See cross-VDC connections |
 
 ## Supported Resource Types
-
-Each resource type has a distinctive custom SVG icon for instant visual identification:
 
 | Category | Resources |
 |----------|-----------|
@@ -251,7 +328,7 @@ Two files, zero build process:
 | File | Role |
 |------|------|
 | **`ionos-cloud-network-visualizer.html`** | Self-contained frontend — D3.js v7 for topology, Leaflet.js v1.9.4 for maps, all CSS/JS inline |
-| **`serve.py`** | Lightweight localhost CORS proxy (Python stdlib only) bridging browser requests to IONOS Cloud APIs and the IONOS docs MCP endpoint |
+| **`serve.py`** | Lightweight localhost CORS proxy (Python stdlib only) bridging browser requests to IONOS Cloud APIs |
 
 ```text
 Browser (localhost:8080)  →  Proxy (serve.py)  →  IONOS Cloud API (*.ionos.com)
@@ -259,7 +336,8 @@ Browser (localhost:8080)  →  Proxy (serve.py)  →  IONOS Cloud API (*.ionos.c
 
 Your API token never leaves your machine.
 
-## Supported IONOS Cloud Services
+<details>
+<summary><strong>Supported IONOS Cloud Services</strong></summary>
 
 | Service | API Endpoint | Scope |
 |---------|--------------|-------|
@@ -279,25 +357,13 @@ Your API token never leaves your machine.
 | Kafka | `kafka.{location}.ionos.com` | Regional |
 | Cloud DNS | `dns.de-fra.ionos.com` | Centralized |
 | CDN | `cdn.de-fra.ionos.com` | Centralized |
-| Data Transfer (Traffic) | `/billing/{contract}/traffic` | Per Contract |
-| Data Transfer (Utilization) | `/billing/{contract}/utilization` | Per Contract |
+| Data Transfer | `/billing/{contract}/traffic` | Per Contract |
 | Telemetry | `api.ionos.com/telemetry/api/v1` | Centralized |
 | AI Model Hub | `openai.inference.de-txl.ionos.com/v1` | Centralized |
 | Labels | `/cloudapi/v6/labels` | Centralized |
-| Locations | `/cloudapi/v6/locations` | Centralized |
-| User Management | `/cloudapi/v6/um` | Centralized |
 | IONOS Cloud Docs (MCP) | `docs.ionos.com/cloud/~gitbook/mcp` | Centralized |
 
-## Configuration
-
-```bash
-python3 serve.py [options]
-```
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--port PORT` | `8080` | Server port (auto-increments if unavailable) |
-| `--no-browser` | `false` | Don't auto-open the browser |
+</details>
 
 ## Keyboard Shortcuts
 
@@ -329,7 +395,7 @@ python3 serve.py [options]
 | **In-Memory Storage** | Tokens live exclusively in browser memory — cleared when you close the tab. No cookies, no disk persistence. |
 | **Localhost Binding** | The proxy binds to `127.0.0.1` only, preventing remote access. |
 | **XSS Protection** | All user-controlled content is escaped before rendering in the DOM. |
-| **AI Context Sanitization** | Infrastructure names are stripped of newlines and control characters before embedding in AI prompts to prevent prompt injection. Context size is capped to stay within model token limits. |
+| **AI Context Sanitization** | Infrastructure names are stripped of control characters before embedding in AI prompts. Context size is capped to stay within model token limits. |
 
 ## Contributing
 
