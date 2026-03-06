@@ -59,7 +59,7 @@ The assistant has two modes, accessible via tabs:
 
 | | | |
 |:--|:--|:--|
-| 🗺️ **Global Map View** — Interactive map of all IONOS DC locations, color-coded by cloud type. Active regions show as cluster bubbles — click to drill down. `G` | 🔗 **Managed Services** — Databases, VPN gateways, NFS, load balancers, K8s clusters, and Kafka on the topology with LAN connections. K8s resources get a helm badge. | 🌐 **Cross-Connect View** — All VDCs in a metro region on one canvas with Private Cross Connect links visible. Same-metro VDCs grouped automatically. |
+| 🗺️ **Global Map View** — Interactive map of all IONOS DC locations, color-coded by cloud type. Active regions show as cluster bubbles — click to drill down. Toggle the DC Network backbone overlay (AS-8560). `G` | 🔗 **Managed Services** — Databases, VPN gateways, NFS, load balancers, K8s clusters, and Kafka on the topology with LAN connections. K8s resources get a helm badge. | 🌐 **Cross-Connect View** — All VDCs in a metro region on one canvas with PCC cross-connect lines, AZ color-coding, and hover tooltips showing billable transfer data. |
 | 🖥️ **Compute View** — VM type, cores, RAM, CPU family for every server. Color-coded: cyan (dedicated), purple (vCPU), orange (Cube), rose (GPU). `C` | 📡 **IP & DNS View** — IP labels on every NIC with reverse DNS and forward DNS. Public IP blocks, DNS zones, and CDN distributions in the sidebar. `I` | 🛡️ **Highlights** — Filter by firewall, flow logs, security groups, IPv6, failover, cross connect, multi-queue, or idle VMs. Matches glow, rest fades. `H` |
 
 ### Analysis & Monitoring
@@ -67,13 +67,13 @@ The assistant has two modes, accessible via tabs:
 | | | |
 |:--|:--|:--|
 | 📜 **Flow Log Explorer** — Drag-and-drop flow log files to analyze traffic. Filter by IP, port, protocol, action. Click any row to trace the path on the topology. `W` | 🔥 **Traffic Heatmap** — Color-coded halos — toggle volume (bytes), security (rejected ratio), or billing (transfer) modes. Cool blue to hot red. `X` / `B` | 💰 **Idle VM Scanner** — Queries Prometheus telemetry to find stopped-but-billed VMs and near-zero traffic servers. Results feed into the AI for cost tips. |
-| 🛡️ **Security Posture** — VDC security summary with progress bars: firewall, flow logs, security groups, private LANs, IPv6. Click any metric to highlight nodes. `S` | 📊 **Live Metrics** — 1-hour throughput and packet charts for any selected server. Data from the IONOS Telemetry API, refreshed per selection. | 📈 **Data Transfer** — Per-VDC and per-server transfer from the Billing API. 30-day daily chart in details, region breakdown on the global map. |
+| 🛡️ **Security Posture** — VDC security summary with progress bars: firewall, flow logs, security groups, private LANs, IPv6. Click any metric to highlight nodes. `S` | 📊 **Live Metrics** — 1-hour throughput and packet charts for any selected server. Data from the IONOS Telemetry API, refreshed per selection. | 📈 **Data Transfer (Billable)** — Per-VDC and per-server billable transfer from the Billing API. Adaptive daily chart with auto-scaling Y-axis, region breakdown on the global map. |
 
 ### AI & Export
 
 | | | |
 |:--|:--|:--|
-| 🤖 **AI Assist** — Ask about security, costs, traffic, or resources — the AI sees your full topology. Generate Terraform, toggle Docs for IONOS documentation via MCP. | ✏️ **AI Design** — Describe an architecture in plain English, get a visual draft on the canvas. Iterate via chat, export as Terraform. Quick-start templates included. | 📤 **Export** — PNG, SVG, JSON, CSV, XLSX workbook, and PDF report with topology diagram and resource inventory — all from one dropdown. |
+| 🤖 **AI Assist** — Ask about security, costs, traffic, or resources — the AI sees your full topology. Generate Terraform, toggle Docs for IONOS documentation via MCP. Voice input supported. | ✏️ **AI Design** — Describe an architecture in plain English, get a visual draft on the canvas. Iterate via chat, export as Terraform. Quick-start templates included. | 📤 **Export** — PNG, SVG, JSON, CSV, XLSX workbook, and PDF report with topology diagram and resource inventory — all from one dropdown. |
 
 ### Customization
 

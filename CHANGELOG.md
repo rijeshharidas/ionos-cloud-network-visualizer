@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2026-03-06
+
+### Added (1.13.0)
+
+- **Regional Map: VDC Hover Tooltips** — Hovering over a VDC marker in the regional drill-down now shows a frosted-glass tooltip with VDC name, location, and billable data transfer (inbound/outbound) from the Billing API. Tooltip disappears on mouse-out.
+- **Regional Map: Availability Zone Badges** — VDC markers are color-coded by AZ (green for AZ 1, amber for AZ 2, purple for AZ 3) with a small "AZ N" badge shown when multiple AZs exist in the same region. Makes it easy to distinguish `de/fra/1` from `de/fra/2` at a glance.
+- **Regional Map: PCC Cross-Connect Lines** — Private Cross Connect links between VDCs in the same region are rendered as dashed orthogonal SVG paths (soft purple) routed above the markers, with PCC name labels. Data fetched from `/pccs?depth=3` API. Lines update live on map pan/zoom and are cleaned up on navigation.
+- **DC Network Backbone Overlay** — New "DC Network" button on the global map toggles an overlay showing all 11 IONOS data center locations as backbone nodes (AS-8560) with a summary panel displaying edge capacity (4,000 Gbps), peering sessions (3,500+), and metro redundancy tiers.
+- **Voice Input for AI Assistant** — Microphone button next to the AI input textarea enables voice-to-text via the Web Speech API. Supports all four languages (EN/DE/ES/FR), shows a pulsing red indicator while listening, and auto-sends the transcribed message on speech end.
+- **Karlsruhe DC Location** — Added `de/ka` (Karlsruhe) to the location registry with coordinates, city name, and cloud type classification.
+
+### Changed (1.13.0)
+
+- **"Data Transfer" → "Data Transfer (Billable)"** — All references to billing-sourced data transfer now include "(Billable)" or "(Billable, current period)" to clarify the data comes from the IONOS Billing API. Updated across all four languages (EN, DE, ES, FR) in the map billing panel, detail panel, heatmap button/tooltip, keyboard shortcuts help, feature carousel, and AI context summary.
+- **Billing Period Label** — Changed from "30d" to "current period" (and locale equivalents) since the Billing API returns the current calendar month, not a rolling 30-day window.
+- **Billing Chart Y-Axis** — Y-axis now adapts to actual data values instead of flooring at 1 GB. Uses `d3.scaleLinear().nice()` for clean tick marks and automatically switches to MB units when values are below 0.5 GB.
+- **Regional Map Zoom Level** — Increased drill-down zoom from `+2` to `+3` for a closer view of VDC markers within a region.
+- **AI Context Strings** — AI context builder now labels transfer data as "Billable Data Transfer" for clearer LLM understanding.
+
+### Fixed (1.13.0)
+
+- **Non-ISO-8859-1 Token Error** — Pasting API tokens containing hidden Unicode characters (e.g., smart quotes from rich-text editors) caused `fetch()` to throw "String contains non ISO-8859-1 code point". Fixed by stripping non-printable-ASCII characters from the token input.
+- **AI Button Visibility Null Safety** — `updateAiButtonVisibility()` could throw if `graphData` was null. Fixed with optional chaining (`graphData?.nodes?.length`).
+- **DC Network Button Text Wrapping** — The "DC Network" button text wrapped to two lines on narrow viewports. Fixed with `white-space: nowrap`.
+
 ## [1.12.0] - 2026-03-01
 
 ### Added (1.12.0)
