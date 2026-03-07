@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.1] - 2026-03-07
+
+### Changed (1.16.1)
+
+- **Sidebar Section Spacing** — Increased padding and label margins in sidebar sections for better readability.
+- **Map Billing Panel** — Added accent left-border, increased padding, shadow depth, and backdrop blur for stronger visual anchoring.
+- **Map Overlay Buttons** — Replaced solid-fill action buttons (S3, Backbone, Support) with translucent glassmorphism style matching the dark-themed map aesthetic.
+- **AI Edge Tab** — Enlarged tab icon, label, and padding; increased gradient and border opacity so the tab is easier to spot when the AI panel is closed.
+- **Map Background in Topology View** — Reduced tile brightness and increased grayscale so the geographic backdrop recedes behind the network diagram.
+- **Toolbar Polish** — Increased button padding, divider spacing, and container shadow/blur for a cleaner grouped appearance.
+- **Connection Lines** — Bumped link stroke-width and opacity for better visibility; increased label background opacity.
+- **AI Response Text** — Added `line-height: 1.6` for breathing room and styled `<strong>` tags in accent color with slight letter-spacing for scannable structure.
+- **Suggestion Chips Label** — Added a contextual header ("Try asking" / "Try designing") above the AI suggestion chips so their purpose is immediately clear.
+- **AI Panel Shadow** — Added a left-side drop shadow when the panel is open for clear depth separation from the canvas.
+
+### Fixed (1.16.1)
+
+- **Billing Data Transfer Units** — The AI context builder now correctly converts `/traffic/` API values from Bytes to GB before labelling them. Previously, raw byte values were passed as "GB", causing the AI to report wildly inflated transfer numbers (e.g. 144 TB instead of ~134 GB).
+
 ## [1.16.0] - 2026-03-06
 
 ### Added (1.16.0)
